@@ -1,4 +1,10 @@
 @import "tailwindcss";
+
+@layer base {
+  button, [role="button"], a {
+    cursor: pointer !important;
+  }
+}
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
@@ -127,4 +133,7 @@
   html {
     @apply font-sans;
   }
+}
+button {
+  cursor: pointer !important;
 }

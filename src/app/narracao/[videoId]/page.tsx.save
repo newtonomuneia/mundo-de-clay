@@ -1,0 +1,688 @@
+"use client";
+
+import { useEffect, useState, useRef } from "react";
+import { useParams } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
+
+interface Cena {
+  id: string;
+  video_id: string;
+  numero: string;
+  ordem: number;
+  narracao: string;
+  emocao: string;
+  duracao_estimada: number;
+  duracao_real: number | null;
+  tipo_cena: string;
+  imagem_url: string | null;
+  tts_url: string | null;
+  tts_status: string;
+}
+
+interface Video {
+  id: string;
+  titulo: string | null;
+  formato: string | null;
+  sinopse: string | null;
+  tom: string | null;
+  num_cenas: number | null;
+  geracao_tts_status: string | null;
+}
+
+const EMOCAO_COLORS: Record<string, string> = {
+  calma: "bg-blue-900/60 text-blue-300 border-blue-700",
+  neutra: "bg-zinc-700/60 text-zinc-300 border-zinc-600",
+  tensa: "bg-yellow-900/60 text-yellow-300 border-yellow-700",
+  suspense: "bg-purple-900/60 text-purple-300 border-purple-700",
+  panico: "bg-red-900/60 text-red-300 border-red-700",
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  pendente: "bg-zinc-700/60 text-zinc-400 border-zinc-600",
+  gerada: "bg-yellow-900/60 text-yellow-300 border-yellow-700",
+  aprovada: "bg-green-900/60 text-green-300 border-green-700",
+  rejeitada: "bg-red-900/60 text-red-300 border-red-700",
+};
+
+const EMOCOES = ["calma", "neutra", "tensa", "suspense", "panico"];
+
+export default function NarracaoPage() {
+  const params = useParams();
+  const videoId = params.videoId as string;
+
+  const [video, setVideo] = useState<Video | null>(null);
+  const [cenas, setCenas] = useState<Cena[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editingCenas, setEditingCenas] = useState<Set<string>>(new Set());
+  const [editForms, setEditForms] = useState<
+    Record<string, { narracao: string; emocao: string }>
+  >({});
+  const [regenerando, setRegenerando] = useState(false);
+  const [playingAll, setPlayingAll] = useState(false);
+  const [playingIndex, setPlayingIndex] = useState(-1);
+  const [expandedImages, setExpandedImages] = useState<Set<string>>(new Set());
+  const audioRefs = useRef<Record<string, HTMLAudioElement | null>>({});
+  const playAllRef = useRef(false);
+
+  useEffect(() => {
+    if (videoId) fetchData();
+  }, [videoId]);
+
+  async function fetchData() {
+    const { data: vData } = await supabase
+      .from("videos")
+      .select(
+        "id,titulo,formato,sinopse,tom,num_cenas,geracao_tts_status"
+      )
+      .eq("id", videoId)
+      .single();
+
+    if (vData) setVideo(vData);
+
+    const { data: cData } = await supabase
+      .from("cenas")
+      .select(
+        "id,video_id,numero,ordem,narracao,emocao,duracao_estimada,duracao_real,tipo_cena,imagem_url,tts_url,tts_status"
+      )
+      .eq("video_id", videoId)
+      .is("opcao_id", null)
+      .order("ordem", { ascending: true });
+
+    if (cData) setCenas(cData);
+    setLoading(false);
+  }
+
+  // --- Contadores ---
+  const totalCenas = cenas.length;
+  const aprovadas = cenas.filter((c) => c.tts_status === "aprovada").length;
+  const geradas = cenas.filter((c) => c.tts_status === "gerada").length;
+  const pendentes = cenas.filter((c) => c.tts_status === "pendente").length;
+  const todasAprovadas = aprovadas === totalCenas && totalCenas > 0;
+  const duracaoTotal = cenas.reduce((s, c) => s + (c.duracao_real || 0), 0);
+
+  // --- Formatar duração ---
+  function formatDuration(seconds: number | null): string {
+    if (!seconds) return "—";
+    return seconds.toFixed(1) + "s";
+  }
+
+  function formatDurationTotal(seconds: number): string {
+    const mins = Math.floor(seconds / 60);
+    const secs = (seconds % 60).toFixed(1);
+    return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+  }
+
+  // --- Tocar tudo em sequência ---
+  async function playAll() {
+    const playable = cenas.filter(
+      (c) => c.tts_url && (c.tts_status === "gerada" || c.tts_status === "aprovada")
+    );
+    if (playable.length === 0) {
+      toast.info("Nenhum áudio disponível para tocar.");
+      return;
+    }
+
+    setPlayingAll(true);
+    playAllRef.current = true;
+
+    for (let i = 0; i < playable.length; i++) {
+      if (!playAllRef.current) break;
+      setPlayingIndex(playable[i].ordem);
+
+      const audio = audioRefs.current[playable[i].id];
+      if (audio) {
+        audio.currentTime = 0;
+        try {
+          await audio.play();
+          await new Promise<void>((resolve) => {
+            const onEnd = () => {
+              audio.removeEventListener("ended", onEnd);
+              resolve();
+            };
+            audio.addEventListener("ended", onEnd);
+          });
+        } catch {
+          // áudio pode falhar se o navegador bloquear autoplay
+        }
+      }
+    }
+
+    setPlayingAll(false);
+    setPlayingIndex(-1);
+    playAllRef.current = false;
+  }
+
+  function stopAll() {
+    playAllRef.current = false;
+    setPlayingAll(false);
+    setPlayingIndex(-1);
+    Object.values(audioRefs.current).forEach((a) => {
+      if (a) {
+        a.pause();
+        a.currentTime = 0;
+      }
+    });
+  }
+
+  // --- Ações globais ---
+
+async function aprovarEContinuar() {
+    for (const c of cenas) {
+      if (c.tts_status !== "aprovada") {
+        await supabase.from("cenas").update({ tts_status: "aprovada" }).eq("id", c.id);
+      }
+    }
+
+    toast.info("Avançando pipeline...");
+    try {
+      const res = await fetch(`/api/webhook?path=pipeline/avancar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ video_id: videoId }),
+      });
+      const data = await res.json();
+      if (data.success && data.proximaTela) {
+        window.location.href = data.proximaTela;
+      } else {
+        toast.error(data.erro || "Erro ao avançar pipeline");
+      }
+    } catch {
+      toast.error("Erro de conexão com n8n");
+    }
+  }
+
+  async function regenerarPendentes() {
+    setRegenerando(true);
+    toast.info("Disparando regeneração de TTS...");
+    try {
+      const res = await fetch(`/api/webhook?path=tts/regenerar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ video_id: videoId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Pod ligando. Narrações serão geradas em breve.");
+      } else {
+        toast.error(data.erro || "Erro ao disparar regeneração");
+      }
+    } catch {
+      toast.error("Erro de conexão com n8n");
+    }
+    setRegenerando(false);
+  }
+
+
+  // --- Ações por cena ---
+  async function aprovarCena(cenaId: string) {
+    await supabase
+      .from("cenas")
+      .update({ tts_status: "aprovada" })
+      .eq("id", cenaId);
+    toast.success("Narração aprovada");
+    fetchData();
+  }
+
+  async function rejeitarCena(cenaId: string) {
+    await supabase
+      .from("cenas")
+      .update({ tts_status: "pendente" })
+      .eq("id", cenaId);
+    toast.info("Cena marcada para regeneração");
+    fetchData();
+  }
+
+  function toggleEdit(cenaId: string, cena: Cena) {
+    const newSet = new Set(editingCenas);
+    if (newSet.has(cenaId)) {
+      newSet.delete(cenaId);
+    } else {
+      newSet.add(cenaId);
+      setEditForms((prev) => ({
+        ...prev,
+        [cenaId]: {
+          narracao: cena.narracao || "",
+          emocao: cena.emocao || "neutra",
+        },
+      }));
+    }
+    setEditingCenas(newSet);
+  }
+
+  async function salvarEdicao(cenaId: string) {
+    const form = editForms[cenaId];
+    if (!form) return;
+
+    await supabase
+      .from("cenas")
+      .update({
+        narracao: form.narracao,
+        emocao: form.emocao,
+        tts_status: "pendente",
+        tts_url: null,
+        duracao_real: null,
+      })
+      .eq("id", cenaId);
+
+    const newSet = new Set(editingCenas);
+    newSet.delete(cenaId);
+    setEditingCenas(newSet);
+
+    toast.success("Narração editada e marcada para regeneração");
+    fetchData();
+  }
+
+  async function uploadManual(cenaId: string, file: File) {
+    if (!file.type.startsWith("audio/")) {
+      toast.error("Arquivo deve ser um áudio (MP3)");
+      return;
+    }
+
+    const cena = cenas.find((c) => c.id === cenaId);
+    if (!cena) return;
+
+    const storagePath = `${videoId}/narr_${cena.numero}.mp3`;
+
+    toast.info("Fazendo upload...");
+
+    const { error: uploadError } = await supabase.storage
+      .from("narracoes")
+      .upload(storagePath, file, {
+        upsert: true,
+        contentType: "audio/mpeg",
+      });
+
+    if (uploadError) {
+      toast.error("Erro no upload: " + uploadError.message);
+      return;
+    }
+
+const { data: urlData } = supabase.storage
+      .from("narracoes")
+      .getPublicUrl(storagePath);
+    urlData.publicUrl = urlData.publicUrl + '?t=' + Date.now();
+
+    // Medir duração via Audio API do browser
+    const tempUrl = URL.createObjectURL(file);
+    const tempAudio = new Audio(tempUrl);
+
+    tempAudio.addEventListener("loadedmetadata", async () => {
+      const duration = Math.round(tempAudio.duration * 100) / 100;
+      URL.revokeObjectURL(tempUrl);
+
+      await supabase
+        .from("cenas")
+        .update({
+          tts_url: urlData.publicUrl,
+          tts_status: "gerada",
+          duracao_real: duration,
+        })
+        .eq("id", cenaId);
+
+      toast.success(`Áudio enviado (${duration.toFixed(1)}s)`);
+      fetchData();
+    });
+
+    tempAudio.addEventListener("error", async () => {
+      URL.revokeObjectURL(tempUrl);
+      // Upload feito mas sem duração
+      await supabase
+        .from("cenas")
+        .update({
+          tts_url: urlData.publicUrl,
+          tts_status: "gerada",
+        })
+        .eq("id", cenaId);
+
+      toast.success("Áudio enviado (duração não medida)");
+      fetchData();
+    });
+  }
+
+  function toggleImage(cenaId: string) {
+    const newSet = new Set(expandedImages);
+    if (newSet.has(cenaId)) {
+      newSet.delete(cenaId);
+    } else {
+      newSet.add(cenaId);
+    }
+    setExpandedImages(newSet);
+  }
+
+  // --- Render ---
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center">
+        <p className="text-zinc-500">Carregando...</p>
+      </div>
+    );
+  }
+
+  if (!video) {
+    return (
+      <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center">
+        <p className="text-red-400">Vídeo não encontrado.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6 max-w-5xl mx-auto">
+      {/* HEADER */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-1">
+          {video.titulo || "Sem título"}{" "}
+          <span className="text-zinc-500 text-base font-normal">— Narração</span>
+        </h1>
+        <p className="text-sm text-zinc-500 mb-3">{video.sinopse || ""}</p>
+
+        <div className="flex flex-wrap gap-3 text-sm">
+          <span className="text-zinc-400">
+            Cenas: <span className="text-zinc-200">{totalCenas}</span>
+          </span>
+          <Separator orientation="vertical" className="h-5 bg-zinc-700" />
+          <span className="text-green-400">
+            Aprovadas: {aprovadas}
+          </span>
+          <span className="text-yellow-400">
+            Geradas: {geradas}
+          </span>
+          <span className="text-zinc-500">
+            Pendentes: {pendentes}
+          </span>
+          <Separator orientation="vertical" className="h-5 bg-zinc-700" />
+          <span className="text-zinc-400">
+            Duração total:{" "}
+            <span className="text-zinc-200">
+              {duracaoTotal > 0 ? formatDurationTotal(duracaoTotal) : "—"}
+            </span>
+          </span>
+        </div>
+
+        {video.geracao_tts_status === "gerando" && (
+          <div className="mt-3 px-3 py-2 rounded bg-yellow-900/30 border border-yellow-800 text-yellow-300 text-sm">
+            ⏳ Geração em andamento... recarregue a página para ver novos áudios.
+          </div>
+        )}
+      </div>
+
+      {/* CONTROLE DE REPRODUÇÃO */}
+      <div className="mb-4 flex gap-2">
+        {!playingAll ? (
+          <Button
+            onClick={playAll}
+            variant="outline"
+            size="sm"
+            className="cursor-pointer"
+            disabled={geradas + aprovadas === 0}
+          >
+            ▶ Tocar tudo em sequência
+          </Button>
+        ) : (
+          <Button
+            onClick={stopAll}
+            variant="outline"
+            size="sm"
+            className="cursor-pointer text-red-400 border-red-800"
+          >
+            ■ Parar reprodução
+          </Button>
+        )}
+      </div>
+
+      {/* LISTA DE CENAS */}
+      <div className="space-y-4">
+        {cenas.map((cena) => {
+          const isEditing = editingCenas.has(cena.id);
+          const form = editForms[cena.id];
+          const isPlaying = playingIndex === cena.ordem;
+          const imageExpanded = expandedImages.has(cena.id);
+
+          return (
+            <Card
+              key={cena.id}
+              className={`bg-zinc-900 border-zinc-800 ${
+                isPlaying ? "ring-1 ring-purple-500/50" : ""
+              }`}
+            >
+              <CardContent className="pt-4">
+                <div className="flex gap-4">
+                  {/* COLUNA ESQUERDA — Imagem */}
+                  <div className="flex-shrink-0">
+                    {cena.imagem_url ? (
+                      <img
+                        src={cena.imagem_url}
+                        alt={`Cena ${cena.numero}`}
+                        className={`rounded border border-zinc-700 cursor-pointer transition-all ${
+                          imageExpanded ? "w-48" : "w-20"
+                        }`}
+                        style={{ aspectRatio: "9/16", objectFit: "cover" }}
+                        onClick={() => toggleImage(cena.id)}
+                        title="Clique para expandir/recolher"
+                      />
+                    ) : (
+                      <div
+                        className="w-20 bg-zinc-800 rounded border border-zinc-700 flex items-center justify-center text-zinc-600 text-xs"
+                        style={{ aspectRatio: "9/16" }}
+                      >
+                        Sem img
+                      </div>
+                    )}
+                  </div>
+
+                  {/* COLUNA DIREITA — Conteúdo */}
+                  <div className="flex-1 min-w-0">
+                    {/* Linha 1: número, badges, duração */}
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <span className="text-sm font-semibold text-zinc-200">
+                        Cena {cena.numero}
+                      </span>
+                      <Badge
+                        variant="outline"
+                        className={`text-xs ${
+                          EMOCAO_COLORS[cena.emocao] || EMOCAO_COLORS.neutra
+                        }`}
+                      >
+                        {cena.emocao}
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className={`text-xs ${
+                          STATUS_COLORS[cena.tts_status] || STATUS_COLORS.pendente
+                        }`}
+                      >
+                        {cena.tts_status}
+                      </Badge>
+                      <span className="text-xs text-zinc-500 ml-auto">
+                        {formatDuration(cena.duracao_real)}
+                      </span>
+                    </div>
+
+                    {/* Linha 2: texto narração */}
+                    <p className="text-sm text-zinc-300 mb-3 leading-relaxed">
+                      "{cena.narracao}"
+                    </p>
+
+                    {/* Linha 3: player de áudio */}
+                    {cena.tts_url ? (
+                      <audio
+                        ref={(el) => {
+                          audioRefs.current[cena.id] = el;
+                        }}
+                        src={cena.tts_url}
+                        controls
+                        preload="none"
+                        className="w-full h-8 mb-3"
+                        style={{ filter: "invert(0.85)" }}
+                      />
+                    ) : (
+                      <div className="h-8 mb-3 flex items-center text-xs text-zinc-600">
+                        Áudio não gerado
+                      </div>
+                    )}
+
+                    {/* Linha 4: ações */}
+                    {!isEditing && (
+                      <div className="flex gap-2 flex-wrap">
+                        {cena.tts_status === "gerada" && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => aprovarCena(cena.id)}
+                              className="text-xs cursor-pointer text-green-400 border-green-800 hover:bg-green-900/30"
+                            >
+                              ✓ Aprovar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => rejeitarCena(cena.id)}
+                              className="text-xs cursor-pointer text-red-400 border-red-800 hover:bg-red-900/30"
+                            >
+                              ✕ Rejeitar
+                            </Button>
+                          </>
+                        )}
+                        {cena.tts_status === "aprovada" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => rejeitarCena(cena.id)}
+                            className="text-xs cursor-pointer text-zinc-500 border-zinc-700"
+                          >
+                            Desfazer aprovação
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => toggleEdit(cena.id, cena)}
+                          className="text-xs cursor-pointer"
+                        >
+                          Editar
+                        </Button>
+                        <label className="inline-flex items-center gap-1 cursor-pointer text-xs text-zinc-400 hover:text-zinc-200 transition-colors">
+                          <span className="px-2 py-1 border border-zinc-700 rounded hover:bg-zinc-800">
+                            Upload MP3
+                          </span>
+                          <input
+                            type="file"
+                            accept="audio/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f) uploadManual(cena.id, f);
+                              e.target.value = "";
+                            }}
+                          />
+                        </label>
+                      </div>
+                    )}
+
+                    {/* MODO EDIÇÃO */}
+                    {isEditing && form && (
+                      <div className="space-y-3 mt-2 p-3 rounded bg-zinc-800/50 border border-zinc-700">
+                        <div>
+                          <label className="text-xs text-zinc-400 mb-1 block">
+                            Texto da narração
+                          </label>
+                          <Textarea
+                            value={form.narracao}
+                            onChange={(e) =>
+                              setEditForms((prev) => ({
+                                ...prev,
+                                [cena.id]: { ...prev[cena.id], narracao: e.target.value },
+                              }))
+                            }
+                            className="bg-zinc-800 border-zinc-700 text-sm"
+                            rows={3}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-zinc-400 mb-1 block">
+                            Emoção
+                          </label>
+                          <select
+                            value={form.emocao}
+                            onChange={(e) =>
+                              setEditForms((prev) => ({
+                                ...prev,
+                                [cena.id]: { ...prev[cena.id], emocao: e.target.value },
+                              }))
+                            }
+                            className="rounded-md bg-zinc-800 border border-zinc-700 px-3 py-1.5 text-sm text-zinc-100"
+                          >
+                            {EMOCOES.map((em) => (
+                              <option key={em} value={em}>
+                                {em}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <Separator className="bg-zinc-700" />
+
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => salvarEdicao(cena.id)}
+                            className="cursor-pointer"
+                          >
+                            Salvar e marcar para regeneração
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => toggleEdit(cena.id, cena)}
+                            className="cursor-pointer"
+                          >
+                            Cancelar
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* BARRA DE AÇÕES GLOBAIS */}
+      <div className="mt-6 pt-4 border-t border-zinc-800 flex gap-3 flex-wrap">
+        <Button
+          onClick={regenerarPendentes}
+          disabled={regenerando || pendentes === 0}
+          variant="outline"
+          className="cursor-pointer"
+        >
+          {regenerando ? "Disparando..." : `Regenerar pendentes (${pendentes})`}
+        </Button>
+        <Button
+          onClick={aprovarTodas}
+          disabled={geradas === 0}
+          variant="outline"
+          className="cursor-pointer"
+        >
+          Aprovar todas
+        </Button>
+        {todasAprovadas && (
+          <Button
+            onClick={continuarPipeline}
+            className="bg-green-700 hover:bg-green-600 cursor-pointer"
+          >
+            Continuar para próximo módulo →
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
