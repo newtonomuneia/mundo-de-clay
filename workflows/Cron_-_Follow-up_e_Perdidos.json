@@ -1,0 +1,2180 @@
+{
+  "updatedAt": "2025-12-30T00:03:24.000Z",
+  "createdAt": "2025-12-27T13:41:33.452Z",
+  "id": "35rvdde9qxCGV8Me",
+  "name": "Cron - Follow-up e Perdidos",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -752,
+        -32
+      ],
+      "id": "37a2fd07-ee8f-4e01-873e-99c75df6e0ba",
+      "name": "Cron - A cada 30min"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "conversas",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "status",
+              "condition": "neq",
+              "keyValue": "finalizado"
+            },
+            {
+              "keyName": "status",
+              "condition": "neq",
+              "keyValue": "perdido"
+            },
+            {
+              "keyName": "fase_atual",
+              "condition": "neq",
+              "keyValue": "finalizado"
+            },
+            {
+              "keyName": "fase_atual",
+              "condition": "neq",
+              "keyValue": "perdido"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -528,
+        -32
+      ],
+      "id": "dc22c64a-4987-4a7b-8355-99cc7387acd2",
+      "name": "Buscar Conversas Ativas",
+      "credentials": {
+        "supabaseApi": {
+          "id": "C87gCgyLKdnG6PSu",
+          "name": "baralho_prosperidade"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -112,
+        -32
+      ],
+      "id": "1e550256-833a-4955-a93d-71fa6db3619c",
+      "name": "Loop - Cada Conversa"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.z-api.io/instances/3EAC63EE98C5F14530FE227360D3178E/token/198DF2D98C4EB52EFD1319EA/send-text",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "phone",
+              "value": "={{ $json.telefone }}"
+            },
+            {
+              "name": "message",
+              "value": "=Oi, {{ $json.nome }}!👋\n\nVi que você pediu o link de pagamento há pouquinho. \n\nConseguiu acessar?   \n\nSe tiver alguma dúvida, estou aqui para ajudar!   \n\n😊O link continua válido!"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d77addf8-8598-4039-a3ab-1a0922896e5e",
+      "name": "WhatsApp - Lembrete 30min",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        256,
+        -112
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "8jRtMgiJTpVow7wP",
+          "name": "Z-API Credential"
+        }
+      },
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4a67eff5-9b2e-45ae-bd7e-28868cb3587a",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "aguardando_pagamento",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "4df73fc5-0ea2-449d-809a-e9a01b7a27cf",
+              "leftValue": "={{ $now.diff(DateTime.fromISO($json.updated_at), 'minutes').minutes }}",
+              "rightValue": 30,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "e3a5ff69-8d70-42db-8d1e-fc39b3f47aaf",
+              "leftValue": "={{ $now.diff(DateTime.fromISO($json.updated_at), 'minutes').minutes }}",
+              "rightValue": 90,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            },
+            {
+              "id": "e74aaf38-7b1e-4e5d-9b19-c5fd9a64f5a0",
+              "leftValue": "={{ $json.lembrete_30min_enviado }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        96,
+        64
+      ],
+      "id": "2ee2938f-5c18-4b17-a3fc-2e71c181e6ff",
+      "name": "If - Lembrete 30min"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "conversas",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Loop - Cada Conversa').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "lembrete_30min_enviado",
+              "fieldValue": "true"
+            },
+            {
+              "fieldId": "ultima_interacao",
+              "fieldValue": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        432,
+        -112
+      ],
+      "id": "d540718b-fdc0-47af-a7ca-35754273e8c0",
+      "name": "Atualizar - Lembrete 30min Enviado",
+      "credentials": {
+        "supabaseApi": {
+          "id": "C87gCgyLKdnG6PSu",
+          "name": "baralho_prosperidade"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "97d5fcbb-a26e-40e1-82f7-a00345d2195c",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "aguardando_pagamento",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "13812e13-0e23-4e9b-86ba-ae67778346b0",
+              "leftValue": "={{ $now.diff(DateTime.fromISO($json.updated_at), 'hours').hours }}",
+              "rightValue": 24,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "f3f45bab-9c97-44d2-b14f-10cd0c7a0b1e",
+              "leftValue": "={{ $now.diff(DateTime.fromISO($json.updated_at), 'hours').hours }}",
+              "rightValue": 26,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            },
+            {
+              "id": "ddf2379d-4ed9-445e-a469-cdc9d7079359",
+              "leftValue": "={{ $json.lembrete_24h_enviado }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        512,
+        112
+      ],
+      "id": "84a1d4c9-fea0-427b-baf0-4f25f74b9331",
+      "name": "IF - Lembrete 24h"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.z-api.io/instances/3EAC63EE98C5F14530FE227360D3178E/token/198DF2D98C4EB52EFD1319EA/send-text",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=phone",
+              "value": "={{ $json.telefone }}\",\n"
+            },
+            {
+              "name": "message",
+              "value": "=Oi, {{ $json.nome }}! 👋\n\nPassando para lembrar que seu link de pagamento continua válido.\n\nAinda tem interesse no Baralho da Prosperidade? 🌟\n\nSe tiver alguma dúvida, estou aqui para te ajudar!"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9177ceac-e328-43b4-9bd1-593f735d6364",
+      "name": "WhatsApp - Lembrete 24hs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        -96
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "8jRtMgiJTpVow7wP",
+          "name": "Z-API Credential"
+        }
+      },
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "conversas",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Loop - Cada Conversa').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "lembrete_24h_enviado",
+              "fieldValue": "true"
+            },
+            {
+              "fieldId": "ultima_interacao",
+              "fieldValue": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        976,
+        -96
+      ],
+      "id": "37c2045f-c6b7-4c36-af94-50ed3226dd1f",
+      "name": "Atualizar - Lembrete 24hs Enviado",
+      "credentials": {
+        "supabaseApi": {
+          "id": "C87gCgyLKdnG6PSu",
+          "name": "baralho_prosperidade"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "97d5fcbb-a26e-40e1-82f7-a00345d2195c",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "novo_lead",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "62942719-df32-4638-9ef7-adcff444f222",
+              "leftValue": "={{ $json.fase_atual }}",
+              "rightValue": "descoberta",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "5ea27fc8-8853-4e82-a15a-276e705534e4",
+              "leftValue": "={{ $now.diff(DateTime.fromISO($json.ultima_interacao), 'hours').hours }}",
+              "rightValue": 24,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "b3df10ff-dcbd-4b4e-ba24-4fcffc5f2a79",
+              "leftValue": "={{ $now.diff(DateTime.fromISO($json.ultima_interacao), 'hours').hours }}",
+              "rightValue": 26,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        784,
+        128
+      ],
+      "id": "f62b43e6-15f2-4118-95a9-ce729b5e0cd5",
+      "name": "IF - Retomar Conversa"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.z-api.io/instances/3EAC63EE98C5F14530FE227360D3178E/token/198DF2D98C4EB52EFD1319EA/send-text",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "phone",
+              "value": "={{ $json.telefone }}"
+            },
+            {
+              "name": "message",
+              "value": "=Oi, {{ $json.nome }}! 👋\n\nLembrei de você e da nossa conversa sobre prosperidade. 🌟\n\nO Baralho da Prosperidade pode ser um grande aliado na sua jornada:\n\n✨ Para reflexão pessoal: consultas diárias que trazem clareza e orientação\n\n💑 Para usar em dupla: práticas de escuta consciente, alinhamento de intenções e tomada de decisão conjunta que fortalecem vínculos\n\n📖 São 52 cartas com ensinamentos completos do livro \n\"O Algoritmo da Prosperidade\" por apenas R$ 50,00 com frete grátis, você leva uma ferramenta de transformação que pode usar sozinho ou compartilhar com pessoas queridas.\n\nAinda tem interesse? \n\nPosso gerar seu link de pagamento agora mesmo! 💫"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "851b64ec-053d-4b59-a520-4a04da298518",
+      "name": "WhatsApp - Retomar Conversa",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1008,
+        112
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "8jRtMgiJTpVow7wP",
+          "name": "Z-API Credential"
+        }
+      },
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "conversas",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Loop - Cada Conversa').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "ultima_interacao",
+              "fieldValue": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1232,
+        112
+      ],
+      "id": "999f0a3a-436c-46ea-b962-eb3f69965548",
+      "name": "Atualizar - Retomar Conversa",
+      "credentials": {
+        "supabaseApi": {
+          "id": "C87gCgyLKdnG6PSu",
+          "name": "baralho_prosperidade"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "46b0e309-61ec-4ab5-913e-f2752dd67c5b",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "pago",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "c94a0597-da19-49be-bd4b-a676afb22633",
+              "leftValue": "={{ $json.fase_atual }}",
+              "rightValue": "coletando_endereco",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "5682f906-5cdd-45e0-94c8-529fe835655e",
+              "leftValue": "={{ !$json.ultimo_lembrete_endereco || $now.diff(DateTime.fromISO($json.ultimo_lembrete_endereco), 'hours').hours >= 24 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        992,
+        304
+      ],
+      "id": "0956ff55-f3a1-4dfc-af00-f7b2561a2f76",
+      "name": "IF - Lembrete Endereço"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.z-api.io/instances/3EAC63EE98C5F14530FE227360D3178E/token/198DF2D98C4EB52EFD1319EA/send-text",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "phone",
+              "value": "={{ $json.telefone }}\",\n"
+            },
+            {
+              "name": "message",
+              "value": "=Oi, {{ $json.nome }}! 🎉\n\nSeu pagamento já foi confirmado!\n\nAinda preciso do seu endereço completo para enviar o Baralho da Prosperidade.\n\n📍 Qual seu CEP?\n\nAssim que eu receber, vou buscar seu endereço automaticamente! 📦"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "dadc379c-102e-4674-a780-4c2cd8a439e0",
+      "name": "WhatsApp - Lembrete Endereço",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        304
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "8jRtMgiJTpVow7wP",
+          "name": "Z-API Credential"
+        }
+      },
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "conversas",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Loop - Cada Conversa').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "ultima_interacao",
+              "fieldValue": "={{ $now }}"
+            },
+            {
+              "fieldId": "ultimo_lembrete_endereco",
+              "fieldValue": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        288
+      ],
+      "id": "4b56b2ae-f255-42b1-952f-c3a36e0c771c",
+      "name": "Atualizar - Lembrete Endereço",
+      "credentials": {
+        "supabaseApi": {
+          "id": "C87gCgyLKdnG6PSu",
+          "name": "baralho_prosperidade"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0b187fa6-6fea-4587-aea2-0d695e1c35b3",
+              "leftValue": "={{ $json.status === 'novo_lead' || $json.status === 'aguardando_pagamento' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "99fbf816-fa3d-499f-b4e1-f86849ed26cd",
+              "leftValue": "={{ $now.diff(DateTime.fromISO($json.ultima_interacao), 'hours').hours }}",
+              "rightValue": 48,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1168,
+        496
+      ],
+      "id": "8e42f063-6f89-4c5f-8120-3e69d566a14c",
+      "name": "IF - Perdido 48h"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "id": {
+          "__rl": true,
+          "value": "={{ $json.trello_card_id }}",
+          "mode": "id"
+        },
+        "updateFields": {
+          "desc": "={{ $json.nome }}\nCPF: {{ $json.cpf || 'Não informado' }}\nTelefone: {{ $json.telefone }}\n\n❌ LEAD PERDIDO\n\n⚠️ Motivo: 48h+ sem resposta\n\n📊 STATUS:\nStatus: perdido\nFase: perdido\n\n🕐 Última interação: {{ DateTime.fromISO($json.ultima_interacao).toFormat('dd/MM/yyyy HH:mm') }}\n❌ Movido para perdidos em: {{ $now.toFormat('dd/MM/yyyy HH:mm') }}\n\n💬 Possíveis ações:\n- Aguardar retorno espontâneo do cliente\n- Campanha de reengajamento (futuro)\n- Análise de motivos de abandono",
+          "idList": "69444212f9ce8f24466ef906"
+        }
+      },
+      "type": "n8n-nodes-base.trello",
+      "typeVersion": 1,
+      "position": [
+        1408,
+        496
+      ],
+      "id": "2861ccc9-fc34-4832-8119-543447ea3b58",
+      "name": "Trello - Mover para Perdidos",
+      "credentials": {
+        "trelloApi": {
+          "id": "Rw0karD0UnTWxue6",
+          "name": "Trello account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "conversas",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Loop - Cada Conversa').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "perdido"
+            },
+            {
+              "fieldId": "fase_atual",
+              "fieldValue": "perdido"
+            },
+            {
+              "fieldId": "updated_at",
+              "fieldValue": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        496
+      ],
+      "id": "74bf61f9-3158-4d92-9097-6f9c598c0cfb",
+      "name": "Atualizar - Perdido",
+      "credentials": {
+        "supabaseApi": {
+          "id": "C87gCgyLKdnG6PSu",
+          "name": "baralho_prosperidade"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8f21130e-6365-4313-b821-946e00378092",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "finalizado",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "4b806a41-b9d4-437d-a00e-73ffc0dbcb2c",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "perdido",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "aa222e5d-48a1-4c52-a6d4-55d2d11ab475",
+              "leftValue": "={{ $json.fase_atual }}",
+              "rightValue": "finalizado",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "20cd076a-cf98-40ab-badc-415518f88468",
+              "leftValue": "={{ $json.fase_atual }}",
+              "rightValue": "perdido",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -336,
+        -144
+      ],
+      "id": "14654944-8415-4ef9-8af9-c62c81dd7451",
+      "name": "IF - Apenas Conversas Ativas"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        64,
+        -240
+      ],
+      "id": "a417b5da-0f48-4922-8fa6-2b63084a92fe",
+      "name": "No Operation, do nothing"
+    }
+  ],
+  "connections": {
+    "Cron - A cada 30min": {
+      "main": [
+        [
+          {
+            "node": "Buscar Conversas Ativas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Conversas Ativas": {
+      "main": [
+        [
+          {
+            "node": "IF - Apenas Conversas Ativas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop - Cada Conversa": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If - Lembrete 30min",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - Lembrete 30min": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp - Lembrete 30min",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF - Lembrete 24h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp - Lembrete 30min": {
+      "main": [
+        [
+          {
+            "node": "Atualizar - Lembrete 30min Enviado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar - Lembrete 30min Enviado": {
+      "main": [
+        [
+          {
+            "node": "Loop - Cada Conversa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Lembrete 24h": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp - Lembrete 24hs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF - Retomar Conversa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp - Lembrete 24hs": {
+      "main": [
+        [
+          {
+            "node": "Atualizar - Lembrete 24hs Enviado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Retomar Conversa": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp - Retomar Conversa",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF - Lembrete Endereço",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp - Retomar Conversa": {
+      "main": [
+        [
+          {
+            "node": "Atualizar - Retomar Conversa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Lembrete Endereço": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp - Lembrete Endereço",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF - Perdido 48h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp - Lembrete Endereço": {
+      "main": [
+        [
+          {
+            "node": "Atualizar - Lembrete Endereço",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Perdido 48h": {
+      "main": [
+        [
+          {
+            "node": "Trello - Mover para Perdidos",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop - Cada Conversa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trello - Mover para Perdidos": {
+      "main": [
+        [
+          {
+            "node": "Atualizar - Perdido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Apenas Conversas Ativas": {
+      "main": [
+        [
+          {
+            "node": "Loop - Cada Conversa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar - Lembrete 24hs Enviado": {
+      "main": [
+        [
+          {
+            "node": "Loop - Cada Conversa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar - Retomar Conversa": {
+      "main": [
+        [
+          {
+            "node": "Loop - Cada Conversa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar - Lembrete Endereço": {
+      "main": [
+        [
+          {
+            "node": "Loop - Cada Conversa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar - Perdido": {
+      "main": [
+        [
+          {
+            "node": "Loop - Cada Conversa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Cron - A cada 30min": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "a3e2aa29-fd76-4cc9-8998-156e324266a7",
+  "activeVersionId": "a3e2aa29-fd76-4cc9-8998-156e324266a7",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-12-27T13:41:33.458Z",
+      "createdAt": "2025-12-27T13:41:33.458Z",
+      "role": "workflow:owner",
+      "workflowId": "35rvdde9qxCGV8Me",
+      "projectId": "SoH44tJE4dqRVTiw"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-01-31T19:17:10.384Z",
+    "createdAt": "2026-01-31T19:17:10.384Z",
+    "versionId": "a3e2aa29-fd76-4cc9-8998-156e324266a7",
+    "workflowId": "35rvdde9qxCGV8Me",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes",
+                "minutesInterval": 30
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -752,
+          -32
+        ],
+        "id": "37a2fd07-ee8f-4e01-873e-99c75df6e0ba",
+        "name": "Cron - A cada 30min"
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "conversas",
+          "returnAll": true,
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "status",
+                "condition": "neq",
+                "keyValue": "finalizado"
+              },
+              {
+                "keyName": "status",
+                "condition": "neq",
+                "keyValue": "perdido"
+              },
+              {
+                "keyName": "fase_atual",
+                "condition": "neq",
+                "keyValue": "finalizado"
+              },
+              {
+                "keyName": "fase_atual",
+                "condition": "neq",
+                "keyValue": "perdido"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -528,
+          -32
+        ],
+        "id": "dc22c64a-4987-4a7b-8355-99cc7387acd2",
+        "name": "Buscar Conversas Ativas",
+        "credentials": {
+          "supabaseApi": {
+            "id": "C87gCgyLKdnG6PSu",
+            "name": "baralho_prosperidade"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          -112,
+          -32
+        ],
+        "id": "1e550256-833a-4955-a93d-71fa6db3619c",
+        "name": "Loop - Cada Conversa"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.z-api.io/instances/3EAC63EE98C5F14530FE227360D3178E/token/198DF2D98C4EB52EFD1319EA/send-text",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "phone",
+                "value": "={{ $json.telefone }}"
+              },
+              {
+                "name": "message",
+                "value": "=Oi, {{ $json.nome }}!👋\n\nVi que você pediu o link de pagamento há pouquinho. \n\nConseguiu acessar?   \n\nSe tiver alguma dúvida, estou aqui para ajudar!   \n\n😊O link continua válido!"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "d77addf8-8598-4039-a3ab-1a0922896e5e",
+        "name": "WhatsApp - Lembrete 30min",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          256,
+          -112
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "8jRtMgiJTpVow7wP",
+            "name": "Z-API Credential"
+          }
+        },
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "4a67eff5-9b2e-45ae-bd7e-28868cb3587a",
+                "leftValue": "={{ $json.status }}",
+                "rightValue": "aguardando_pagamento",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              },
+              {
+                "id": "4df73fc5-0ea2-449d-809a-e9a01b7a27cf",
+                "leftValue": "={{ $now.diff(DateTime.fromISO($json.updated_at), 'minutes').minutes }}",
+                "rightValue": 30,
+                "operator": {
+                  "type": "number",
+                  "operation": "gte"
+                }
+              },
+              {
+                "id": "e3a5ff69-8d70-42db-8d1e-fc39b3f47aaf",
+                "leftValue": "={{ $now.diff(DateTime.fromISO($json.updated_at), 'minutes').minutes }}",
+                "rightValue": 90,
+                "operator": {
+                  "type": "number",
+                  "operation": "lt"
+                }
+              },
+              {
+                "id": "e74aaf38-7b1e-4e5d-9b19-c5fd9a64f5a0",
+                "leftValue": "={{ $json.lembrete_30min_enviado }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "false",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          96,
+          64
+        ],
+        "id": "2ee2938f-5c18-4b17-a3fc-2e71c181e6ff",
+        "name": "If - Lembrete 30min"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "conversas",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('Loop - Cada Conversa').item.json.id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "lembrete_30min_enviado",
+                "fieldValue": "true"
+              },
+              {
+                "fieldId": "ultima_interacao",
+                "fieldValue": "={{ $now }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          432,
+          -112
+        ],
+        "id": "d540718b-fdc0-47af-a7ca-35754273e8c0",
+        "name": "Atualizar - Lembrete 30min Enviado",
+        "credentials": {
+          "supabaseApi": {
+            "id": "C87gCgyLKdnG6PSu",
+            "name": "baralho_prosperidade"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "97d5fcbb-a26e-40e1-82f7-a00345d2195c",
+                "leftValue": "={{ $json.status }}",
+                "rightValue": "aguardando_pagamento",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              },
+              {
+                "id": "13812e13-0e23-4e9b-86ba-ae67778346b0",
+                "leftValue": "={{ $now.diff(DateTime.fromISO($json.updated_at), 'hours').hours }}",
+                "rightValue": 24,
+                "operator": {
+                  "type": "number",
+                  "operation": "gte"
+                }
+              },
+              {
+                "id": "f3f45bab-9c97-44d2-b14f-10cd0c7a0b1e",
+                "leftValue": "={{ $now.diff(DateTime.fromISO($json.updated_at), 'hours').hours }}",
+                "rightValue": 26,
+                "operator": {
+                  "type": "number",
+                  "operation": "lt"
+                }
+              },
+              {
+                "id": "ddf2379d-4ed9-445e-a469-cdc9d7079359",
+                "leftValue": "={{ $json.lembrete_24h_enviado }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "false",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          512,
+          112
+        ],
+        "id": "84a1d4c9-fea0-427b-baf0-4f25f74b9331",
+        "name": "IF - Lembrete 24h"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.z-api.io/instances/3EAC63EE98C5F14530FE227360D3178E/token/198DF2D98C4EB52EFD1319EA/send-text",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "=phone",
+                "value": "={{ $json.telefone }}\",\n"
+              },
+              {
+                "name": "message",
+                "value": "=Oi, {{ $json.nome }}! 👋\n\nPassando para lembrar que seu link de pagamento continua válido.\n\nAinda tem interesse no Baralho da Prosperidade? 🌟\n\nSe tiver alguma dúvida, estou aqui para te ajudar!"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "9177ceac-e328-43b4-9bd1-593f735d6364",
+        "name": "WhatsApp - Lembrete 24hs",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          800,
+          -96
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "8jRtMgiJTpVow7wP",
+            "name": "Z-API Credential"
+          }
+        },
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "conversas",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('Loop - Cada Conversa').item.json.id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "lembrete_24h_enviado",
+                "fieldValue": "true"
+              },
+              {
+                "fieldId": "ultima_interacao",
+                "fieldValue": "={{ $now }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          976,
+          -96
+        ],
+        "id": "37c2045f-c6b7-4c36-af94-50ed3226dd1f",
+        "name": "Atualizar - Lembrete 24hs Enviado",
+        "credentials": {
+          "supabaseApi": {
+            "id": "C87gCgyLKdnG6PSu",
+            "name": "baralho_prosperidade"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "97d5fcbb-a26e-40e1-82f7-a00345d2195c",
+                "leftValue": "={{ $json.status }}",
+                "rightValue": "novo_lead",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              },
+              {
+                "id": "62942719-df32-4638-9ef7-adcff444f222",
+                "leftValue": "={{ $json.fase_atual }}",
+                "rightValue": "descoberta",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              },
+              {
+                "id": "5ea27fc8-8853-4e82-a15a-276e705534e4",
+                "leftValue": "={{ $now.diff(DateTime.fromISO($json.ultima_interacao), 'hours').hours }}",
+                "rightValue": 24,
+                "operator": {
+                  "type": "number",
+                  "operation": "gte"
+                }
+              },
+              {
+                "id": "b3df10ff-dcbd-4b4e-ba24-4fcffc5f2a79",
+                "leftValue": "={{ $now.diff(DateTime.fromISO($json.ultima_interacao), 'hours').hours }}",
+                "rightValue": 26,
+                "operator": {
+                  "type": "number",
+                  "operation": "lt"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          784,
+          128
+        ],
+        "id": "f62b43e6-15f2-4118-95a9-ce729b5e0cd5",
+        "name": "IF - Retomar Conversa"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.z-api.io/instances/3EAC63EE98C5F14530FE227360D3178E/token/198DF2D98C4EB52EFD1319EA/send-text",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "phone",
+                "value": "={{ $json.telefone }}"
+              },
+              {
+                "name": "message",
+                "value": "=Oi, {{ $json.nome }}! 👋\n\nLembrei de você e da nossa conversa sobre prosperidade. 🌟\n\nO Baralho da Prosperidade pode ser um grande aliado na sua jornada:\n\n✨ Para reflexão pessoal: consultas diárias que trazem clareza e orientação\n\n💑 Para usar em dupla: práticas de escuta consciente, alinhamento de intenções e tomada de decisão conjunta que fortalecem vínculos\n\n📖 São 52 cartas com ensinamentos completos do livro \n\"O Algoritmo da Prosperidade\" por apenas R$ 50,00 com frete grátis, você leva uma ferramenta de transformação que pode usar sozinho ou compartilhar com pessoas queridas.\n\nAinda tem interesse? \n\nPosso gerar seu link de pagamento agora mesmo! 💫"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "851b64ec-053d-4b59-a520-4a04da298518",
+        "name": "WhatsApp - Retomar Conversa",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1008,
+          112
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "8jRtMgiJTpVow7wP",
+            "name": "Z-API Credential"
+          }
+        },
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "conversas",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('Loop - Cada Conversa').item.json.id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "ultima_interacao",
+                "fieldValue": "={{ $now }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1232,
+          112
+        ],
+        "id": "999f0a3a-436c-46ea-b962-eb3f69965548",
+        "name": "Atualizar - Retomar Conversa",
+        "credentials": {
+          "supabaseApi": {
+            "id": "C87gCgyLKdnG6PSu",
+            "name": "baralho_prosperidade"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "46b0e309-61ec-4ab5-913e-f2752dd67c5b",
+                "leftValue": "={{ $json.status }}",
+                "rightValue": "pago",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              },
+              {
+                "id": "c94a0597-da19-49be-bd4b-a676afb22633",
+                "leftValue": "={{ $json.fase_atual }}",
+                "rightValue": "coletando_endereco",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              },
+              {
+                "id": "5682f906-5cdd-45e0-94c8-529fe835655e",
+                "leftValue": "={{ !$json.ultimo_lembrete_endereco || $now.diff(DateTime.fromISO($json.ultimo_lembrete_endereco), 'hours').hours >= 24 }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          992,
+          304
+        ],
+        "id": "0956ff55-f3a1-4dfc-af00-f7b2561a2f76",
+        "name": "IF - Lembrete Endereço"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.z-api.io/instances/3EAC63EE98C5F14530FE227360D3178E/token/198DF2D98C4EB52EFD1319EA/send-text",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "phone",
+                "value": "={{ $json.telefone }}\",\n"
+              },
+              {
+                "name": "message",
+                "value": "=Oi, {{ $json.nome }}! 🎉\n\nSeu pagamento já foi confirmado!\n\nAinda preciso do seu endereço completo para enviar o Baralho da Prosperidade.\n\n📍 Qual seu CEP?\n\nAssim que eu receber, vou buscar seu endereço automaticamente! 📦"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "dadc379c-102e-4674-a780-4c2cd8a439e0",
+        "name": "WhatsApp - Lembrete Endereço",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1280,
+          304
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "8jRtMgiJTpVow7wP",
+            "name": "Z-API Credential"
+          }
+        },
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "conversas",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('Loop - Cada Conversa').item.json.id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "ultima_interacao",
+                "fieldValue": "={{ $now }}"
+              },
+              {
+                "fieldId": "ultimo_lembrete_endereco",
+                "fieldValue": "={{ $now }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1520,
+          288
+        ],
+        "id": "4b56b2ae-f255-42b1-952f-c3a36e0c771c",
+        "name": "Atualizar - Lembrete Endereço",
+        "credentials": {
+          "supabaseApi": {
+            "id": "C87gCgyLKdnG6PSu",
+            "name": "baralho_prosperidade"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "0b187fa6-6fea-4587-aea2-0d695e1c35b3",
+                "leftValue": "={{ $json.status === 'novo_lead' || $json.status === 'aguardando_pagamento' }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "99fbf816-fa3d-499f-b4e1-f86849ed26cd",
+                "leftValue": "={{ $now.diff(DateTime.fromISO($json.ultima_interacao), 'hours').hours }}",
+                "rightValue": 48,
+                "operator": {
+                  "type": "number",
+                  "operation": "gte"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          1168,
+          496
+        ],
+        "id": "8e42f063-6f89-4c5f-8120-3e69d566a14c",
+        "name": "IF - Perdido 48h"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "id": {
+            "__rl": true,
+            "value": "={{ $json.trello_card_id }}",
+            "mode": "id"
+          },
+          "updateFields": {
+            "desc": "={{ $json.nome }}\nCPF: {{ $json.cpf || 'Não informado' }}\nTelefone: {{ $json.telefone }}\n\n❌ LEAD PERDIDO\n\n⚠️ Motivo: 48h+ sem resposta\n\n📊 STATUS:\nStatus: perdido\nFase: perdido\n\n🕐 Última interação: {{ DateTime.fromISO($json.ultima_interacao).toFormat('dd/MM/yyyy HH:mm') }}\n❌ Movido para perdidos em: {{ $now.toFormat('dd/MM/yyyy HH:mm') }}\n\n💬 Possíveis ações:\n- Aguardar retorno espontâneo do cliente\n- Campanha de reengajamento (futuro)\n- Análise de motivos de abandono",
+            "idList": "69444212f9ce8f24466ef906"
+          }
+        },
+        "type": "n8n-nodes-base.trello",
+        "typeVersion": 1,
+        "position": [
+          1408,
+          496
+        ],
+        "id": "2861ccc9-fc34-4832-8119-543447ea3b58",
+        "name": "Trello - Mover para Perdidos",
+        "credentials": {
+          "trelloApi": {
+            "id": "Rw0karD0UnTWxue6",
+            "name": "Trello account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "conversas",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('Loop - Cada Conversa').item.json.id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "status",
+                "fieldValue": "perdido"
+              },
+              {
+                "fieldId": "fase_atual",
+                "fieldValue": "perdido"
+              },
+              {
+                "fieldId": "updated_at",
+                "fieldValue": "={{ $now }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1584,
+          496
+        ],
+        "id": "74bf61f9-3158-4d92-9097-6f9c598c0cfb",
+        "name": "Atualizar - Perdido",
+        "credentials": {
+          "supabaseApi": {
+            "id": "C87gCgyLKdnG6PSu",
+            "name": "baralho_prosperidade"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "8f21130e-6365-4313-b821-946e00378092",
+                "leftValue": "={{ $json.status }}",
+                "rightValue": "finalizado",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              },
+              {
+                "id": "4b806a41-b9d4-437d-a00e-73ffc0dbcb2c",
+                "leftValue": "={{ $json.status }}",
+                "rightValue": "perdido",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              },
+              {
+                "id": "aa222e5d-48a1-4c52-a6d4-55d2d11ab475",
+                "leftValue": "={{ $json.fase_atual }}",
+                "rightValue": "finalizado",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              },
+              {
+                "id": "20cd076a-cf98-40ab-badc-415518f88468",
+                "leftValue": "={{ $json.fase_atual }}",
+                "rightValue": "perdido",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -336,
+          -144
+        ],
+        "id": "14654944-8415-4ef9-8af9-c62c81dd7451",
+        "name": "IF - Apenas Conversas Ativas"
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [
+          64,
+          -240
+        ],
+        "id": "a417b5da-0f48-4922-8fa6-2b63084a92fe",
+        "name": "No Operation, do nothing"
+      }
+    ],
+    "connections": {
+      "Cron - A cada 30min": {
+        "main": [
+          [
+            {
+              "node": "Buscar Conversas Ativas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Buscar Conversas Ativas": {
+        "main": [
+          [
+            {
+              "node": "IF - Apenas Conversas Ativas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop - Cada Conversa": {
+        "main": [
+          [
+            {
+              "node": "No Operation, do nothing",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "If - Lembrete 30min",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If - Lembrete 30min": {
+        "main": [
+          [
+            {
+              "node": "WhatsApp - Lembrete 30min",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "IF - Lembrete 24h",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "WhatsApp - Lembrete 30min": {
+        "main": [
+          [
+            {
+              "node": "Atualizar - Lembrete 30min Enviado",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualizar - Lembrete 30min Enviado": {
+        "main": [
+          [
+            {
+              "node": "Loop - Cada Conversa",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF - Lembrete 24h": {
+        "main": [
+          [
+            {
+              "node": "WhatsApp - Lembrete 24hs",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "IF - Retomar Conversa",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "WhatsApp - Lembrete 24hs": {
+        "main": [
+          [
+            {
+              "node": "Atualizar - Lembrete 24hs Enviado",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF - Retomar Conversa": {
+        "main": [
+          [
+            {
+              "node": "WhatsApp - Retomar Conversa",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "IF - Lembrete Endereço",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "WhatsApp - Retomar Conversa": {
+        "main": [
+          [
+            {
+              "node": "Atualizar - Retomar Conversa",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF - Lembrete Endereço": {
+        "main": [
+          [
+            {
+              "node": "WhatsApp - Lembrete Endereço",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "IF - Perdido 48h",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "WhatsApp - Lembrete Endereço": {
+        "main": [
+          [
+            {
+              "node": "Atualizar - Lembrete Endereço",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF - Perdido 48h": {
+        "main": [
+          [
+            {
+              "node": "Trello - Mover para Perdidos",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Loop - Cada Conversa",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Trello - Mover para Perdidos": {
+        "main": [
+          [
+            {
+              "node": "Atualizar - Perdido",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF - Apenas Conversas Ativas": {
+        "main": [
+          [
+            {
+              "node": "Loop - Cada Conversa",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualizar - Lembrete 24hs Enviado": {
+        "main": [
+          [
+            {
+              "node": "Loop - Cada Conversa",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualizar - Retomar Conversa": {
+        "main": [
+          [
+            {
+              "node": "Loop - Cada Conversa",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualizar - Lembrete Endereço": {
+        "main": [
+          [
+            {
+              "node": "Loop - Cada Conversa",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualizar - Perdido": {
+        "main": [
+          [
+            {
+              "node": "Loop - Cada Conversa",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "system migration",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

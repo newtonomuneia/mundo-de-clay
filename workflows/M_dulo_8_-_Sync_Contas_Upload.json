@@ -1,0 +1,615 @@
+{
+  "updatedAt": "2026-01-21T20:56:04.000Z",
+  "createdAt": "2026-01-20T18:02:33.309Z",
+  "id": "cIH6f1ARi2JwkS3k",
+  "name": "Módulo 8 - Sync_Contas_Upload",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "contas-upload",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1040,
+        -96
+      ],
+      "id": "45d5a6a1-01d1-4b88-b685-f22253de75d4",
+      "name": "Webhook_Contas_Upload",
+      "webhookId": "c30bf2a2-89ef-443b-9d7a-741bac914b2a"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "body.alterados",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        -208
+      ],
+      "id": "31bf1ed7-039a-478b-b749-d22ca72891cd",
+      "name": "Split_Alterados"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "body.excluir",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        -32
+      ],
+      "id": "0db4f973-189b-41e6-b648-fa3b2d6d60fc",
+      "name": "Split_Excluir"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cc405cc6-e60f-4ed1-a124-287267e05d6d",
+              "leftValue": "={{$json.body.gerar_cnab}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -656,
+        240
+      ],
+      "id": "87412940-a412-44f5-b5f7-0fbd64654479",
+      "name": "IF_Gerar_CNAB"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "contas_a_pagar",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "tipo_pagamento",
+              "fieldValue": "={{ $json.tipo }}"
+            },
+            {
+              "fieldId": "valor",
+              "fieldValue": "={{ $json.valor }}"
+            },
+            {
+              "fieldId": "descricao",
+              "fieldValue": "={{ $json.descricao }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ $json.status }}"
+            },
+            {
+              "fieldId": "codigo_barras",
+              "fieldValue": "={{ $json.codigo_barras }}"
+            },
+            {
+              "fieldId": "vencimento",
+              "fieldValue": "={{ $json.vencimento }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        -208
+      ],
+      "id": "0f9ee6b1-ca0e-4ac6-8492-f287216ae75b",
+      "name": "Atualizar_Conta",
+      "credentials": {
+        "supabaseApi": {
+          "id": "OP3IGsLO3LJ2h9JA",
+          "name": "Supabase Accounting Payables"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "tableId": "contas_a_pagar",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        -32
+      ],
+      "id": "db9f2856-74a4-499b-8b74-4968defe1d30",
+      "name": "Deletar_Conta",
+      "credentials": {
+        "supabaseApi": {
+          "id": "OP3IGsLO3LJ2h9JA",
+          "name": "Supabase Accounting Payables"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "z7YlpAflvgCoCZ9H",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/z7YlpAflvgCoCZ9H",
+          "cachedResultName": "Módulo 2 - Gerar CNAB"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -432,
+        160
+      ],
+      "id": "eb6c3c44-e990-4528-a105-e037022a7c13",
+      "name": "Chamar_Modulo_CNAB"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://prosperidade-n8n.yc5mic.easypanel.host/webhook/sync-contas",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -112,
+        -144
+      ],
+      "id": "d0dcea96-1b04-4046-a79b-981b457c2a97",
+      "name": "Sync_Planilha_Contas",
+      "executeOnce": true
+    }
+  ],
+  "connections": {
+    "Webhook_Contas_Upload": {
+      "main": [
+        [
+          {
+            "node": "Split_Alterados",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split_Excluir",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "IF_Gerar_CNAB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split_Alterados": {
+      "main": [
+        [
+          {
+            "node": "Atualizar_Conta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF_Gerar_CNAB": {
+      "main": [
+        [
+          {
+            "node": "Chamar_Modulo_CNAB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split_Excluir": {
+      "main": [
+        [
+          {
+            "node": "Deletar_Conta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar_Conta": {
+      "main": [
+        [
+          {
+            "node": "Sync_Planilha_Contas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deletar_Conta": {
+      "main": [
+        [
+          {
+            "node": "Sync_Planilha_Contas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "0b64e07f-7754-4e0b-9e2b-729e19dcbf51",
+  "activeVersionId": "0b64e07f-7754-4e0b-9e2b-729e19dcbf51",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-01-20T18:02:33.319Z",
+      "createdAt": "2026-01-20T18:02:33.319Z",
+      "role": "workflow:owner",
+      "workflowId": "cIH6f1ARi2JwkS3k",
+      "projectId": "SoH44tJE4dqRVTiw"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-01-31T19:17:10.384Z",
+    "createdAt": "2026-01-31T19:17:10.384Z",
+    "versionId": "0b64e07f-7754-4e0b-9e2b-729e19dcbf51",
+    "workflowId": "cIH6f1ARi2JwkS3k",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "contas-upload",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -1040,
+          -96
+        ],
+        "id": "45d5a6a1-01d1-4b88-b685-f22253de75d4",
+        "name": "Webhook_Contas_Upload",
+        "webhookId": "c30bf2a2-89ef-443b-9d7a-741bac914b2a"
+      },
+      {
+        "parameters": {
+          "fieldToSplitOut": "body.alterados",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitOut",
+        "typeVersion": 1,
+        "position": [
+          -656,
+          -208
+        ],
+        "id": "31bf1ed7-039a-478b-b749-d22ca72891cd",
+        "name": "Split_Alterados"
+      },
+      {
+        "parameters": {
+          "fieldToSplitOut": "body.excluir",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitOut",
+        "typeVersion": 1,
+        "position": [
+          -656,
+          -32
+        ],
+        "id": "0db4f973-189b-41e6-b648-fa3b2d6d60fc",
+        "name": "Split_Excluir"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "cc405cc6-e60f-4ed1-a124-287267e05d6d",
+                "leftValue": "={{$json.body.gerar_cnab}}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -656,
+          240
+        ],
+        "id": "87412940-a412-44f5-b5f7-0fbd64654479",
+        "name": "IF_Gerar_CNAB"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "contas_a_pagar",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $json.id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "tipo_pagamento",
+                "fieldValue": "={{ $json.tipo }}"
+              },
+              {
+                "fieldId": "valor",
+                "fieldValue": "={{ $json.valor }}"
+              },
+              {
+                "fieldId": "descricao",
+                "fieldValue": "={{ $json.descricao }}"
+              },
+              {
+                "fieldId": "status",
+                "fieldValue": "={{ $json.status }}"
+              },
+              {
+                "fieldId": "codigo_barras",
+                "fieldValue": "={{ $json.codigo_barras }}"
+              },
+              {
+                "fieldId": "vencimento",
+                "fieldValue": "={{ $json.vencimento }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -448,
+          -208
+        ],
+        "id": "0f9ee6b1-ca0e-4ac6-8492-f287216ae75b",
+        "name": "Atualizar_Conta",
+        "credentials": {
+          "supabaseApi": {
+            "id": "OP3IGsLO3LJ2h9JA",
+            "name": "Supabase Accounting Payables"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "delete",
+          "tableId": "contas_a_pagar",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $json.id }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -448,
+          -32
+        ],
+        "id": "db9f2856-74a4-499b-8b74-4968defe1d30",
+        "name": "Deletar_Conta",
+        "credentials": {
+          "supabaseApi": {
+            "id": "OP3IGsLO3LJ2h9JA",
+            "name": "Supabase Accounting Payables"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "z7YlpAflvgCoCZ9H",
+            "mode": "list",
+            "cachedResultUrl": "/workflow/z7YlpAflvgCoCZ9H",
+            "cachedResultName": "Módulo 2 - Gerar CNAB"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          -432,
+          160
+        ],
+        "id": "eb6c3c44-e990-4528-a105-e037022a7c13",
+        "name": "Chamar_Modulo_CNAB"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://prosperidade-n8n.yc5mic.easypanel.host/webhook/sync-contas",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -112,
+          -144
+        ],
+        "id": "d0dcea96-1b04-4046-a79b-981b457c2a97",
+        "name": "Sync_Planilha_Contas",
+        "executeOnce": true
+      }
+    ],
+    "connections": {
+      "Webhook_Contas_Upload": {
+        "main": [
+          [
+            {
+              "node": "Split_Alterados",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Split_Excluir",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "IF_Gerar_CNAB",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split_Alterados": {
+        "main": [
+          [
+            {
+              "node": "Atualizar_Conta",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF_Gerar_CNAB": {
+        "main": [
+          [
+            {
+              "node": "Chamar_Modulo_CNAB",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split_Excluir": {
+        "main": [
+          [
+            {
+              "node": "Deletar_Conta",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualizar_Conta": {
+        "main": [
+          [
+            {
+              "node": "Sync_Planilha_Contas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Deletar_Conta": {
+        "main": [
+          [
+            {
+              "node": "Sync_Planilha_Contas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "system migration",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

@@ -1,0 +1,914 @@
+{
+  "updatedAt": "2026-04-09T02:33:58.763Z",
+  "createdAt": "2026-04-06T14:44:52.931Z",
+  "id": "xXCs1EYlltvlmUUn",
+  "name": "Módulo 08 — Montagem (FFmpeg)",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "0e00e39b-196e-432b-8e24-e640e931fc06",
+      "name": "Início Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "notes": "⚠️ TESTE MANUAL: clique 'Test workflow' com video_id no nó seguinte."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "test-vid",
+              "name": "video_id",
+              "value": "TROCAR-UUID-AQUI",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "648ce511-8f16-4ad1-970b-0cc57c8c6eb4",
+      "name": "Video ID Teste",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "notes": "⚠️ TROQUE O UUID AQUI para testar."
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "video_id"
+            }
+          ]
+        }
+      },
+      "id": "63bc6422-dff4-468f-8752-06229813eacd",
+      "name": "Trigger Externo",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        400
+      ],
+      "notes": "Recebe { video_id } do webhook montagem/disparar."
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst video_id = item.video_id || null;\nif (!video_id) throw new Error('video_id não encontrado.');\nreturn [{ json: { video_id } }];"
+      },
+      "id": "b84aeeb7-7fd1-4b5d-aaeb-c9db3216347c",
+      "name": "Normalizar Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        208
+      ],
+      "notes": "Unifica input. Saída: { video_id }"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg-url",
+              "name": "SUPABASE_URL",
+              "value": "https://vngtopghlmgqjaibqiyb.supabase.co",
+              "type": "string"
+            },
+            {
+              "id": "cfg-key",
+              "name": "SUPABASE_SERVICE_KEY",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuZ3RvcGdobG1ncWphaWJxaXliIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzUzOTg4NiwiZXhwIjoyMDg5MTE1ODg2fQ.xywZiNZ3h6_uVE9-ltt2LAXtZJ8jTezHCE4LmjBxzTk",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cc6a1926-3de4-4b81-9ebc-6780edfbd7ee",
+      "name": "Configuração",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        608,
+        208
+      ],
+      "notes": "Supabase config."
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/videos?id=eq.{{ $('Normalizar Input').first().json.video_id }}&select=id,titulo,formato,texto_final_tela",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "38e3bf5d-8052-4ab7-a96d-229a752188ad",
+      "name": "Ler Vídeo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        816,
+        112
+      ],
+      "notes": "GET dados do vídeo (formato, texto_final_tela)."
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/cenas?video_id=eq.{{ $('Normalizar Input').first().json.video_id }}&opcao_id=is.null&order=ordem.asc&select=id,numero,ordem,tipo_cena,transicao_entrada,narracao,duracao_estimada,duracao_real,video_url,efeito_url",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "ad716148-d740-4a82-97fb-73c41894d931",
+      "name": "Ler Cenas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        816,
+        304
+      ],
+      "notes": "GET todas as cenas, ordem ASC."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Preparar Montagem — builds complete FFmpeg montage script\nconst config = $('Configuração').first().json;\nconst videoId = $('Normalizar Input').first().json.video_id;\n\n// Parse video data\nconst videoRaw = $('Ler Vídeo').all().map(i => i.json);\nconst video = Array.isArray(videoRaw[0]) ? videoRaw[0][0] : videoRaw[0];\n\n// Parse cenas\nconst cenasRaw = $('Ler Cenas').all().map(i => i.json);\nlet cenas = Array.isArray(cenasRaw[0]) ? cenasRaw[0] : cenasRaw;\ncenas = cenas.sort((a, b) => a.ordem - b.ordem);\n\nconst formato = video.formato || 'shorts';\nconst res = formato === 'shorts' ? '768x1344' : '1920x1080';\nconst resX = formato === 'shorts' ? 768 : 1920;\nconst resY = formato === 'shorts' ? 1344 : 1080;\nconst dir = '/tmp/m08/' + videoId;\n\n// Storage URLs\nconst base = config.SUPABASE_URL + '/storage/v1/object/';\nconst finalPath = videoId + '/final.mp4';\nconst srtPath = videoId + '/legendas.srt';\nconst uploadFinal = base + 'videos-finais/' + finalPath;\nconst uploadSrt = base + 'videos-finais/' + srtPath;\nconst publicFinal = base + 'public/videos-finais/' + finalPath;\nconst publicSrt = base + 'public/videos-finais/' + srtPath;\nconst key = config.SUPABASE_SERVICE_KEY;\n\nlet s = 'set -e\\n';\ns += 'cd \"' + dir + '\"\\n\\n';\n\n// === VERIFICAR FONTES ===\ns += 'EATER_FONT=$(fc-list : file | grep -i eater | head -1 | cut -d: -f1 | sed \"s/^ *//\")\\n';\ns += 'CREEPSTER_FONT=$(fc-list : file | grep -i creepster | head -1 | cut -d: -f1 | sed \"s/^ *//\")\\n';\ns += '[ -z \"$EATER_FONT\" ] && echo \"ERRO: Fonte Eater nao instalada\" && exit 1\\n';\ns += '[ -z \"$CREEPSTER_FONT\" ] && echo \"ERRO: Fonte Creepster nao instalada\" && exit 1\\n';\ns += 'echo \"Fontes OK\"\\n\\n';\n\n// === FASE 1: DOWNLOAD ===\ns += 'echo \"=== FASE 1: DOWNLOAD ===\"\\n';\nfor (const c of cenas) {\n  if (c.tipo_cena === 'texto') continue;\n  const n = c.numero;\n  if (c.video_url) s += 'curl -sL -o \"anim_' + n + '.mp4\" \"' + c.video_url + '\"\\n';\n  if (c.efeito_url) s += 'curl -sL -o \"fx_' + n + '.mp3\" \"' + c.efeito_url + '\"\\n';\n}\ns += 'echo \"Downloads OK\"\\n\\n';\n\n// === FASE 2: PROCESSAR CENAS ===\ns += 'echo \"=== FASE 2: PROCESSAR CENAS ===\"\\n';\nconst fadeFiles = [];\n\nfor (let i = 0; i < cenas.length; i++) {\n  const c = cenas[i];\n  const n = c.numero;\n  const isFirst = (i === 0);\n  const isLast = (i === cenas.length - 1);\n  const trans = c.transicao_entrada || 'dip_to_black';\n  const ff = 'fade_' + n + '.mp4';\n  fadeFiles.push(ff);\n\n  s += '\\n# Cena ' + n + ' (' + c.tipo_cena + ', ' + trans;\n  if (isFirst) s += ', PRIMEIRA';\n  if (isLast) s += ', ULTIMA';\n  s += ')\\n';\n\n  if (c.tipo_cena === 'texto') {\n    // Tela de texto — Creepster 52\n    const dur = c.duracao_estimada || 3;\n\n    // Escrever texto via heredoc (evita problemas de escaping)\n    s += \"cat > text_\" + n + \".txt << 'TEXTEOF'\\n\";\n    s += (c.narracao || '') + '\\n';\n    s += 'TEXTEOF\\n';\n\n    // Montar filtros de vídeo\n    let vf = 'drawtext=textfile=text_' + n + '.txt:fontcolor=white:fontsize=52:x=(w-tw)/2:y=(h-th)/2:fontfile=$CREEPSTER_FONT:borderw=3:bordercolor=black:line_spacing=10:text_align=M+C';\n    let afParts = [];\n    if (trans === 'dip_to_black') {\n      if (!isFirst) {\n        vf += ',fade=t=in:st=0:d=0.5';\n        afParts.push('afade=t=in:st=0:d=0.5');\n      }\n      if (!isLast) {\n        const fo = (dur - 0.5).toFixed(4);\n        vf += ',fade=t=out:st=' + fo + ':d=0.5';\n        afParts.push('afade=t=out:st=' + fo + ':d=0.5');\n      }\n    }\n\n    s += 'ffmpeg -y -f lavfi -i color=c=black:s=' + res + ':r=16:d=' + dur;\n    s += ' -f lavfi -i anullsrc=r=44100:cl=stereo';\n    s += ' -vf \"' + vf + '\"';\n    if (afParts.length > 0) s += ' -af \"' + afParts.join(',') + '\"';\n    s += ' -c:v libx264 -crf 18 -pix_fmt yuv420p -c:a aac -t ' + dur + ' ' + ff + '\\n';\n\n  } else {\n    // Cena normal — sync vídeo + áudio\n    if (c.efeito_url) {\n      s += 'ffmpeg -y -i \"anim_' + n + '.mp4\" -i \"fx_' + n + '.mp3\" -map 0:v -map 1:a -c:v libx264 -crf 18 -c:a aac -shortest sync_' + n + '.mp4\\n';\n    } else {\n      // Sem áudio — adicionar track silencioso\n      s += 'ffmpeg -y -i \"anim_' + n + '.mp4\" -f lavfi -i anullsrc=r=44100:cl=stereo -map 0:v -map 1:a -c:v libx264 -crf 18 -c:a aac -shortest sync_' + n + '.mp4\\n';\n    }\n\n    // Medir duração real\n    s += 'DUR=$(ffprobe -v quiet -show_entries format=duration -of csv=p=0 sync_' + n + '.mp4)\\n';\n\n    if (trans === 'dip_to_black') {\n      let vfParts = [];\n      let afParts = [];\n\n      if (!isFirst) {\n        vfParts.push('fade=t=in:st=0:d=0.5');\n        afParts.push('afade=t=in:st=0:d=0.5');\n      }\n      if (!isLast) {\n        s += 'FOUT=$(python3 -c \"print(round(float(\\'${DUR}\\') - 0.5, 4))\")\\n';\n        vfParts.push('fade=t=out:st=${FOUT}:d=0.5');\n        afParts.push('afade=t=out:st=${FOUT}:d=0.5');\n      }\n\n      if (vfParts.length > 0) {\n        s += 'ffmpeg -y -i sync_' + n + '.mp4 -vf \"' + vfParts.join(',') + '\" -af \"' + afParts.join(',') + '\" -c:v libx264 -crf 18 -c:a aac ' + ff + '\\n';\n      } else {\n        // dip_to_black sem fades (primeira + última, improvável)\n        s += 'ffmpeg -y -i sync_' + n + '.mp4 -c:v libx264 -crf 18 -c:a aac ' + ff + '\\n';\n      }\n    } else {\n      // corte_seco — re-encode sem fades\n      s += 'ffmpeg -y -i sync_' + n + '.mp4 -c:v libx264 -crf 18 -c:a aac ' + ff + '\\n';\n    }\n  }\n\n  s += 'echo \"Cena ' + n + ' OK\"\\n';\n}\n\ns += '\\n';\n\n// === FASE 3: LEGENDAS ===\ns += 'echo \"=== FASE 3: LEGENDAS ===\"\\n';\n\n// Dados das cenas para o gerador de legendas\nconst subData = cenas.map(c => ({\n  n: c.numero,\n  txt: (c.tipo_cena !== 'texto' && c.narracao) ? c.narracao : null,\n  f: 'fade_' + c.numero + '.mp4'\n}));\n\ns += \"cat > scenes_sub.json << 'JSONEOF'\\n\";\ns += JSON.stringify(subData) + '\\n';\ns += 'JSONEOF\\n\\n';\n\n// Script Python para gerar ASS + SRT\ns += \"cat > gen_subs.py << 'PYEOF'\\n\";\ns += 'import json, subprocess, os\\n';\ns += '\\n';\ns += 'with open(\"scenes_sub.json\") as f:\\n';\ns += '    scenes = json.load(f)\\n';\ns += '\\n';\ns += 'durations = {}\\n';\ns += 'for sc in scenes:\\n';\ns += '    ff = sc[\"f\"]\\n';\ns += '    if os.path.exists(ff):\\n';\ns += '        r = subprocess.run([\"ffprobe\",\"-v\",\"quiet\",\"-show_entries\",\"format=duration\",\"-of\",\"csv=p=0\",ff], capture_output=True, text=True)\\n';\ns += '        durations[sc[\"n\"]] = float(r.stdout.strip())\\n';\ns += '    else:\\n';\ns += '        durations[sc[\"n\"]] = 0\\n';\ns += '\\n';\ns += 'acc = 0.0\\n';\ns += 'ass_ev = []\\n';\ns += 'srt_ev = []\\n';\ns += 'si = 1\\n';\ns += '\\n';\ns += 'def ass_ts(t):\\n';\ns += '    h=int(t//3600); m=int((t%3600)//60); sv=t%60\\n';\ns += '    return f\"{h}:{m:02d}:{sv:05.2f}\"\\n';\ns += '\\n';\ns += 'def srt_ts(t):\\n';\ns += '    h=int(t//3600); m=int((t%3600)//60); sv=int(t%60); ms=int((t%1)*1000)\\n';\ns += '    return f\"{h:02d}:{m:02d}:{sv:02d},{ms:03d}\"\\n';\ns += '\\n';\ns += 'for sc in scenes:\\n';\ns += '    dur = durations.get(sc[\"n\"], 0)\\n';\ns += '    txt = sc.get(\"txt\")\\n';\ns += '    if txt:\\n';\ns += '        st = acc\\n';\ns += '        en = acc + dur\\n';\ns += '        tag = r\"{\\\\fad(300,300)}\"\\n';\ns += '        ass_ev.append(f\"Dialogue: 0,{ass_ts(st)},{ass_ts(en)},Default,,0,0,0,,{tag}{txt}\")\\n';\ns += '        srt_ev.append(f\"{si}\\\\n{srt_ts(st)} --> {srt_ts(en)}\\\\n{txt}\\\\n\")\\n';\ns += '        si += 1\\n';\ns += '    acc += dur\\n';\ns += '\\n';\ns += 'ass = \"[Script Info]\\\\n\"\\n';\ns += 'ass += \"Title: Legendas\\\\n\"\\n';\ns += 'ass += \"ScriptType: v4.00+\\\\n\"\\n';\ns += 'ass += \"PlayResX: ' + resX + '\\\\n\"\\n';\ns += 'ass += \"PlayResY: ' + resY + '\\\\n\\\\n\"\\n';\ns += 'ass += \"[V4+ Styles]\\\\n\"\\n';\ns += 'ass += \"Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\\\\n\"\\n';\ns += 'ass += \"Style: Default,Eater,54,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,0,0,0,0,100,100,0,0,1,3,2,2,10,10,250,1\\\\n\\\\n\"\\n';\ns += 'ass += \"[Events]\\\\n\"\\n';\ns += 'ass += \"Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\\\\n\"\\n';\ns += 'for ev in ass_ev:\\n';\ns += '    ass += ev + \"\\\\n\"\\n';\ns += '\\n';\ns += 'with open(\"legendas.ass\", \"w\") as f:\\n';\ns += '    f.write(ass)\\n';\ns += '\\n';\ns += 'with open(\"legendas.srt\", \"w\") as f:\\n';\ns += '    for ev in srt_ev:\\n';\ns += '        f.write(ev + \"\\\\n\")\\n';\ns += '\\n';\ns += 'print(f\"Legendas: {len(ass_ev)} entradas\")\\n';\n\ns += 'PYEOF\\n';\ns += 'python3 gen_subs.py\\n';\ns += 'echo \"Legendas OK\"\\n\\n';\n\n// === FASE 4: CONCATENAR ===\ns += 'echo \"=== FASE 4: CONCATENAR ===\"\\n';\nlet concatIn = '';\nlet concatFilt = '';\nfor (let i = 0; i < fadeFiles.length; i++) {\n  concatIn += ' -i ' + fadeFiles[i];\n  concatFilt += '[' + i + ':v][' + i + ':a]';\n}\nconcatFilt += 'concat=n=' + fadeFiles.length + ':v=1:a=1[vout][aout]';\ns += 'ffmpeg -y' + concatIn + ' -filter_complex \"' + concatFilt + '\" -map \"[vout]\" -map \"[aout]\" -c:v libx264 -crf 18 -c:a aac concatenado.mp4\\n';\ns += 'echo \"Concat OK\"\\n\\n';\n\n// === FASE 5: EFEITOS VISUAIS ===\ns += 'echo \"=== FASE 5: EFEITOS VISUAIS ===\"\\n';\ns += 'ffmpeg -y -i concatenado.mp4 -vf \"noise=alls=10:allf=t,vignette=PI/4,curves=preset=darker\" -c:v libx264 -crf 18 -c:a copy efeitos.mp4\\n';\ns += 'echo \"Efeitos OK\"\\n\\n';\n\n// === FASE 6: EXPORT FINAL ===\ns += 'echo \"=== FASE 6: EXPORT FINAL ===\"\\n';\ns += 'ffmpeg -y -i efeitos.mp4 -vf \"ass=legendas.ass\" -af \"loudnorm=I=-16:TP=-1.5:LRA=11\" -c:v libx264 -crf 23 -profile:v high -pix_fmt yuv420p -r 16 -c:a aac -b:a 128k -movflags +faststart final.mp4\\n';\ns += 'echo \"Export OK\"\\n\\n';\n\n// === FASE 7: UPLOAD ===\ns += 'echo \"=== FASE 7: UPLOAD ===\"\\n';\ns += 'curl -s -X POST \"' + uploadFinal + '\" ';\ns += '-H \"apikey: ' + key + '\" ';\ns += '-H \"Authorization: Bearer ' + key + '\" ';\ns += '-H \"Content-Type: video/mp4\" ';\ns += '-H \"x-upsert: true\" ';\ns += '--data-binary @final.mp4\\n\\n';\n\ns += 'curl -s -X POST \"' + uploadSrt + '\" ';\ns += '-H \"apikey: ' + key + '\" ';\ns += '-H \"Authorization: Bearer ' + key + '\" ';\ns += '-H \"Content-Type: text/plain\" ';\ns += '-H \"x-upsert: true\" ';\ns += '--data-binary @legendas.srt\\n\\n';\n\ns += 'echo \"Upload OK\"\\n';\ns += 'echo \"SUCCESS\"\\n';\n\nreturn [{ json: {\n  _script: s,\n  videoId: videoId,\n  publicUrlFinal: publicFinal,\n  publicUrlSrt: publicSrt\n} }];\n"
+      },
+      "id": "21aa0a40-6e57-47da-83d6-2341ee2c71a1",
+      "name": "Preparar Montagem",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        208
+      ],
+      "notes": "Gera script bash completo:\n- Download assets\n- Sync vídeo + áudio por cena\n- Fades conforme transicao_entrada\n- Legendas ASS + SRT via Python\n- Concat filter_complex\n- Efeitos visuais\n- Export final (yuv420p, loudnorm)\n- Upload Supabase Storage"
+    },
+    {
+      "parameters": {
+        "command": "=mkdir -p /tmp/m08/{{ $('Normalizar Input').first().json.video_id }}"
+      },
+      "id": "c165c0e5-e1f3-4355-8630-fd65fb893d8d",
+      "name": "Setup Diretório",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        1248,
+        208
+      ],
+      "credentials": {
+        "sshPassword": {
+          "id": "Mw31xh0fiZfOM7X7",
+          "name": "Hostinger VPS"
+        }
+      },
+      "notes": "Cria diretório temporário no VPS."
+    },
+    {
+      "parameters": {
+        "command": "={{ $('Preparar Montagem').first().json._script }}"
+      },
+      "id": "12e5b43c-179b-4576-bf75-04f5f6d6a8e0",
+      "name": "Executar Montagem",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        1456,
+        208
+      ],
+      "credentials": {
+        "sshPassword": {
+          "id": "Mw31xh0fiZfOM7X7",
+          "name": "Hostinger VPS"
+        }
+      },
+      "notes": "Executa script FFmpeg completo via SSH no VPS.\nProcessa todas as cenas → concat → efeitos → legendas → export → upload."
+    },
+    {
+      "parameters": {
+        "jsCode": "const ssh = $('Executar Montagem').first().json;\nconst stdout = ssh.stdout || '';\nconst stderr = ssh.stderr || '';\n\nif (!stdout.includes('SUCCESS')) {\n  throw new Error('❌ Montagem ERRO:\\n' + stderr.substring(0, 1500));\n}\n\nconst meta = $('Preparar Montagem').first().json;\nreturn [{ json: {\n  videoId: meta.videoId,\n  publicUrlFinal: meta.publicUrlFinal,\n  publicUrlSrt: meta.publicUrlSrt\n} }];"
+      },
+      "id": "6586a6bf-64c0-4db7-b83d-b5a58ecb7ad3",
+      "name": "Verificar Resultado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1664,
+        208
+      ],
+      "notes": "Checa stdout por SUCCESS. Se falhou, para com erro detalhado."
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/videos?id=eq.{{ $('Normalizar Input').first().json.video_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ video_final_url: $json.publicUrlFinal, srt_url: $json.publicUrlSrt, status: 'aguardando' }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "c46b81f5-4fd8-42b1-88b1-c188eba8ef4c",
+      "name": "Atualizar Vídeo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1872,
+        208
+      ],
+      "notes": "PATCH videos: video_final_url, srt_url, status='aguardando_aprovacao'."
+    },
+    {
+      "parameters": {
+        "command": "=rm -rf /tmp/m08/{{ $('Normalizar Input').first().json.video_id }}"
+      },
+      "id": "7769b86c-33c8-4983-b0d9-e54931d416ad",
+      "name": "Cleanup",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        2080,
+        208
+      ],
+      "credentials": {
+        "sshPassword": {
+          "id": "Mw31xh0fiZfOM7X7",
+          "name": "Hostinger VPS"
+        }
+      },
+      "notes": "Remove diretório temporário do VPS."
+    }
+  ],
+  "connections": {
+    "Início Manual": {
+      "main": [
+        [
+          {
+            "node": "Video ID Teste",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Video ID Teste": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Externo": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar Input": {
+      "main": [
+        [
+          {
+            "node": "Configuração",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configuração": {
+      "main": [
+        [
+          {
+            "node": "Ler Vídeo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler Vídeo": {
+      "main": [
+        [
+          {
+            "node": "Ler Cenas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler Cenas": {
+      "main": [
+        [
+          {
+            "node": "Preparar Montagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Montagem": {
+      "main": [
+        [
+          {
+            "node": "Setup Diretório",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Setup Diretório": {
+      "main": [
+        [
+          {
+            "node": "Executar Montagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Executar Montagem": {
+      "main": [
+        [
+          {
+            "node": "Verificar Resultado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar Resultado": {
+      "main": [
+        [
+          {
+            "node": "Atualizar Vídeo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Vídeo": {
+      "main": [
+        [
+          {
+            "node": "Cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "89d7ef17-e9b7-4c95-b978-07e9f5628d9e",
+  "activeVersionId": "89d7ef17-e9b7-4c95-b978-07e9f5628d9e",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-04-06T14:44:52.937Z",
+      "createdAt": "2026-04-06T14:44:52.937Z",
+      "role": "workflow:owner",
+      "workflowId": "xXCs1EYlltvlmUUn",
+      "projectId": "SoH44tJE4dqRVTiw"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-04-09T02:34:07.000Z",
+    "createdAt": "2026-04-09T02:33:58.764Z",
+    "versionId": "89d7ef17-e9b7-4c95-b978-07e9f5628d9e",
+    "workflowId": "xXCs1EYlltvlmUUn",
+    "nodes": [
+      {
+        "parameters": {},
+        "id": "0e00e39b-196e-432b-8e24-e640e931fc06",
+        "name": "Início Manual",
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "notes": "⚠️ TESTE MANUAL: clique 'Test workflow' com video_id no nó seguinte."
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "test-vid",
+                "name": "video_id",
+                "value": "TROCAR-UUID-AQUI",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "648ce511-8f16-4ad1-970b-0cc57c8c6eb4",
+        "name": "Video ID Teste",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          208,
+          0
+        ],
+        "notes": "⚠️ TROQUE O UUID AQUI para testar."
+      },
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "video_id"
+              }
+            ]
+          }
+        },
+        "id": "63bc6422-dff4-468f-8752-06229813eacd",
+        "name": "Trigger Externo",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          0,
+          400
+        ],
+        "notes": "Recebe { video_id } do webhook montagem/disparar."
+      },
+      {
+        "parameters": {
+          "jsCode": "const item = $input.first().json;\nconst video_id = item.video_id || null;\nif (!video_id) throw new Error('video_id não encontrado.');\nreturn [{ json: { video_id } }];"
+        },
+        "id": "b84aeeb7-7fd1-4b5d-aaeb-c9db3216347c",
+        "name": "Normalizar Input",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          400,
+          208
+        ],
+        "notes": "Unifica input. Saída: { video_id }"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "cfg-url",
+                "name": "SUPABASE_URL",
+                "value": "https://vngtopghlmgqjaibqiyb.supabase.co",
+                "type": "string"
+              },
+              {
+                "id": "cfg-key",
+                "name": "SUPABASE_SERVICE_KEY",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuZ3RvcGdobG1ncWphaWJxaXliIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzUzOTg4NiwiZXhwIjoyMDg5MTE1ODg2fQ.xywZiNZ3h6_uVE9-ltt2LAXtZJ8jTezHCE4LmjBxzTk",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "cc6a1926-3de4-4b81-9ebc-6780edfbd7ee",
+        "name": "Configuração",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          608,
+          208
+        ],
+        "notes": "Supabase config."
+      },
+      {
+        "parameters": {
+          "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/videos?id=eq.{{ $('Normalizar Input').first().json.video_id }}&select=id,titulo,formato,texto_final_tela",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "38e3bf5d-8052-4ab7-a96d-229a752188ad",
+        "name": "Ler Vídeo",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          816,
+          112
+        ],
+        "notes": "GET dados do vídeo (formato, texto_final_tela)."
+      },
+      {
+        "parameters": {
+          "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/cenas?video_id=eq.{{ $('Normalizar Input').first().json.video_id }}&opcao_id=is.null&order=ordem.asc&select=id,numero,ordem,tipo_cena,transicao_entrada,narracao,duracao_estimada,duracao_real,video_url,efeito_url",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "ad716148-d740-4a82-97fb-73c41894d931",
+        "name": "Ler Cenas",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          816,
+          304
+        ],
+        "notes": "GET todas as cenas, ordem ASC."
+      },
+      {
+        "parameters": {
+          "jsCode": "// Preparar Montagem — builds complete FFmpeg montage script\nconst config = $('Configuração').first().json;\nconst videoId = $('Normalizar Input').first().json.video_id;\n\n// Parse video data\nconst videoRaw = $('Ler Vídeo').all().map(i => i.json);\nconst video = Array.isArray(videoRaw[0]) ? videoRaw[0][0] : videoRaw[0];\n\n// Parse cenas\nconst cenasRaw = $('Ler Cenas').all().map(i => i.json);\nlet cenas = Array.isArray(cenasRaw[0]) ? cenasRaw[0] : cenasRaw;\ncenas = cenas.sort((a, b) => a.ordem - b.ordem);\n\nconst formato = video.formato || 'shorts';\nconst res = formato === 'shorts' ? '768x1344' : '1920x1080';\nconst resX = formato === 'shorts' ? 768 : 1920;\nconst resY = formato === 'shorts' ? 1344 : 1080;\nconst dir = '/tmp/m08/' + videoId;\n\n// Storage URLs\nconst base = config.SUPABASE_URL + '/storage/v1/object/';\nconst finalPath = videoId + '/final.mp4';\nconst srtPath = videoId + '/legendas.srt';\nconst uploadFinal = base + 'videos-finais/' + finalPath;\nconst uploadSrt = base + 'videos-finais/' + srtPath;\nconst publicFinal = base + 'public/videos-finais/' + finalPath;\nconst publicSrt = base + 'public/videos-finais/' + srtPath;\nconst key = config.SUPABASE_SERVICE_KEY;\n\nlet s = 'set -e\\n';\ns += 'cd \"' + dir + '\"\\n\\n';\n\n// === VERIFICAR FONTES ===\ns += 'EATER_FONT=$(fc-list : file | grep -i eater | head -1 | cut -d: -f1 | sed \"s/^ *//\")\\n';\ns += 'CREEPSTER_FONT=$(fc-list : file | grep -i creepster | head -1 | cut -d: -f1 | sed \"s/^ *//\")\\n';\ns += '[ -z \"$EATER_FONT\" ] && echo \"ERRO: Fonte Eater nao instalada\" && exit 1\\n';\ns += '[ -z \"$CREEPSTER_FONT\" ] && echo \"ERRO: Fonte Creepster nao instalada\" && exit 1\\n';\ns += 'echo \"Fontes OK\"\\n\\n';\n\n// === FASE 1: DOWNLOAD ===\ns += 'echo \"=== FASE 1: DOWNLOAD ===\"\\n';\nfor (const c of cenas) {\n  if (c.tipo_cena === 'texto') continue;\n  const n = c.numero;\n  if (c.video_url) s += 'curl -sL -o \"anim_' + n + '.mp4\" \"' + c.video_url + '\"\\n';\n  if (c.efeito_url) s += 'curl -sL -o \"fx_' + n + '.mp3\" \"' + c.efeito_url + '\"\\n';\n}\ns += 'echo \"Downloads OK\"\\n\\n';\n\n// === FASE 2: PROCESSAR CENAS ===\ns += 'echo \"=== FASE 2: PROCESSAR CENAS ===\"\\n';\nconst fadeFiles = [];\n\nfor (let i = 0; i < cenas.length; i++) {\n  const c = cenas[i];\n  const n = c.numero;\n  const isFirst = (i === 0);\n  const isLast = (i === cenas.length - 1);\n  const trans = c.transicao_entrada || 'dip_to_black';\n  const ff = 'fade_' + n + '.mp4';\n  fadeFiles.push(ff);\n\n  s += '\\n# Cena ' + n + ' (' + c.tipo_cena + ', ' + trans;\n  if (isFirst) s += ', PRIMEIRA';\n  if (isLast) s += ', ULTIMA';\n  s += ')\\n';\n\n  if (c.tipo_cena === 'texto') {\n    // Tela de texto — Creepster 52\n    const dur = c.duracao_estimada || 3;\n\n    // Escrever texto via heredoc (evita problemas de escaping)\n    s += \"cat > text_\" + n + \".txt << 'TEXTEOF'\\n\";\n    s += (c.narracao || '') + '\\n';\n    s += 'TEXTEOF\\n';\n\n    // Montar filtros de vídeo\n    let vf = 'drawtext=textfile=text_' + n + '.txt:fontcolor=white:fontsize=52:x=(w-tw)/2:y=(h-th)/2:fontfile=$CREEPSTER_FONT:borderw=3:bordercolor=black:line_spacing=10:text_align=M+C';\n    let afParts = [];\n    if (trans === 'dip_to_black') {\n      if (!isFirst) {\n        vf += ',fade=t=in:st=0:d=0.5';\n        afParts.push('afade=t=in:st=0:d=0.5');\n      }\n      if (!isLast) {\n        const fo = (dur - 0.5).toFixed(4);\n        vf += ',fade=t=out:st=' + fo + ':d=0.5';\n        afParts.push('afade=t=out:st=' + fo + ':d=0.5');\n      }\n    }\n\n    s += 'ffmpeg -y -f lavfi -i color=c=black:s=' + res + ':r=16:d=' + dur;\n    s += ' -f lavfi -i anullsrc=r=44100:cl=stereo';\n    s += ' -vf \"' + vf + '\"';\n    if (afParts.length > 0) s += ' -af \"' + afParts.join(',') + '\"';\n    s += ' -c:v libx264 -crf 18 -pix_fmt yuv420p -c:a aac -t ' + dur + ' ' + ff + '\\n';\n\n  } else {\n    // Cena normal — sync vídeo + áudio\n    if (c.efeito_url) {\n      s += 'ffmpeg -y -i \"anim_' + n + '.mp4\" -i \"fx_' + n + '.mp3\" -map 0:v -map 1:a -c:v libx264 -crf 18 -c:a aac -shortest sync_' + n + '.mp4\\n';\n    } else {\n      // Sem áudio — adicionar track silencioso\n      s += 'ffmpeg -y -i \"anim_' + n + '.mp4\" -f lavfi -i anullsrc=r=44100:cl=stereo -map 0:v -map 1:a -c:v libx264 -crf 18 -c:a aac -shortest sync_' + n + '.mp4\\n';\n    }\n\n    // Medir duração real\n    s += 'DUR=$(ffprobe -v quiet -show_entries format=duration -of csv=p=0 sync_' + n + '.mp4)\\n';\n\n    if (trans === 'dip_to_black') {\n      let vfParts = [];\n      let afParts = [];\n\n      if (!isFirst) {\n        vfParts.push('fade=t=in:st=0:d=0.5');\n        afParts.push('afade=t=in:st=0:d=0.5');\n      }\n      if (!isLast) {\n        s += 'FOUT=$(python3 -c \"print(round(float(\\'${DUR}\\') - 0.5, 4))\")\\n';\n        vfParts.push('fade=t=out:st=${FOUT}:d=0.5');\n        afParts.push('afade=t=out:st=${FOUT}:d=0.5');\n      }\n\n      if (vfParts.length > 0) {\n        s += 'ffmpeg -y -i sync_' + n + '.mp4 -vf \"' + vfParts.join(',') + '\" -af \"' + afParts.join(',') + '\" -c:v libx264 -crf 18 -c:a aac ' + ff + '\\n';\n      } else {\n        // dip_to_black sem fades (primeira + última, improvável)\n        s += 'ffmpeg -y -i sync_' + n + '.mp4 -c:v libx264 -crf 18 -c:a aac ' + ff + '\\n';\n      }\n    } else {\n      // corte_seco — re-encode sem fades\n      s += 'ffmpeg -y -i sync_' + n + '.mp4 -c:v libx264 -crf 18 -c:a aac ' + ff + '\\n';\n    }\n  }\n\n  s += 'echo \"Cena ' + n + ' OK\"\\n';\n}\n\ns += '\\n';\n\n// === FASE 3: LEGENDAS ===\ns += 'echo \"=== FASE 3: LEGENDAS ===\"\\n';\n\n// Dados das cenas para o gerador de legendas\nconst subData = cenas.map(c => ({\n  n: c.numero,\n  txt: (c.tipo_cena !== 'texto' && c.narracao) ? c.narracao : null,\n  f: 'fade_' + c.numero + '.mp4'\n}));\n\ns += \"cat > scenes_sub.json << 'JSONEOF'\\n\";\ns += JSON.stringify(subData) + '\\n';\ns += 'JSONEOF\\n\\n';\n\n// Script Python para gerar ASS + SRT\ns += \"cat > gen_subs.py << 'PYEOF'\\n\";\ns += 'import json, subprocess, os\\n';\ns += '\\n';\ns += 'with open(\"scenes_sub.json\") as f:\\n';\ns += '    scenes = json.load(f)\\n';\ns += '\\n';\ns += 'durations = {}\\n';\ns += 'for sc in scenes:\\n';\ns += '    ff = sc[\"f\"]\\n';\ns += '    if os.path.exists(ff):\\n';\ns += '        r = subprocess.run([\"ffprobe\",\"-v\",\"quiet\",\"-show_entries\",\"format=duration\",\"-of\",\"csv=p=0\",ff], capture_output=True, text=True)\\n';\ns += '        durations[sc[\"n\"]] = float(r.stdout.strip())\\n';\ns += '    else:\\n';\ns += '        durations[sc[\"n\"]] = 0\\n';\ns += '\\n';\ns += 'acc = 0.0\\n';\ns += 'ass_ev = []\\n';\ns += 'srt_ev = []\\n';\ns += 'si = 1\\n';\ns += '\\n';\ns += 'def ass_ts(t):\\n';\ns += '    h=int(t//3600); m=int((t%3600)//60); sv=t%60\\n';\ns += '    return f\"{h}:{m:02d}:{sv:05.2f}\"\\n';\ns += '\\n';\ns += 'def srt_ts(t):\\n';\ns += '    h=int(t//3600); m=int((t%3600)//60); sv=int(t%60); ms=int((t%1)*1000)\\n';\ns += '    return f\"{h:02d}:{m:02d}:{sv:02d},{ms:03d}\"\\n';\ns += '\\n';\ns += 'for sc in scenes:\\n';\ns += '    dur = durations.get(sc[\"n\"], 0)\\n';\ns += '    txt = sc.get(\"txt\")\\n';\ns += '    if txt:\\n';\ns += '        st = acc\\n';\ns += '        en = acc + dur\\n';\ns += '        tag = r\"{\\\\fad(300,300)}\"\\n';\ns += '        ass_ev.append(f\"Dialogue: 0,{ass_ts(st)},{ass_ts(en)},Default,,0,0,0,,{tag}{txt}\")\\n';\ns += '        srt_ev.append(f\"{si}\\\\n{srt_ts(st)} --> {srt_ts(en)}\\\\n{txt}\\\\n\")\\n';\ns += '        si += 1\\n';\ns += '    acc += dur\\n';\ns += '\\n';\ns += 'ass = \"[Script Info]\\\\n\"\\n';\ns += 'ass += \"Title: Legendas\\\\n\"\\n';\ns += 'ass += \"ScriptType: v4.00+\\\\n\"\\n';\ns += 'ass += \"PlayResX: ' + resX + '\\\\n\"\\n';\ns += 'ass += \"PlayResY: ' + resY + '\\\\n\\\\n\"\\n';\ns += 'ass += \"[V4+ Styles]\\\\n\"\\n';\ns += 'ass += \"Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\\\\n\"\\n';\ns += 'ass += \"Style: Default,Eater,54,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,0,0,0,0,100,100,0,0,1,3,2,2,10,10,250,1\\\\n\\\\n\"\\n';\ns += 'ass += \"[Events]\\\\n\"\\n';\ns += 'ass += \"Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\\\\n\"\\n';\ns += 'for ev in ass_ev:\\n';\ns += '    ass += ev + \"\\\\n\"\\n';\ns += '\\n';\ns += 'with open(\"legendas.ass\", \"w\") as f:\\n';\ns += '    f.write(ass)\\n';\ns += '\\n';\ns += 'with open(\"legendas.srt\", \"w\") as f:\\n';\ns += '    for ev in srt_ev:\\n';\ns += '        f.write(ev + \"\\\\n\")\\n';\ns += '\\n';\ns += 'print(f\"Legendas: {len(ass_ev)} entradas\")\\n';\n\ns += 'PYEOF\\n';\ns += 'python3 gen_subs.py\\n';\ns += 'echo \"Legendas OK\"\\n\\n';\n\n// === FASE 4: CONCATENAR ===\ns += 'echo \"=== FASE 4: CONCATENAR ===\"\\n';\nlet concatIn = '';\nlet concatFilt = '';\nfor (let i = 0; i < fadeFiles.length; i++) {\n  concatIn += ' -i ' + fadeFiles[i];\n  concatFilt += '[' + i + ':v][' + i + ':a]';\n}\nconcatFilt += 'concat=n=' + fadeFiles.length + ':v=1:a=1[vout][aout]';\ns += 'ffmpeg -y' + concatIn + ' -filter_complex \"' + concatFilt + '\" -map \"[vout]\" -map \"[aout]\" -c:v libx264 -crf 18 -c:a aac concatenado.mp4\\n';\ns += 'echo \"Concat OK\"\\n\\n';\n\n// === FASE 5: EFEITOS VISUAIS ===\ns += 'echo \"=== FASE 5: EFEITOS VISUAIS ===\"\\n';\ns += 'ffmpeg -y -i concatenado.mp4 -vf \"noise=alls=10:allf=t,vignette=PI/4,curves=preset=darker\" -c:v libx264 -crf 18 -c:a copy efeitos.mp4\\n';\ns += 'echo \"Efeitos OK\"\\n\\n';\n\n// === FASE 6: EXPORT FINAL ===\ns += 'echo \"=== FASE 6: EXPORT FINAL ===\"\\n';\ns += 'ffmpeg -y -i efeitos.mp4 -vf \"ass=legendas.ass\" -af \"loudnorm=I=-16:TP=-1.5:LRA=11\" -c:v libx264 -crf 23 -profile:v high -pix_fmt yuv420p -r 16 -c:a aac -b:a 128k -movflags +faststart final.mp4\\n';\ns += 'echo \"Export OK\"\\n\\n';\n\n// === FASE 7: UPLOAD ===\ns += 'echo \"=== FASE 7: UPLOAD ===\"\\n';\ns += 'curl -s -X POST \"' + uploadFinal + '\" ';\ns += '-H \"apikey: ' + key + '\" ';\ns += '-H \"Authorization: Bearer ' + key + '\" ';\ns += '-H \"Content-Type: video/mp4\" ';\ns += '-H \"x-upsert: true\" ';\ns += '--data-binary @final.mp4\\n\\n';\n\ns += 'curl -s -X POST \"' + uploadSrt + '\" ';\ns += '-H \"apikey: ' + key + '\" ';\ns += '-H \"Authorization: Bearer ' + key + '\" ';\ns += '-H \"Content-Type: text/plain\" ';\ns += '-H \"x-upsert: true\" ';\ns += '--data-binary @legendas.srt\\n\\n';\n\ns += 'echo \"Upload OK\"\\n';\ns += 'echo \"SUCCESS\"\\n';\n\nreturn [{ json: {\n  _script: s,\n  videoId: videoId,\n  publicUrlFinal: publicFinal,\n  publicUrlSrt: publicSrt\n} }];\n"
+        },
+        "id": "21aa0a40-6e57-47da-83d6-2341ee2c71a1",
+        "name": "Preparar Montagem",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1040,
+          208
+        ],
+        "notes": "Gera script bash completo:\n- Download assets\n- Sync vídeo + áudio por cena\n- Fades conforme transicao_entrada\n- Legendas ASS + SRT via Python\n- Concat filter_complex\n- Efeitos visuais\n- Export final (yuv420p, loudnorm)\n- Upload Supabase Storage"
+      },
+      {
+        "parameters": {
+          "command": "=mkdir -p /tmp/m08/{{ $('Normalizar Input').first().json.video_id }}"
+        },
+        "id": "c165c0e5-e1f3-4355-8630-fd65fb893d8d",
+        "name": "Setup Diretório",
+        "type": "n8n-nodes-base.ssh",
+        "typeVersion": 1,
+        "position": [
+          1248,
+          208
+        ],
+        "credentials": {
+          "sshPassword": {
+            "id": "Mw31xh0fiZfOM7X7",
+            "name": "Hostinger VPS"
+          }
+        },
+        "notes": "Cria diretório temporário no VPS."
+      },
+      {
+        "parameters": {
+          "command": "={{ $('Preparar Montagem').first().json._script }}"
+        },
+        "id": "12e5b43c-179b-4576-bf75-04f5f6d6a8e0",
+        "name": "Executar Montagem",
+        "type": "n8n-nodes-base.ssh",
+        "typeVersion": 1,
+        "position": [
+          1456,
+          208
+        ],
+        "credentials": {
+          "sshPassword": {
+            "id": "Mw31xh0fiZfOM7X7",
+            "name": "Hostinger VPS"
+          }
+        },
+        "notes": "Executa script FFmpeg completo via SSH no VPS.\nProcessa todas as cenas → concat → efeitos → legendas → export → upload."
+      },
+      {
+        "parameters": {
+          "jsCode": "const ssh = $('Executar Montagem').first().json;\nconst stdout = ssh.stdout || '';\nconst stderr = ssh.stderr || '';\n\nif (!stdout.includes('SUCCESS')) {\n  throw new Error('❌ Montagem ERRO:\\n' + stderr.substring(0, 1500));\n}\n\nconst meta = $('Preparar Montagem').first().json;\nreturn [{ json: {\n  videoId: meta.videoId,\n  publicUrlFinal: meta.publicUrlFinal,\n  publicUrlSrt: meta.publicUrlSrt\n} }];"
+        },
+        "id": "6586a6bf-64c0-4db7-b83d-b5a58ecb7ad3",
+        "name": "Verificar Resultado",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1664,
+          208
+        ],
+        "notes": "Checa stdout por SUCCESS. Se falhou, para com erro detalhado."
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/videos?id=eq.{{ $('Normalizar Input').first().json.video_id }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=minimal"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ video_final_url: $json.publicUrlFinal, srt_url: $json.publicUrlSrt, status: 'aguardando' }) }}",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "c46b81f5-4fd8-42b1-88b1-c188eba8ef4c",
+        "name": "Atualizar Vídeo",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1872,
+          208
+        ],
+        "notes": "PATCH videos: video_final_url, srt_url, status='aguardando_aprovacao'."
+      },
+      {
+        "parameters": {
+          "command": "=rm -rf /tmp/m08/{{ $('Normalizar Input').first().json.video_id }}"
+        },
+        "id": "7769b86c-33c8-4983-b0d9-e54931d416ad",
+        "name": "Cleanup",
+        "type": "n8n-nodes-base.ssh",
+        "typeVersion": 1,
+        "position": [
+          2080,
+          208
+        ],
+        "credentials": {
+          "sshPassword": {
+            "id": "Mw31xh0fiZfOM7X7",
+            "name": "Hostinger VPS"
+          }
+        },
+        "notes": "Remove diretório temporário do VPS."
+      }
+    ],
+    "connections": {
+      "Início Manual": {
+        "main": [
+          [
+            {
+              "node": "Video ID Teste",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Video ID Teste": {
+        "main": [
+          [
+            {
+              "node": "Normalizar Input",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Trigger Externo": {
+        "main": [
+          [
+            {
+              "node": "Normalizar Input",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Normalizar Input": {
+        "main": [
+          [
+            {
+              "node": "Configuração",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Configuração": {
+        "main": [
+          [
+            {
+              "node": "Ler Vídeo",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Ler Vídeo": {
+        "main": [
+          [
+            {
+              "node": "Ler Cenas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Ler Cenas": {
+        "main": [
+          [
+            {
+              "node": "Preparar Montagem",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Preparar Montagem": {
+        "main": [
+          [
+            {
+              "node": "Setup Diretório",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Setup Diretório": {
+        "main": [
+          [
+            {
+              "node": "Executar Montagem",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Executar Montagem": {
+        "main": [
+          [
+            {
+              "node": "Verificar Resultado",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Verificar Resultado": {
+        "main": [
+          [
+            {
+              "node": "Atualizar Vídeo",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualizar Vídeo": {
+        "main": [
+          [
+            {
+              "node": "Cleanup",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Newton Omune",
+    "name": "Version 89d7ef17",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

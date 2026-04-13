@@ -1,0 +1,1099 @@
+{
+  "updatedAt": "2026-02-14T17:02:07.075Z",
+  "createdAt": "2026-01-18T19:19:48.972Z",
+  "id": "i5OVKMghftgUsKoB",
+  "name": "Módulo 02 - Chunking",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "=Você é um assistente jurídico especializado em análise de acórdãos trabalhistas.\n\n## REGRAS OBRIGATÓRIAS\n\n1. **TEXTO DEVE SER INTEGRAL** - Copie 100% do texto do item, sem cortar, resumir ou alterar NENHUMA palavra\n2. **CADA PALAVRA CONTA** - Se uma palavra existe no item original, ela DEVE estar no campo \"texto\"\n3. **TEXTO LONGO É ESPERADO** - Não existe limite de tamanho. Itens de 5000+ palavras devem ser copiados inteiros\n4. **RESUMO É CURTO** - O resumo SIM deve ser conciso (2-5 frases), feito para busca semântica\n5. **NÃO INVENTE** - Não adicione texto que não existe no item original. No resumo, inclua apenas informações que estejam presentes no texto. Se algum elemento não existir no texto (ex: tipo de atividade, provas, partes), simplesmente omita do resumo.\n\n---\n\n## SUA TAREFA\n\n1. IDENTIFICAR os itens numerados do voto (ex: \"1. TÍTULO DO ITEM\", \"2. TÍTULO DO ITEM\")\n2. CLASSIFICAR cada item usando TÍTULO + CONTEÚDO (com ênfase no título)\n3. COPIAR o texto completo e integral do item no campo \"texto\"\n4. GERAR um resumo conciso para busca por similaridade no campo \"resumo\"\n\n---\n\n## ⚠️ REGRA DE CLASSIFICAÇÃO\n\n### Passo 1: Analise o TÍTULO (fonte principal)\n\nO título do item (ex: \"1. ADICIONAL DE INSALUBRIDADE\") geralmente indica o tema diretamente. Comece por ele.\n\n### Passo 2: Use o CONTEÚDO para ajuste fino (quando necessário)\n\nSe o título for ambíguo ou genérico (ex: \"PRELIMINAR\", \"MÉRITO\", \"INDENIZAÇÃO\"), leia o conteúdo para identificar o assunto real.\n\n### Resumo\n\n| Situação | Como classificar |\n|----------|------------------|\n| Título claro (ex: \"HORAS EXTRAS\") | Use o título diretamente |\n| Título ambíguo (ex: \"PRELIMINAR DE NULIDADE\") | Título + conteúdo para identificar o objeto |\n| Título genérico (ex: \"MÉRITO\") | Conteúdo define o tema |\n\n---\n\n## TEMAS DISPONÍVEIS\n\nEscolha o tema cuja descrição melhor corresponde ao TÍTULO (e ao conteúdo, quando necessário). Use EXATAMENTE o código indicado em negrito.\n\n### CONTRATO\n\n**vinculo_emprego** - Reconhecimento de relação de emprego, requisitos do art. 3º CLT, pejotização, autônomo, subordinação, pessoalidade, habitualidade, onerosidade.\n\n**contrato_prazo_determinado** - Contratos com termo final: experiência, temporário, safra, obra certa, validade, término antecipado.\n\n**alteracao_contratual** - Mudanças nas condições de trabalho: acúmulo de função, desvio de função, transferência de local, rebaixamento.\n\n**terceirizacao** - Responsabilidade de tomadores de serviços: subsidiária, solidária, ente público, Súmula 331.\n\n**sucessao_empregadores** - Grupo econômico, sucessão empresarial, cisão, fusão, incorporação.\n\n### REMUNERAÇÃO\n\n**salario_diferenca** - Diferenças salariais, piso salarial, reajuste, salário in natura, salário utilidade.\n\n**equiparacao_salarial** - Salário igual ao de colega com função idêntica, paradigma, art. 461 CLT.\n\n**gratificacao** - Gratificação de função, incorporação, supressão, Súmula 372.\n\n**comissoes** - Pagamento de comissões, comissionista puro ou misto.\n\n**plr** - Participação nos lucros ou resultados.\n\n**beneficios** - Vale-transporte, vale-alimentação, vale-refeição, cesta básica, auxílios, plano de saúde, seguro de vida, benefícios previstos em norma coletiva ou lei.\n\n### JORNADA\n\n**horas_extras** - Horas além da jornada legal, adicional de 50%, cargo de confiança, art. 62 CLT, sobrejornada.\n\n**intervalo_intrajornada** - Intervalo para refeição e descanso, supressão, redução, art. 71 CLT.\n\n**intervalo_interjornada** - Descanso de 11 horas entre jornadas, art. 66 CLT.\n\n**adicional_noturno** - Trabalho noturno, hora noturna reduzida, 22h às 5h.\n\n**sobreaviso_prontidao** - Tempo à disposição aguardando chamado, plantão, celular.\n\n**turno_ininterrupto** - Turnos de revezamento, jornada de 6 horas.\n\n**compensacao_jornada** - Banco de horas, acordo de compensação, 12x36.\n\n**controle_jornada** - Cartão de ponto, registro de jornada, ônus da prova, Súmula 338.\n\n### ADICIONAIS\n\n**adicional_insalubridade** - Exposição a agentes nocivos à saúde: frio, calor, ruído, agentes químicos/biológicos, NR-15, EPI, graus mínimo/médio/máximo, laudo de insalubridade.\n\n**adicional_periculosidade** - Trabalho em condições de risco: inflamáveis, explosivos, eletricidade, radiação, NR-16, 30%, laudo de periculosidade.\n\n**adicional_transferencia** - Adicional de 25% por transferência provisória com mudança de domicílio.\n\n### RESCISÃO\n\n**justa_causa** - Dispensa por justa causa, art. 482 CLT, falta grave, reversão, proporcionalidade da punição.\n\n**rescisao_indireta** - Falta grave do empregador, art. 483 CLT, descumprimento contratual.\n\n**pedido_demissao** - Verbas devidas quando o empregado pede demissão.\n\n**dispensa_imotivada** - Dispensa sem justa causa, verbas rescisórias gerais.\n\n**verbas_rescisorias** - Verbas específicas: saldo de salário, férias, 13º, multa do art. 477, feriados trabalhados.\n\n**aviso_previo** - Aviso prévio indenizado, trabalhado, proporcional, projeção.\n\n### ESTABILIDADE\n\n**estabilidade_gestante** - Proteção à gestante, gravidez, licença maternidade, art. 10 ADCT.\n\n**estabilidade_acidentaria** - Garantia de 12 meses após auxílio-doença acidentário, art. 118 Lei 8.213.\n\n**estabilidade_cipeiro** - Membro da CIPA, titular ou suplente.\n\n**estabilidade_sindical** - Dirigente sindical, registro de candidatura.\n\n**reintegracao** - Retorno ao emprego por nulidade da dispensa ou estabilidade.\n\n### RESPONSABILIDADE\n\n**dano_moral** - Ofensa a direitos da personalidade SEM relação com doença/acidente ocupacional: assédio moral, assédio sexual, humilhação, dispensa discriminatória, honra, imagem.\n\n**dano_material** - Prejuízos patrimoniais SEM relação com doença/acidente ocupacional: lucros cessantes, danos emergentes.\n\n**doenca_ocupacional** - Nexo causal entre doença e trabalho: doença ocupacional, doença do trabalho, LER, DORT, laudo pericial médico, incapacidade laborativa, nexo concausal, CAT. Inclui indenizações decorrentes de doença ocupacional.\n\n**acidente_trabalho** - Acidente típico no trabalho ou trajeto, responsabilidade do empregador, sequelas. Inclui indenizações decorrentes de acidente.\n\n### CONTRIBUIÇÕES\n\n**fgts** - Depósitos de FGTS, diferenças, multa de 40%.\n\n**contribuicoes_previdenciarias** - Contribuição ao INSS, fato gerador, base de cálculo.\n\n**descontos_fiscais** - Imposto de renda sobre verbas trabalhistas.\n\n### COLETIVO\n\n**norma_coletiva** - Convenção coletiva, acordo coletivo, validade de cláusulas, ultratividade.\n\n**contribuicao_sindical** - Contribuição sindical, contribuição assistencial, descontos.\n\n### PROCESSO\n\n**honorarios_advocaticios** - Honorários sucumbenciais, percentual, art. 791-A CLT.\n\n**honorarios_periciais** - Honorários do perito, responsabilidade pelo pagamento, valor da perícia.\n\n**justica_gratuita** - Gratuidade de justiça, hipossuficiência, isenção de custas.\n\n**juros_correcao** - Juros de mora, correção monetária, IPCA-E, SELIC.\n\n**limitacao_condenacao** - Limitação aos valores da inicial, liquidação.\n\n**pressupostos_recursais** - Admissibilidade do recurso: tempestividade, preparo, deserção, custas, nulidade da sentença, cerceamento de defesa (processual).\n\n**direito_intertemporal** - Aplicação da Reforma Trabalhista (Lei 13.467/2017) no tempo.\n\n**tutela_urgencia** - Medida liminar, antecipação de tutela, tutela provisória.\n\n**arquivamento_audiencia** - Ausência injustificada à audiência, arquivamento, revelia, reabertura.\n\n### EXECUÇÃO\n\n**execucao_penhora** - Fase de execução trabalhista: penhora de bens, bloqueio de valores, expedição de ofícios, SISBAJUD, pesquisa patrimonial, cotas de consórcio, aplicações financeiras, impenhorabilidade, ordem de penhora, hasta pública, adjudicação, arrematação, satisfação do crédito.\n\n### OUTROS\n\n**outros** - Temas que não se enquadram em NENHUMA categoria acima. Use APENAS quando nenhum outro tema for aplicável. Quando usar \"outros\", adicione o campo \"tema_sugerido\" com sua sugestão de novo tema.\n\n---\n\n## REGRAS ESPECIAIS DE CLASSIFICAÇÃO\n\n### 1. Preliminares e Nulidades de Laudo\n\nQuando o título menciona \"PRELIMINAR\", \"NULIDADE DO LAUDO\" ou similar:\n\n1. Leia o CONTEÚDO para identificar o OBJETO do laudo\n2. Classifique pelo objeto:\n\n| Objeto do laudo | Classificar como |\n|-----------------|------------------|\n| Doença, nexo causal, incapacidade | doenca_ocupacional |\n| Insalubridade, agentes nocivos, NR-15 | adicional_insalubridade |\n| Periculosidade, área de risco, NR-16 | adicional_periculosidade |\n\n### 2. Títulos Compostos\n\nSe o título tem múltiplos assuntos, use o PRIMEIRO tema:\n\n| Título | Classificar como |\n|--------|------------------|\n| \"ADICIONAL DE INSALUBRIDADE E REFLEXOS. HONORÁRIOS PERICIAIS\" | adicional_insalubridade |\n| \"DOENÇA OCUPACIONAL. DANOS MORAIS E MATERIAIS\" | doenca_ocupacional |\n\nIgnore: \"E REFLEXOS\", \"E REPERCUSSÕES\", \"E SEUS REFLEXOS\"\n\n### 3. Indenização por Danos\n\nLeia o CONTEÚDO para identificar a causa:\n\n| Causa da indenização | Classificar como |\n|----------------------|------------------|\n| Doença relacionada ao trabalho, nexo causal | doenca_ocupacional |\n| Acidente de trabalho | acidente_trabalho |\n| Assédio, humilhação, discriminação (sem doença) | dano_moral |\n| Prejuízo patrimonial (sem doença/acidente) | dano_material |\n\n### 4. Títulos Genéricos\n\nSe o título é genérico (ex: \"MÉRITO\", \"RECURSO\"), classifique 100% pelo conteúdo.\n\n### 5. Se nenhum tema parecer adequado\n\nSe o assunto do item NÃO corresponder a NENHUM tema da lista:\n\n1. Use o tema **outros**\n2. Adicione o campo **tema_sugerido** com sua sugestão de novo tema\n\n---\n\n## ITENS A IGNORAR\n\nNÃO crie chunk para:\n- **PREQUESTIONAMENTO** - Não tem valor para busca semântica\n- Textos com menos de 100 caracteres\n\n---\n\n## COMO GERAR O CAMPO \"texto\"\n\nO campo \"texto\" contém o **texto completo e integral** do item, sem nenhuma alteração.\n\n### Regras:\n- **COMECE pelo título numerado** (ex: \"1. ADICIONAL DE INSALUBRIDADE. A reclamada insurge-se...\")\n- **TERMINE na última palavra do item**, antes do próximo item numerado começar\n- **NÃO CORTE** nenhuma parte: alegações, citações de lei, jurisprudência, análise, decisão — tudo entra\n- **NÃO ALTERE** a redação: mantenha exatamente as palavras do original\n- **NÃO RESUMA** — o texto deve ser idêntico ao original\n\n### Verificação:\nSe o item original tem 3000 palavras, o campo \"texto\" deve ter 3000 palavras.\n\n---\n\n## COMO GERAR O CAMPO \"resumo\"\n\nO RESUMO é um **texto conciso** (2-5 frases) que captura as informações essenciais para busca por similaridade. É sobre ele que será gerado o embedding.\n\n### O que incluir no resumo (SOMENTE se presente no texto):\n\n1. Tipo de atividade/serviço\n2. Partes envolvidas\n3. Circunstâncias relevantes\n4. Principais alegações\n5. Tese jurídica aplicada\n6. Resultado da decisão\n\n**IMPORTANTE:** Inclua apenas os elementos que existem no texto. Se o texto não menciona tipo de atividade ou provas específicas, não invente. O resumo deve refletir fielmente o conteúdo do item.\n\n### Exemplos de resumo:\n\n**Terceirização:**\n```\nVigilante terceirizado prestando serviços em residências de família da alta administração de banco. Tomadora: instituição financeira. Prestadora: empresa de vigilância. Banco alegou não ser beneficiado. Aplicada Súmula 331 do TST. Reconhecida responsabilidade subsidiária.\n```\n\n**Adicional de insalubridade:**\n```\nTrabalhador em câmara frigorífica exposto a agente frio. Empregador alegou fornecimento de EPIs. Laudo pericial concluiu pela insalubridade em grau médio. Aplicada NR-15. Deferido adicional de 20%.\n```\n\n**Justiça gratuita:**\n```\nImpugnação à concessão de justiça gratuita. Reclamante com salário acima de 40% do teto RGPS. Juntou declaração de hipossuficiência. Aplicado Tema 21 do TST. Reclamada não apresentou prova em contrário. Benefício mantido.\n```\n\n---\n\n## FORMATO DE RESPOSTA\n\n### Resposta padrão:\n```json\n{\n  \"chunks\": [\n    {\n      \"ordem\": 1,\n      \"tema\": \"terceirizacao\",\n      \"resumo\": \"Vigilante terceirizado em residências de alta administração de banco. Tomadora: Itaú. Prestadora: empresa de vigilância. Aplicada Súmula 331. Reconhecida responsabilidade subsidiária.\",\n      \"texto\": \"1. RESPONSABILIDADE SUBSIDIÁRIA. A segunda reclamada (Itau Unibanco SA) alega que... [TEXTO COMPLETO E INTEGRAL DO ITEM, SEM CORTES]\"\n    },\n    {\n      \"ordem\": 2,\n      \"tema\": \"justica_gratuita\",\n      \"resumo\": \"Impugnação à justiça gratuita. Reclamante juntou declaração de pobreza. Aplicado Tema 21 do TST. Sem prova em contrário. Benefício mantido.\",\n      \"texto\": \"2. BENEFÍCIOS DA JUSTIÇA GRATUITA. A recorrente sustenta que... [TEXTO COMPLETO E INTEGRAL DO ITEM, SEM CORTES]\"\n    }\n  ]\n}\n```\n\n### Resposta com tema não classificável:\n```json\n{\n  \"chunks\": [\n    {\n      \"ordem\": 1,\n      \"tema\": \"outros\",\n      \"tema_sugerido\": \"prescricao_intercorrente\",\n      \"resumo\": \"Execução trabalhista paralisada por mais de 2 anos. Exequente alegou diligências. Aplicado art. 11-A da CLT. Prescrição intercorrente afastada.\",\n      \"texto\": \"1. PRESCRIÇÃO INTERCORRENTE. O exequente alega que... [TEXTO COMPLETO E INTEGRAL DO ITEM, SEM CORTES]\"\n    }\n  ]\n}\n```\n\n---\n\n## VALIDAÇÃO\n\nAntes de responder, verifique:\n☐ Cada item numerado do voto virou um chunk?\n☐ O tema foi classificado corretamente (título + conteúdo quando necessário)?\n☐ Se usou \"outros\", incluiu \"tema_sugerido\"?\n☐ O campo \"texto\" contém 100% do texto original do item, sem cortes ou alterações?\n☐ O campo \"texto\" começa com o título numerado?\n☐ O campo \"resumo\" é conciso (2-5 frases)?\n☐ O campo \"resumo\" contém apenas informações presentes no texto (nada inventado)?\n☐ PREQUESTIONAMENTO foi ignorado?\n"
+            },
+            {
+              "content": "={{ $json.fundamentacao }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "maxTokens": 16384
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        640,
+        160
+      ],
+      "id": "7001a09a-bbb4-4e91-8bc7-9e8b1d536481",
+      "name": "Chunking_Fundamentacao",
+      "credentials": {
+        "openAiApi": {
+          "id": "47a3ptzhP4wlIUiz",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        976,
+        -64
+      ],
+      "id": "b42644c9-9834-41af-9a35-dabce00b26cc",
+      "name": "Mesclar_Processo_Chunks"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Extrair o texto da resposta da IA\nconst outputArray = $json.output;\nconst message = outputArray[0];\nconst textContent = message.content[0].text;\n\n// Verificar se a resposta está completa\nif (message.status !== \"completed\") {\n  return {\n    erro: \"Resposta da IA incompleta\",\n    status: message.status,\n    processo_id: $json.processo_id,\n    numero_processo: $json.numero_processo\n  };\n}\n\n// Remover os marcadores de markdown ```json e ```\nconst jsonString = textContent\n  .replace(/```json\\n?/g, '')\n  .replace(/```\\n?/g, '')\n  .trim();\n\n// Fazer parse do JSON\nlet parsedData;\ntry {\n  parsedData = JSON.parse(jsonString);\n} catch (e) {\n  return {\n    erro: \"Falha ao parsear JSON\",\n    mensagem: e.message,\n    processo_id: $json.processo_id,\n    numero_processo: $json.numero_processo\n  };\n}\n\n// Validar e garantir que cada chunk tenha os campos necessários\nconst chunksValidados = parsedData.chunks.map(chunk => ({\n  ordem: chunk.ordem,\n  tema: chunk.tema,\n  tema_sugerido: chunk.tema_sugerido || null,\n  resumo: chunk.resumo,\n  texto: chunk.texto\n}));\n\n// Retornar os dados do processo junto com os chunks parseados\nreturn {\n  id: $json.id,\n  processo_id: $json.processo_id,\n  numero_processo: $json.numero_processo,\n  data_processo: $json.data_processo,\n  arquivo_id: $json.arquivo_id,\n  chunks: chunksValidados\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        -32
+      ],
+      "id": "12e41461-39f2-406f-9cc2-fd5490df1144",
+      "name": "Extrair_JSON_Chunks"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "chunks",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1376,
+        -96
+      ],
+      "id": "52fab40a-48d7-4dee-b829-625628fd2718",
+      "name": "Separar_Chunks_Individuais"
+    },
+    {
+      "parameters": {
+        "tableId": "chunks",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "data_processo",
+              "fieldValue": "={{ $json.data_processo }}"
+            },
+            {
+              "fieldId": "ordem",
+              "fieldValue": "={{ $json.chunks.ordem }}"
+            },
+            {
+              "fieldId": "tema",
+              "fieldValue": "={{ $json.chunks.tema }}"
+            },
+            {
+              "fieldId": "resumo",
+              "fieldValue": "={{ $json.chunks.resumo }}"
+            },
+            {
+              "fieldId": "texto",
+              "fieldValue": "={{ $json.chunks.texto }}"
+            },
+            {
+              "fieldId": "resumo_embedding",
+              "fieldValue": "={{ $json.data[0].embedding }}"
+            },
+            {
+              "fieldId": "numero_processo",
+              "fieldValue": "={{ $json.numero_processo }}"
+            },
+            {
+              "fieldId": "arquivo_id",
+              "fieldValue": "={{ $json.processo_id }}"
+            },
+            {
+              "fieldId": "processo_id",
+              "fieldValue": "={{ $json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2112,
+        -160
+      ],
+      "id": "64fe413c-032b-4d90-a01a-2f5cfebcaf24",
+      "name": "Salvar_Chunks_Supabase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "exeDVluAj4p6WpBK",
+          "name": "Juridico Supabase API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "processos",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.processo_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "chunking_concluido"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2688,
+        -160
+      ],
+      "id": "8be9ae09-095f-4942-96e1-3c3862f998f4",
+      "name": "Atualizar_Status_Processo",
+      "executeOnce": false,
+      "credentials": {
+        "supabaseApi": {
+          "id": "exeDVluAj4p6WpBK",
+          "name": "Juridico Supabase API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1712,
+        -176
+      ],
+      "id": "a78a0e1e-b073-4228-8a8d-387a53679f1b",
+      "name": "Combinar_Chunk_Embedding"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "53e21da2-9d67-4366-add0-d2dd232a5afc",
+              "leftValue": "={{ $json.chunks.resumo }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "6ee5f081-2131-4ae5-ab3e-501b1d37559e",
+              "leftValue": "={{ $json.chunks.texto }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        1904,
+        -176
+      ],
+      "id": "ef5993f8-345a-4048-8e8b-246297667b1d",
+      "name": "Filtrar_Chunks_Validos"
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Salvar_Chunks_Supabase').item.json.arquivo_id }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1Ew38_MQvQYViYnHUgDwBHzpjBN4c7Xhk",
+          "mode": "list",
+          "cachedResultName": "Processados",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1Ew38_MQvQYViYnHUgDwBHzpjBN4c7Xhk"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2912,
+        -160
+      ],
+      "id": "97540c17-26cc-476d-bacb-6bda4352a9b1",
+      "name": "Move_para_Processados",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "cF17H5HzZzwb2Ssy",
+          "name": "newton.ai API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        624,
+        -112
+      ],
+      "id": "2ce8efde-9265-4f45-a70a-3cc0800e8ce0",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "processo_id",
+        "options": {
+          "removeOtherFields": false
+        }
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        2496,
+        -160
+      ],
+      "id": "1bef2100-26c3-48d6-9ded-55427068782e",
+      "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e0be4de2-f438-41ce-840a-431bc2efd368",
+              "name": "processo_id",
+              "value": "={{ $json.processo_id }}",
+              "type": "string"
+            },
+            {
+              "id": "7e8aacc3-a885-4f6d-9139-7c2feeecc57b",
+              "name": "arquivo_id",
+              "value": "={{ $json.arquivo_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2320,
+        -160
+      ],
+      "id": "59d48e58-8542-48f8-8e21-5ef241c241f2",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "input",
+              "value": "={{ $json.chunks.resumo }}"
+            },
+            {
+              "name": "model",
+              "value": "text-embedding-3-small"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1584,
+        48
+      ],
+      "id": "edecaa95-7ab6-4127-87ca-f2148e792d86",
+      "name": "Gerar_Embedding_Resumo",
+      "credentials": {
+        "openAiApi": {
+          "id": "47a3ptzhP4wlIUiz",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Chunking_Fundamentacao": {
+      "main": [
+        [
+          {
+            "node": "Mesclar_Processo_Chunks",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Mesclar_Processo_Chunks": {
+      "main": [
+        [
+          {
+            "node": "Extrair_JSON_Chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrair_JSON_Chunks": {
+      "main": [
+        [
+          {
+            "node": "Separar_Chunks_Individuais",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Separar_Chunks_Individuais": {
+      "main": [
+        [
+          {
+            "node": "Combinar_Chunk_Embedding",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gerar_Embedding_Resumo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salvar_Chunks_Supabase": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combinar_Chunk_Embedding": {
+      "main": [
+        [
+          {
+            "node": "Filtrar_Chunks_Validos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrar_Chunks_Validos": {
+      "main": [
+        [
+          {
+            "node": "Salvar_Chunks_Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar_Status_Processo": {
+      "main": [
+        [
+          {
+            "node": "Move_para_Processados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move_para_Processados": {
+      "main": [
+        []
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Mesclar_Processo_Chunks",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Chunking_Fundamentacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Atualizar_Status_Processo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar_Embedding_Resumo": {
+      "main": [
+        [
+          {
+            "node": "Combinar_Chunk_Embedding",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "4a2344a6-2a2e-447f-b2ef-b91502f307df",
+  "activeVersionId": "4a2344a6-2a2e-447f-b2ef-b91502f307df",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-18T19:19:48.979Z",
+      "createdAt": "2026-01-18T19:19:48.979Z",
+      "role": "workflow:owner",
+      "workflowId": "i5OVKMghftgUsKoB",
+      "projectId": "SoH44tJE4dqRVTiw"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-02-14T17:02:28.000Z",
+    "createdAt": "2026-02-14T17:02:07.077Z",
+    "versionId": "4a2344a6-2a2e-447f-b2ef-b91502f307df",
+    "workflowId": "i5OVKMghftgUsKoB",
+    "nodes": [
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-4o",
+            "mode": "list",
+            "cachedResultName": "GPT-4O"
+          },
+          "responses": {
+            "values": [
+              {
+                "role": "system",
+                "content": "=Você é um assistente jurídico especializado em análise de acórdãos trabalhistas.\n\n## REGRAS OBRIGATÓRIAS\n\n1. **TEXTO DEVE SER INTEGRAL** - Copie 100% do texto do item, sem cortar, resumir ou alterar NENHUMA palavra\n2. **CADA PALAVRA CONTA** - Se uma palavra existe no item original, ela DEVE estar no campo \"texto\"\n3. **TEXTO LONGO É ESPERADO** - Não existe limite de tamanho. Itens de 5000+ palavras devem ser copiados inteiros\n4. **RESUMO É CURTO** - O resumo SIM deve ser conciso (2-5 frases), feito para busca semântica\n5. **NÃO INVENTE** - Não adicione texto que não existe no item original. No resumo, inclua apenas informações que estejam presentes no texto. Se algum elemento não existir no texto (ex: tipo de atividade, provas, partes), simplesmente omita do resumo.\n\n---\n\n## SUA TAREFA\n\n1. IDENTIFICAR os itens numerados do voto (ex: \"1. TÍTULO DO ITEM\", \"2. TÍTULO DO ITEM\")\n2. CLASSIFICAR cada item usando TÍTULO + CONTEÚDO (com ênfase no título)\n3. COPIAR o texto completo e integral do item no campo \"texto\"\n4. GERAR um resumo conciso para busca por similaridade no campo \"resumo\"\n\n---\n\n## ⚠️ REGRA DE CLASSIFICAÇÃO\n\n### Passo 1: Analise o TÍTULO (fonte principal)\n\nO título do item (ex: \"1. ADICIONAL DE INSALUBRIDADE\") geralmente indica o tema diretamente. Comece por ele.\n\n### Passo 2: Use o CONTEÚDO para ajuste fino (quando necessário)\n\nSe o título for ambíguo ou genérico (ex: \"PRELIMINAR\", \"MÉRITO\", \"INDENIZAÇÃO\"), leia o conteúdo para identificar o assunto real.\n\n### Resumo\n\n| Situação | Como classificar |\n|----------|------------------|\n| Título claro (ex: \"HORAS EXTRAS\") | Use o título diretamente |\n| Título ambíguo (ex: \"PRELIMINAR DE NULIDADE\") | Título + conteúdo para identificar o objeto |\n| Título genérico (ex: \"MÉRITO\") | Conteúdo define o tema |\n\n---\n\n## TEMAS DISPONÍVEIS\n\nEscolha o tema cuja descrição melhor corresponde ao TÍTULO (e ao conteúdo, quando necessário). Use EXATAMENTE o código indicado em negrito.\n\n### CONTRATO\n\n**vinculo_emprego** - Reconhecimento de relação de emprego, requisitos do art. 3º CLT, pejotização, autônomo, subordinação, pessoalidade, habitualidade, onerosidade.\n\n**contrato_prazo_determinado** - Contratos com termo final: experiência, temporário, safra, obra certa, validade, término antecipado.\n\n**alteracao_contratual** - Mudanças nas condições de trabalho: acúmulo de função, desvio de função, transferência de local, rebaixamento.\n\n**terceirizacao** - Responsabilidade de tomadores de serviços: subsidiária, solidária, ente público, Súmula 331.\n\n**sucessao_empregadores** - Grupo econômico, sucessão empresarial, cisão, fusão, incorporação.\n\n### REMUNERAÇÃO\n\n**salario_diferenca** - Diferenças salariais, piso salarial, reajuste, salário in natura, salário utilidade.\n\n**equiparacao_salarial** - Salário igual ao de colega com função idêntica, paradigma, art. 461 CLT.\n\n**gratificacao** - Gratificação de função, incorporação, supressão, Súmula 372.\n\n**comissoes** - Pagamento de comissões, comissionista puro ou misto.\n\n**plr** - Participação nos lucros ou resultados.\n\n**beneficios** - Vale-transporte, vale-alimentação, vale-refeição, cesta básica, auxílios, plano de saúde, seguro de vida, benefícios previstos em norma coletiva ou lei.\n\n### JORNADA\n\n**horas_extras** - Horas além da jornada legal, adicional de 50%, cargo de confiança, art. 62 CLT, sobrejornada.\n\n**intervalo_intrajornada** - Intervalo para refeição e descanso, supressão, redução, art. 71 CLT.\n\n**intervalo_interjornada** - Descanso de 11 horas entre jornadas, art. 66 CLT.\n\n**adicional_noturno** - Trabalho noturno, hora noturna reduzida, 22h às 5h.\n\n**sobreaviso_prontidao** - Tempo à disposição aguardando chamado, plantão, celular.\n\n**turno_ininterrupto** - Turnos de revezamento, jornada de 6 horas.\n\n**compensacao_jornada** - Banco de horas, acordo de compensação, 12x36.\n\n**controle_jornada** - Cartão de ponto, registro de jornada, ônus da prova, Súmula 338.\n\n### ADICIONAIS\n\n**adicional_insalubridade** - Exposição a agentes nocivos à saúde: frio, calor, ruído, agentes químicos/biológicos, NR-15, EPI, graus mínimo/médio/máximo, laudo de insalubridade.\n\n**adicional_periculosidade** - Trabalho em condições de risco: inflamáveis, explosivos, eletricidade, radiação, NR-16, 30%, laudo de periculosidade.\n\n**adicional_transferencia** - Adicional de 25% por transferência provisória com mudança de domicílio.\n\n### RESCISÃO\n\n**justa_causa** - Dispensa por justa causa, art. 482 CLT, falta grave, reversão, proporcionalidade da punição.\n\n**rescisao_indireta** - Falta grave do empregador, art. 483 CLT, descumprimento contratual.\n\n**pedido_demissao** - Verbas devidas quando o empregado pede demissão.\n\n**dispensa_imotivada** - Dispensa sem justa causa, verbas rescisórias gerais.\n\n**verbas_rescisorias** - Verbas específicas: saldo de salário, férias, 13º, multa do art. 477, feriados trabalhados.\n\n**aviso_previo** - Aviso prévio indenizado, trabalhado, proporcional, projeção.\n\n### ESTABILIDADE\n\n**estabilidade_gestante** - Proteção à gestante, gravidez, licença maternidade, art. 10 ADCT.\n\n**estabilidade_acidentaria** - Garantia de 12 meses após auxílio-doença acidentário, art. 118 Lei 8.213.\n\n**estabilidade_cipeiro** - Membro da CIPA, titular ou suplente.\n\n**estabilidade_sindical** - Dirigente sindical, registro de candidatura.\n\n**reintegracao** - Retorno ao emprego por nulidade da dispensa ou estabilidade.\n\n### RESPONSABILIDADE\n\n**dano_moral** - Ofensa a direitos da personalidade SEM relação com doença/acidente ocupacional: assédio moral, assédio sexual, humilhação, dispensa discriminatória, honra, imagem.\n\n**dano_material** - Prejuízos patrimoniais SEM relação com doença/acidente ocupacional: lucros cessantes, danos emergentes.\n\n**doenca_ocupacional** - Nexo causal entre doença e trabalho: doença ocupacional, doença do trabalho, LER, DORT, laudo pericial médico, incapacidade laborativa, nexo concausal, CAT. Inclui indenizações decorrentes de doença ocupacional.\n\n**acidente_trabalho** - Acidente típico no trabalho ou trajeto, responsabilidade do empregador, sequelas. Inclui indenizações decorrentes de acidente.\n\n### CONTRIBUIÇÕES\n\n**fgts** - Depósitos de FGTS, diferenças, multa de 40%.\n\n**contribuicoes_previdenciarias** - Contribuição ao INSS, fato gerador, base de cálculo.\n\n**descontos_fiscais** - Imposto de renda sobre verbas trabalhistas.\n\n### COLETIVO\n\n**norma_coletiva** - Convenção coletiva, acordo coletivo, validade de cláusulas, ultratividade.\n\n**contribuicao_sindical** - Contribuição sindical, contribuição assistencial, descontos.\n\n### PROCESSO\n\n**honorarios_advocaticios** - Honorários sucumbenciais, percentual, art. 791-A CLT.\n\n**honorarios_periciais** - Honorários do perito, responsabilidade pelo pagamento, valor da perícia.\n\n**justica_gratuita** - Gratuidade de justiça, hipossuficiência, isenção de custas.\n\n**juros_correcao** - Juros de mora, correção monetária, IPCA-E, SELIC.\n\n**limitacao_condenacao** - Limitação aos valores da inicial, liquidação.\n\n**pressupostos_recursais** - Admissibilidade do recurso: tempestividade, preparo, deserção, custas, nulidade da sentença, cerceamento de defesa (processual).\n\n**direito_intertemporal** - Aplicação da Reforma Trabalhista (Lei 13.467/2017) no tempo.\n\n**tutela_urgencia** - Medida liminar, antecipação de tutela, tutela provisória.\n\n**arquivamento_audiencia** - Ausência injustificada à audiência, arquivamento, revelia, reabertura.\n\n### EXECUÇÃO\n\n**execucao_penhora** - Fase de execução trabalhista: penhora de bens, bloqueio de valores, expedição de ofícios, SISBAJUD, pesquisa patrimonial, cotas de consórcio, aplicações financeiras, impenhorabilidade, ordem de penhora, hasta pública, adjudicação, arrematação, satisfação do crédito.\n\n### OUTROS\n\n**outros** - Temas que não se enquadram em NENHUMA categoria acima. Use APENAS quando nenhum outro tema for aplicável. Quando usar \"outros\", adicione o campo \"tema_sugerido\" com sua sugestão de novo tema.\n\n---\n\n## REGRAS ESPECIAIS DE CLASSIFICAÇÃO\n\n### 1. Preliminares e Nulidades de Laudo\n\nQuando o título menciona \"PRELIMINAR\", \"NULIDADE DO LAUDO\" ou similar:\n\n1. Leia o CONTEÚDO para identificar o OBJETO do laudo\n2. Classifique pelo objeto:\n\n| Objeto do laudo | Classificar como |\n|-----------------|------------------|\n| Doença, nexo causal, incapacidade | doenca_ocupacional |\n| Insalubridade, agentes nocivos, NR-15 | adicional_insalubridade |\n| Periculosidade, área de risco, NR-16 | adicional_periculosidade |\n\n### 2. Títulos Compostos\n\nSe o título tem múltiplos assuntos, use o PRIMEIRO tema:\n\n| Título | Classificar como |\n|--------|------------------|\n| \"ADICIONAL DE INSALUBRIDADE E REFLEXOS. HONORÁRIOS PERICIAIS\" | adicional_insalubridade |\n| \"DOENÇA OCUPACIONAL. DANOS MORAIS E MATERIAIS\" | doenca_ocupacional |\n\nIgnore: \"E REFLEXOS\", \"E REPERCUSSÕES\", \"E SEUS REFLEXOS\"\n\n### 3. Indenização por Danos\n\nLeia o CONTEÚDO para identificar a causa:\n\n| Causa da indenização | Classificar como |\n|----------------------|------------------|\n| Doença relacionada ao trabalho, nexo causal | doenca_ocupacional |\n| Acidente de trabalho | acidente_trabalho |\n| Assédio, humilhação, discriminação (sem doença) | dano_moral |\n| Prejuízo patrimonial (sem doença/acidente) | dano_material |\n\n### 4. Títulos Genéricos\n\nSe o título é genérico (ex: \"MÉRITO\", \"RECURSO\"), classifique 100% pelo conteúdo.\n\n### 5. Se nenhum tema parecer adequado\n\nSe o assunto do item NÃO corresponder a NENHUM tema da lista:\n\n1. Use o tema **outros**\n2. Adicione o campo **tema_sugerido** com sua sugestão de novo tema\n\n---\n\n## ITENS A IGNORAR\n\nNÃO crie chunk para:\n- **PREQUESTIONAMENTO** - Não tem valor para busca semântica\n- Textos com menos de 100 caracteres\n\n---\n\n## COMO GERAR O CAMPO \"texto\"\n\nO campo \"texto\" contém o **texto completo e integral** do item, sem nenhuma alteração.\n\n### Regras:\n- **COMECE pelo título numerado** (ex: \"1. ADICIONAL DE INSALUBRIDADE. A reclamada insurge-se...\")\n- **TERMINE na última palavra do item**, antes do próximo item numerado começar\n- **NÃO CORTE** nenhuma parte: alegações, citações de lei, jurisprudência, análise, decisão — tudo entra\n- **NÃO ALTERE** a redação: mantenha exatamente as palavras do original\n- **NÃO RESUMA** — o texto deve ser idêntico ao original\n\n### Verificação:\nSe o item original tem 3000 palavras, o campo \"texto\" deve ter 3000 palavras.\n\n---\n\n## COMO GERAR O CAMPO \"resumo\"\n\nO RESUMO é um **texto conciso** (2-5 frases) que captura as informações essenciais para busca por similaridade. É sobre ele que será gerado o embedding.\n\n### O que incluir no resumo (SOMENTE se presente no texto):\n\n1. Tipo de atividade/serviço\n2. Partes envolvidas\n3. Circunstâncias relevantes\n4. Principais alegações\n5. Tese jurídica aplicada\n6. Resultado da decisão\n\n**IMPORTANTE:** Inclua apenas os elementos que existem no texto. Se o texto não menciona tipo de atividade ou provas específicas, não invente. O resumo deve refletir fielmente o conteúdo do item.\n\n### Exemplos de resumo:\n\n**Terceirização:**\n```\nVigilante terceirizado prestando serviços em residências de família da alta administração de banco. Tomadora: instituição financeira. Prestadora: empresa de vigilância. Banco alegou não ser beneficiado. Aplicada Súmula 331 do TST. Reconhecida responsabilidade subsidiária.\n```\n\n**Adicional de insalubridade:**\n```\nTrabalhador em câmara frigorífica exposto a agente frio. Empregador alegou fornecimento de EPIs. Laudo pericial concluiu pela insalubridade em grau médio. Aplicada NR-15. Deferido adicional de 20%.\n```\n\n**Justiça gratuita:**\n```\nImpugnação à concessão de justiça gratuita. Reclamante com salário acima de 40% do teto RGPS. Juntou declaração de hipossuficiência. Aplicado Tema 21 do TST. Reclamada não apresentou prova em contrário. Benefício mantido.\n```\n\n---\n\n## FORMATO DE RESPOSTA\n\n### Resposta padrão:\n```json\n{\n  \"chunks\": [\n    {\n      \"ordem\": 1,\n      \"tema\": \"terceirizacao\",\n      \"resumo\": \"Vigilante terceirizado em residências de alta administração de banco. Tomadora: Itaú. Prestadora: empresa de vigilância. Aplicada Súmula 331. Reconhecida responsabilidade subsidiária.\",\n      \"texto\": \"1. RESPONSABILIDADE SUBSIDIÁRIA. A segunda reclamada (Itau Unibanco SA) alega que... [TEXTO COMPLETO E INTEGRAL DO ITEM, SEM CORTES]\"\n    },\n    {\n      \"ordem\": 2,\n      \"tema\": \"justica_gratuita\",\n      \"resumo\": \"Impugnação à justiça gratuita. Reclamante juntou declaração de pobreza. Aplicado Tema 21 do TST. Sem prova em contrário. Benefício mantido.\",\n      \"texto\": \"2. BENEFÍCIOS DA JUSTIÇA GRATUITA. A recorrente sustenta que... [TEXTO COMPLETO E INTEGRAL DO ITEM, SEM CORTES]\"\n    }\n  ]\n}\n```\n\n### Resposta com tema não classificável:\n```json\n{\n  \"chunks\": [\n    {\n      \"ordem\": 1,\n      \"tema\": \"outros\",\n      \"tema_sugerido\": \"prescricao_intercorrente\",\n      \"resumo\": \"Execução trabalhista paralisada por mais de 2 anos. Exequente alegou diligências. Aplicado art. 11-A da CLT. Prescrição intercorrente afastada.\",\n      \"texto\": \"1. PRESCRIÇÃO INTERCORRENTE. O exequente alega que... [TEXTO COMPLETO E INTEGRAL DO ITEM, SEM CORTES]\"\n    }\n  ]\n}\n```\n\n---\n\n## VALIDAÇÃO\n\nAntes de responder, verifique:\n☐ Cada item numerado do voto virou um chunk?\n☐ O tema foi classificado corretamente (título + conteúdo quando necessário)?\n☐ Se usou \"outros\", incluiu \"tema_sugerido\"?\n☐ O campo \"texto\" contém 100% do texto original do item, sem cortes ou alterações?\n☐ O campo \"texto\" começa com o título numerado?\n☐ O campo \"resumo\" é conciso (2-5 frases)?\n☐ O campo \"resumo\" contém apenas informações presentes no texto (nada inventado)?\n☐ PREQUESTIONAMENTO foi ignorado?\n"
+              },
+              {
+                "content": "={{ $json.fundamentacao }}"
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {
+            "maxTokens": 16384
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 2,
+        "position": [
+          640,
+          160
+        ],
+        "id": "7001a09a-bbb4-4e91-8bc7-9e8b1d536481",
+        "name": "Chunking_Fundamentacao",
+        "credentials": {
+          "openAiApi": {
+            "id": "47a3ptzhP4wlIUiz",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "combine",
+          "combineBy": "combineByPosition",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          976,
+          -64
+        ],
+        "id": "b42644c9-9834-41af-9a35-dabce00b26cc",
+        "name": "Mesclar_Processo_Chunks"
+      },
+      {
+        "parameters": {
+          "mode": "runOnceForEachItem",
+          "jsCode": "// Extrair o texto da resposta da IA\nconst outputArray = $json.output;\nconst message = outputArray[0];\nconst textContent = message.content[0].text;\n\n// Verificar se a resposta está completa\nif (message.status !== \"completed\") {\n  return {\n    erro: \"Resposta da IA incompleta\",\n    status: message.status,\n    processo_id: $json.processo_id,\n    numero_processo: $json.numero_processo\n  };\n}\n\n// Remover os marcadores de markdown ```json e ```\nconst jsonString = textContent\n  .replace(/```json\\n?/g, '')\n  .replace(/```\\n?/g, '')\n  .trim();\n\n// Fazer parse do JSON\nlet parsedData;\ntry {\n  parsedData = JSON.parse(jsonString);\n} catch (e) {\n  return {\n    erro: \"Falha ao parsear JSON\",\n    mensagem: e.message,\n    processo_id: $json.processo_id,\n    numero_processo: $json.numero_processo\n  };\n}\n\n// Validar e garantir que cada chunk tenha os campos necessários\nconst chunksValidados = parsedData.chunks.map(chunk => ({\n  ordem: chunk.ordem,\n  tema: chunk.tema,\n  tema_sugerido: chunk.tema_sugerido || null,\n  resumo: chunk.resumo,\n  texto: chunk.texto\n}));\n\n// Retornar os dados do processo junto com os chunks parseados\nreturn {\n  id: $json.id,\n  processo_id: $json.processo_id,\n  numero_processo: $json.numero_processo,\n  data_processo: $json.data_processo,\n  arquivo_id: $json.arquivo_id,\n  chunks: chunksValidados\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1168,
+          -32
+        ],
+        "id": "12e41461-39f2-406f-9cc2-fd5490df1144",
+        "name": "Extrair_JSON_Chunks"
+      },
+      {
+        "parameters": {
+          "fieldToSplitOut": "chunks",
+          "include": "allOtherFields",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitOut",
+        "typeVersion": 1,
+        "position": [
+          1376,
+          -96
+        ],
+        "id": "52fab40a-48d7-4dee-b829-625628fd2718",
+        "name": "Separar_Chunks_Individuais"
+      },
+      {
+        "parameters": {
+          "tableId": "chunks",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "data_processo",
+                "fieldValue": "={{ $json.data_processo }}"
+              },
+              {
+                "fieldId": "ordem",
+                "fieldValue": "={{ $json.chunks.ordem }}"
+              },
+              {
+                "fieldId": "tema",
+                "fieldValue": "={{ $json.chunks.tema }}"
+              },
+              {
+                "fieldId": "resumo",
+                "fieldValue": "={{ $json.chunks.resumo }}"
+              },
+              {
+                "fieldId": "texto",
+                "fieldValue": "={{ $json.chunks.texto }}"
+              },
+              {
+                "fieldId": "resumo_embedding",
+                "fieldValue": "={{ $json.data[0].embedding }}"
+              },
+              {
+                "fieldId": "numero_processo",
+                "fieldValue": "={{ $json.numero_processo }}"
+              },
+              {
+                "fieldId": "arquivo_id",
+                "fieldValue": "={{ $json.processo_id }}"
+              },
+              {
+                "fieldId": "processo_id",
+                "fieldValue": "={{ $json.id }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          2112,
+          -160
+        ],
+        "id": "64fe413c-032b-4d90-a01a-2f5cfebcaf24",
+        "name": "Salvar_Chunks_Supabase",
+        "credentials": {
+          "supabaseApi": {
+            "id": "exeDVluAj4p6WpBK",
+            "name": "Juridico Supabase API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "processos",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $json.processo_id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "status",
+                "fieldValue": "chunking_concluido"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          2688,
+          -160
+        ],
+        "id": "8be9ae09-095f-4942-96e1-3c3862f998f4",
+        "name": "Atualizar_Status_Processo",
+        "executeOnce": false,
+        "credentials": {
+          "supabaseApi": {
+            "id": "exeDVluAj4p6WpBK",
+            "name": "Juridico Supabase API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "combine",
+          "combineBy": "combineByPosition",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          1712,
+          -176
+        ],
+        "id": "a78a0e1e-b073-4228-8a8d-387a53679f1b",
+        "name": "Combinar_Chunk_Embedding"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "53e21da2-9d67-4366-add0-d2dd232a5afc",
+                "leftValue": "={{ $json.chunks.resumo }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "6ee5f081-2131-4ae5-ab3e-501b1d37559e",
+                "leftValue": "={{ $json.chunks.texto }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.filter",
+        "typeVersion": 2.2,
+        "position": [
+          1904,
+          -176
+        ],
+        "id": "ef5993f8-345a-4048-8e8b-246297667b1d",
+        "name": "Filtrar_Chunks_Validos"
+      },
+      {
+        "parameters": {
+          "operation": "move",
+          "fileId": {
+            "__rl": true,
+            "value": "={{ $('Salvar_Chunks_Supabase').item.json.arquivo_id }}",
+            "mode": "id"
+          },
+          "driveId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "1Ew38_MQvQYViYnHUgDwBHzpjBN4c7Xhk",
+            "mode": "list",
+            "cachedResultName": "Processados",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1Ew38_MQvQYViYnHUgDwBHzpjBN4c7Xhk"
+          }
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          2912,
+          -160
+        ],
+        "id": "97540c17-26cc-476d-bacb-6bda4352a9b1",
+        "name": "Move_para_Processados",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "cF17H5HzZzwb2Ssy",
+            "name": "newton.ai API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "inputSource": "passthrough"
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          624,
+          -112
+        ],
+        "id": "2ce8efde-9265-4f45-a70a-3cc0800e8ce0",
+        "name": "When Executed by Another Workflow"
+      },
+      {
+        "parameters": {
+          "compare": "selectedFields",
+          "fieldsToCompare": "processo_id",
+          "options": {
+            "removeOtherFields": false
+          }
+        },
+        "type": "n8n-nodes-base.removeDuplicates",
+        "typeVersion": 2,
+        "position": [
+          2496,
+          -160
+        ],
+        "id": "1bef2100-26c3-48d6-9ded-55427068782e",
+        "name": "Remove Duplicates"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "e0be4de2-f438-41ce-840a-431bc2efd368",
+                "name": "processo_id",
+                "value": "={{ $json.processo_id }}",
+                "type": "string"
+              },
+              {
+                "id": "7e8aacc3-a885-4f6d-9139-7c2feeecc57b",
+                "name": "arquivo_id",
+                "value": "={{ $json.arquivo_id }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          2320,
+          -160
+        ],
+        "id": "59d48e58-8542-48f8-8e21-5ef241c241f2",
+        "name": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.openai.com/v1/embeddings",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "openAiApi",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "input",
+                "value": "={{ $json.chunks.resumo }}"
+              },
+              {
+                "name": "model",
+                "value": "text-embedding-3-small"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1584,
+          48
+        ],
+        "id": "edecaa95-7ab6-4127-87ca-f2148e792d86",
+        "name": "Gerar_Embedding_Resumo",
+        "credentials": {
+          "openAiApi": {
+            "id": "47a3ptzhP4wlIUiz",
+            "name": "OpenAi account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Chunking_Fundamentacao": {
+        "main": [
+          [
+            {
+              "node": "Mesclar_Processo_Chunks",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Mesclar_Processo_Chunks": {
+        "main": [
+          [
+            {
+              "node": "Extrair_JSON_Chunks",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extrair_JSON_Chunks": {
+        "main": [
+          [
+            {
+              "node": "Separar_Chunks_Individuais",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Separar_Chunks_Individuais": {
+        "main": [
+          [
+            {
+              "node": "Combinar_Chunk_Embedding",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Gerar_Embedding_Resumo",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Salvar_Chunks_Supabase": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Combinar_Chunk_Embedding": {
+        "main": [
+          [
+            {
+              "node": "Filtrar_Chunks_Validos",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filtrar_Chunks_Validos": {
+        "main": [
+          [
+            {
+              "node": "Salvar_Chunks_Supabase",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualizar_Status_Processo": {
+        "main": [
+          [
+            {
+              "node": "Move_para_Processados",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Move_para_Processados": {
+        "main": [
+          []
+        ]
+      },
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "Mesclar_Processo_Chunks",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Chunking_Fundamentacao",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Remove Duplicates": {
+        "main": [
+          [
+            {
+              "node": "Atualizar_Status_Processo",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields": {
+        "main": [
+          [
+            {
+              "node": "Remove Duplicates",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Gerar_Embedding_Resumo": {
+        "main": [
+          [
+            {
+              "node": "Combinar_Chunk_Embedding",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Newton Omune",
+    "name": "Version 4a2344a6",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

@@ -1,0 +1,514 @@
+{
+  "updatedAt": "2026-04-08T01:08:33.000Z",
+  "createdAt": "2026-04-08T01:08:33.566Z",
+  "id": "gBuyx55Y8g4NnP1B",
+  "name": "Webhook — Premissa Restaurar",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "premissa/restaurar",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "14bbad61-3a82-4fbb-8c84-b5777b86ed89",
+      "name": "Webhook Restaurar",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "premissa-restaurar",
+      "notes": "POST /premissa/restaurar { premissa_id }\nVolta premissa de 'descartada' para 'disponível' (sem video) ou 'em_uso' (com video em produção)."
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst premissa_id = item.premissa_id || (item.body && item.body.premissa_id) || null;\nif (!premissa_id) throw new Error('premissa_id obrigatório.');\nreturn [{ json: { premissa_id } }];"
+      },
+      "id": "9fb350e3-2343-450c-88db-184d7d43f87c",
+      "name": "Normalizar Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg-url",
+              "name": "SUPABASE_URL",
+              "value": "https://vngtopghlmgqjaibqiyb.supabase.co",
+              "type": "string"
+            },
+            {
+              "id": "cfg-key",
+              "name": "SUPABASE_SERVICE_KEY",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuZ3RvcGdobG1ncWphaWJxaXliIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzUzOTg4NiwiZXhwIjoyMDg5MTE1ODg2fQ.xywZiNZ3h6_uVE9-ltt2LAXtZJ8jTezHCE4LmjBxzTk",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d034e639-9185-4a76-9c55-1fbdf71a079e",
+      "name": "Configuração",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, mensagem: 'Premissa restaurada.' }) }}",
+        "options": {}
+      },
+      "id": "be16b84a-1a1b-4bd5-b0ff-187a6938c3a9",
+      "name": "Responder Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        624,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/premissas?id=eq.{{ $('Normalizar Input').first().json.premissa_id }}&select=video_id",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "406b6a4c-144b-45c1-bef2-702d47c44070",
+      "name": "Ler Premissa",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        832,
+        0
+      ],
+      "notes": "Verifica se a premissa tem video_id pra decidir o status de retorno."
+    },
+    {
+      "parameters": {
+        "jsCode": "const arr = $input.first().json;\nconst row = Array.isArray(arr) ? arr[0] : arr;\nconst hasVideo = row && row.video_id ? true : false;\nreturn [{ json: { novo_status: hasVideo ? 'em_uso' : 'disponível' } }];"
+      },
+      "id": "502bedd8-e14e-4497-8c8b-5fa982420b5f",
+      "name": "Decidir Status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        0
+      ],
+      "notes": "Se tem video_id → 'em_uso'. Senão → 'disponível'."
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/premissas?id=eq.{{ $('Normalizar Input').first().json.premissa_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ status: $('Decidir Status').first().json.novo_status }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "bbebccc5-8848-4a0d-aabf-049104b525d6",
+      "name": "Restaurar Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1248,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Restaurar": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar Input": {
+      "main": [
+        [
+          {
+            "node": "Configuração",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configuração": {
+      "main": [
+        [
+          {
+            "node": "Responder Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responder Webhook": {
+      "main": [
+        [
+          {
+            "node": "Ler Premissa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler Premissa": {
+      "main": [
+        [
+          {
+            "node": "Decidir Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decidir Status": {
+      "main": [
+        [
+          {
+            "node": "Restaurar Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "bbb46a3c-c692-4848-b16b-9466684fc21c",
+  "activeVersionId": "bbb46a3c-c692-4848-b16b-9466684fc21c",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-04-08T01:08:33.574Z",
+      "createdAt": "2026-04-08T01:08:33.574Z",
+      "role": "workflow:owner",
+      "workflowId": "gBuyx55Y8g4NnP1B",
+      "projectId": "SoH44tJE4dqRVTiw"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-04-08T01:08:36.000Z",
+    "createdAt": "2026-04-08T01:08:33.576Z",
+    "versionId": "bbb46a3c-c692-4848-b16b-9466684fc21c",
+    "workflowId": "gBuyx55Y8g4NnP1B",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "premissa/restaurar",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "14bbad61-3a82-4fbb-8c84-b5777b86ed89",
+        "name": "Webhook Restaurar",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          0,
+          0
+        ],
+        "webhookId": "premissa-restaurar",
+        "notes": "POST /premissa/restaurar { premissa_id }\nVolta premissa de 'descartada' para 'disponível' (sem video) ou 'em_uso' (com video em produção)."
+      },
+      {
+        "parameters": {
+          "jsCode": "const item = $input.first().json;\nconst premissa_id = item.premissa_id || (item.body && item.body.premissa_id) || null;\nif (!premissa_id) throw new Error('premissa_id obrigatório.');\nreturn [{ json: { premissa_id } }];"
+        },
+        "id": "9fb350e3-2343-450c-88db-184d7d43f87c",
+        "name": "Normalizar Input",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          208,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "cfg-url",
+                "name": "SUPABASE_URL",
+                "value": "https://vngtopghlmgqjaibqiyb.supabase.co",
+                "type": "string"
+              },
+              {
+                "id": "cfg-key",
+                "name": "SUPABASE_SERVICE_KEY",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuZ3RvcGdobG1ncWphaWJxaXliIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzUzOTg4NiwiZXhwIjoyMDg5MTE1ODg2fQ.xywZiNZ3h6_uVE9-ltt2LAXtZJ8jTezHCE4LmjBxzTk",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "d034e639-9185-4a76-9c55-1fbdf71a079e",
+        "name": "Configuração",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          416,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ success: true, mensagem: 'Premissa restaurada.' }) }}",
+          "options": {}
+        },
+        "id": "be16b84a-1a1b-4bd5-b0ff-187a6938c3a9",
+        "name": "Responder Webhook",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          624,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/premissas?id=eq.{{ $('Normalizar Input').first().json.premissa_id }}&select=video_id",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "406b6a4c-144b-45c1-bef2-702d47c44070",
+        "name": "Ler Premissa",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          832,
+          0
+        ],
+        "notes": "Verifica se a premissa tem video_id pra decidir o status de retorno."
+      },
+      {
+        "parameters": {
+          "jsCode": "const arr = $input.first().json;\nconst row = Array.isArray(arr) ? arr[0] : arr;\nconst hasVideo = row && row.video_id ? true : false;\nreturn [{ json: { novo_status: hasVideo ? 'em_uso' : 'disponível' } }];"
+        },
+        "id": "502bedd8-e14e-4497-8c8b-5fa982420b5f",
+        "name": "Decidir Status",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1040,
+          0
+        ],
+        "notes": "Se tem video_id → 'em_uso'. Senão → 'disponível'."
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/premissas?id=eq.{{ $('Normalizar Input').first().json.premissa_id }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=minimal"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ status: $('Decidir Status').first().json.novo_status }) }}",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "bbebccc5-8848-4a0d-aabf-049104b525d6",
+        "name": "Restaurar Status",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1248,
+          0
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook Restaurar": {
+        "main": [
+          [
+            {
+              "node": "Normalizar Input",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Normalizar Input": {
+        "main": [
+          [
+            {
+              "node": "Configuração",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Configuração": {
+        "main": [
+          [
+            {
+              "node": "Responder Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Responder Webhook": {
+        "main": [
+          [
+            {
+              "node": "Ler Premissa",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Ler Premissa": {
+        "main": [
+          [
+            {
+              "node": "Decidir Status",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Decidir Status": {
+        "main": [
+          [
+            {
+              "node": "Restaurar Status",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Newton Omune",
+    "name": "Version bbb46a3c",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

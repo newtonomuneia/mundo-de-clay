@@ -1,0 +1,1048 @@
+{
+  "updatedAt": "2026-01-30T17:23:11.000Z",
+  "createdAt": "2026-01-19T19:33:59.473Z",
+  "id": "l08DLjOmqTwYblVm",
+  "name": "Módulo 7 - Sync_Fornecedores_Upload",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fornecedores-upload",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -896,
+        16
+      ],
+      "id": "db14cd44-5bee-4f95-be1b-8e7c3d16687e",
+      "name": "Webhook",
+      "webhookId": "f3c2ebc5-74bc-4ca7-a0d5-21bc288349df"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M",
+          "mode": "list",
+          "cachedResultName": "Contas a Pagar - Automação",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 486328343,
+          "mode": "list",
+          "cachedResultName": "Fornecedores",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit#gid=486328343"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "status_sync",
+              "lookupValue": "alterado"
+            },
+            {
+              "lookupColumn": "status_sync",
+              "lookupValue": "novo"
+            },
+            {
+              "lookupColumn": "status_sync",
+              "lookupValue": "excluir"
+            }
+          ]
+        },
+        "combineFilters": "OR",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -688,
+        16
+      ],
+      "id": "eb266091-1de0-4a5d-9d8f-0675163b5e28",
+      "name": "Ler_Fornecedores_Excel",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RruWc6BrI8tF2hiO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.status_sync }}",
+                    "rightValue": "novo",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "a012a762-d812-466f-8a23-52d36c37826b"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "novo"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6ab1af82-d209-4efe-b402-0f5f97557ef3",
+                    "leftValue": "={{ $json.status_sync }}",
+                    "rightValue": "alterado",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "alterado"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -480,
+        16
+      ],
+      "id": "3ac75e30-6d2c-4d9e-b82e-2590a9309471",
+      "name": "Tipo_Operacao"
+    },
+    {
+      "parameters": {
+        "tableId": "fornecedores",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "cnpj",
+              "fieldValue": "={{ $json.cnpj }}"
+            },
+            {
+              "fieldId": "cpf",
+              "fieldValue": "={{ $json.cpf }}"
+            },
+            {
+              "fieldId": "nome",
+              "fieldValue": "={{ $json.nome }}"
+            },
+            {
+              "fieldId": "tipo",
+              "fieldValue": "={{ $json.tipo }}"
+            },
+            {
+              "fieldId": "banco",
+              "fieldValue": "={{ $json.banco }}"
+            },
+            {
+              "fieldId": "agencia",
+              "fieldValue": "={{ $json.agencia }}"
+            },
+            {
+              "fieldId": "conta",
+              "fieldValue": "={{ $json.conta }}"
+            },
+            {
+              "fieldId": "tipo_conta",
+              "fieldValue": "={{ $json.tipo_conta }}"
+            },
+            {
+              "fieldId": "pendente_revisao",
+              "fieldValue": "={{ $json.pendente_revisao === 'TRUE' }}"
+            },
+            {
+              "fieldId": "created_at",
+              "fieldValue": "={{ $now.setZone('America/Sao_Paulo').toFormat('yyyy-MM-dd HH:mm:ss') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        -96
+      ],
+      "id": "227a8f87-a28a-454e-8822-a90ead99d274",
+      "name": "Inserir_Fornecedor",
+      "credentials": {
+        "supabaseApi": {
+          "id": "OP3IGsLO3LJ2h9JA",
+          "name": "Supabase Accounting Payables"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "fornecedores",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "cnpj",
+              "fieldValue": "={{ $json.cnpj }}"
+            },
+            {
+              "fieldId": "cpf",
+              "fieldValue": "={{ $json.cpf }}"
+            },
+            {
+              "fieldId": "nome",
+              "fieldValue": "={{ $json.nome }}"
+            },
+            {
+              "fieldId": "tipo",
+              "fieldValue": "={{ $json.tipo }}"
+            },
+            {
+              "fieldId": "banco",
+              "fieldValue": "={{ $json.banco }}"
+            },
+            {
+              "fieldId": "agencia",
+              "fieldValue": "={{ $json.agencia }}"
+            },
+            {
+              "fieldId": "conta",
+              "fieldValue": "={{ $json.conta }}"
+            },
+            {
+              "fieldId": "tipo_conta",
+              "fieldValue": "={{ $json.tipo_conta }}"
+            },
+            {
+              "fieldId": "pendente_revisao",
+              "fieldValue": "={{ $json.pendente_revisao === 'TRUE' }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        128
+      ],
+      "id": "8c866e54-823a-4e2c-bc0e-3571d07888ad",
+      "name": "Atualizar_Fornecedor",
+      "credentials": {
+        "supabaseApi": {
+          "id": "OP3IGsLO3LJ2h9JA",
+          "name": "Supabase Accounting Payables"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -80,
+        16
+      ],
+      "id": "7248ea8c-0046-49d5-a301-8e73c655bb21",
+      "name": "Merge_Resultados"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "649a42eb-77e0-424f-bd9f-fe8f88500016",
+              "leftValue": "={{ $json.cnpj }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "c31aa2fa-4057-4666-b12f-481d60343edf",
+              "leftValue": "={{ $json.cpf }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        128,
+        16
+      ],
+      "id": "1cec0518-96ed-401e-9bed-2ef53406353f",
+      "name": "Tem_CNPJ"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "contas_a_pagar",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "fornecedor_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.id }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "aguardando_revisao"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "aprovado"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        336,
+        -80
+      ],
+      "id": "1ca79bcb-20a6-46ca-bcfd-d9941b16e7b2",
+      "name": "Aprovar_Contas_Fornecedor",
+      "credentials": {
+        "supabaseApi": {
+          "id": "OP3IGsLO3LJ2h9JA",
+          "name": "Supabase Accounting Payables"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://prosperidade-n8n.yc5mic.easypanel.host/webhook/sync-contas",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        560,
+        -80
+      ],
+      "id": "1f35fbaa-8dc1-4ff1-9c00-942565f0bfba",
+      "name": "Sync_Planilha_Contas",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://prosperidade-n8n.yc5mic.easypanel.host/webhook/fornecedores-sync",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        768,
+        -80
+      ],
+      "id": "93d01f5c-90f6-433e-a0ad-80871c9ff01c",
+      "name": "Sync_Planilha_Fornecedores",
+      "executeOnce": true
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Ler_Fornecedores_Excel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler_Fornecedores_Excel": {
+      "main": [
+        [
+          {
+            "node": "Tipo_Operacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tipo_Operacao": {
+      "main": [
+        [
+          {
+            "node": "Inserir_Fornecedor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Atualizar_Fornecedor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar_Fornecedor": {
+      "main": [
+        [
+          {
+            "node": "Merge_Resultados",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Inserir_Fornecedor": {
+      "main": [
+        [
+          {
+            "node": "Merge_Resultados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge_Resultados": {
+      "main": [
+        [
+          {
+            "node": "Tem_CNPJ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tem_CNPJ": {
+      "main": [
+        [
+          {
+            "node": "Aprovar_Contas_Fornecedor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aprovar_Contas_Fornecedor": {
+      "main": [
+        [
+          {
+            "node": "Sync_Planilha_Contas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sync_Planilha_Contas": {
+      "main": [
+        [
+          {
+            "node": "Sync_Planilha_Fornecedores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "391d6414-2562-4106-b6d5-b2516d5b18d9",
+  "activeVersionId": "391d6414-2562-4106-b6d5-b2516d5b18d9",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-01-19T19:33:59.478Z",
+      "createdAt": "2026-01-19T19:33:59.478Z",
+      "role": "workflow:owner",
+      "workflowId": "l08DLjOmqTwYblVm",
+      "projectId": "SoH44tJE4dqRVTiw"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-01-31T19:17:10.384Z",
+    "createdAt": "2026-01-31T19:17:10.384Z",
+    "versionId": "391d6414-2562-4106-b6d5-b2516d5b18d9",
+    "workflowId": "l08DLjOmqTwYblVm",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "fornecedores-upload",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -896,
+          16
+        ],
+        "id": "db14cd44-5bee-4f95-be1b-8e7c3d16687e",
+        "name": "Webhook",
+        "webhookId": "f3c2ebc5-74bc-4ca7-a0d5-21bc288349df"
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M",
+            "mode": "list",
+            "cachedResultName": "Contas a Pagar - Automação",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 486328343,
+            "mode": "list",
+            "cachedResultName": "Fornecedores",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit#gid=486328343"
+          },
+          "filtersUI": {
+            "values": [
+              {
+                "lookupColumn": "status_sync",
+                "lookupValue": "alterado"
+              },
+              {
+                "lookupColumn": "status_sync",
+                "lookupValue": "novo"
+              },
+              {
+                "lookupColumn": "status_sync",
+                "lookupValue": "excluir"
+              }
+            ]
+          },
+          "combineFilters": "OR",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          -688,
+          16
+        ],
+        "id": "eb266091-1de0-4a5d-9d8f-0675163b5e28",
+        "name": "Ler_Fornecedores_Excel",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "RruWc6BrI8tF2hiO",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.status_sync }}",
+                      "rightValue": "novo",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "a012a762-d812-466f-8a23-52d36c37826b"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "novo"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "6ab1af82-d209-4efe-b402-0f5f97557ef3",
+                      "leftValue": "={{ $json.status_sync }}",
+                      "rightValue": "alterado",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "alterado"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.3,
+        "position": [
+          -480,
+          16
+        ],
+        "id": "3ac75e30-6d2c-4d9e-b82e-2590a9309471",
+        "name": "Tipo_Operacao"
+      },
+      {
+        "parameters": {
+          "tableId": "fornecedores",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "cnpj",
+                "fieldValue": "={{ $json.cnpj }}"
+              },
+              {
+                "fieldId": "cpf",
+                "fieldValue": "={{ $json.cpf }}"
+              },
+              {
+                "fieldId": "nome",
+                "fieldValue": "={{ $json.nome }}"
+              },
+              {
+                "fieldId": "tipo",
+                "fieldValue": "={{ $json.tipo }}"
+              },
+              {
+                "fieldId": "banco",
+                "fieldValue": "={{ $json.banco }}"
+              },
+              {
+                "fieldId": "agencia",
+                "fieldValue": "={{ $json.agencia }}"
+              },
+              {
+                "fieldId": "conta",
+                "fieldValue": "={{ $json.conta }}"
+              },
+              {
+                "fieldId": "tipo_conta",
+                "fieldValue": "={{ $json.tipo_conta }}"
+              },
+              {
+                "fieldId": "pendente_revisao",
+                "fieldValue": "={{ $json.pendente_revisao === 'TRUE' }}"
+              },
+              {
+                "fieldId": "created_at",
+                "fieldValue": "={{ $now.setZone('America/Sao_Paulo').toFormat('yyyy-MM-dd HH:mm:ss') }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -272,
+          -96
+        ],
+        "id": "227a8f87-a28a-454e-8822-a90ead99d274",
+        "name": "Inserir_Fornecedor",
+        "credentials": {
+          "supabaseApi": {
+            "id": "OP3IGsLO3LJ2h9JA",
+            "name": "Supabase Accounting Payables"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "fornecedores",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $json.id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "cnpj",
+                "fieldValue": "={{ $json.cnpj }}"
+              },
+              {
+                "fieldId": "cpf",
+                "fieldValue": "={{ $json.cpf }}"
+              },
+              {
+                "fieldId": "nome",
+                "fieldValue": "={{ $json.nome }}"
+              },
+              {
+                "fieldId": "tipo",
+                "fieldValue": "={{ $json.tipo }}"
+              },
+              {
+                "fieldId": "banco",
+                "fieldValue": "={{ $json.banco }}"
+              },
+              {
+                "fieldId": "agencia",
+                "fieldValue": "={{ $json.agencia }}"
+              },
+              {
+                "fieldId": "conta",
+                "fieldValue": "={{ $json.conta }}"
+              },
+              {
+                "fieldId": "tipo_conta",
+                "fieldValue": "={{ $json.tipo_conta }}"
+              },
+              {
+                "fieldId": "pendente_revisao",
+                "fieldValue": "={{ $json.pendente_revisao === 'TRUE' }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -272,
+          128
+        ],
+        "id": "8c866e54-823a-4e2c-bc0e-3571d07888ad",
+        "name": "Atualizar_Fornecedor",
+        "credentials": {
+          "supabaseApi": {
+            "id": "OP3IGsLO3LJ2h9JA",
+            "name": "Supabase Accounting Payables"
+          }
+        }
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          -80,
+          16
+        ],
+        "id": "7248ea8c-0046-49d5-a301-8e73c655bb21",
+        "name": "Merge_Resultados"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "649a42eb-77e0-424f-bd9f-fe8f88500016",
+                "leftValue": "={{ $json.cnpj }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "c31aa2fa-4057-4666-b12f-481d60343edf",
+                "leftValue": "={{ $json.cpf }}",
+                "rightValue": "=",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "or"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          128,
+          16
+        ],
+        "id": "1cec0518-96ed-401e-9bed-2ef53406353f",
+        "name": "Tem_CNPJ"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "contas_a_pagar",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "fornecedor_id",
+                "condition": "eq",
+                "keyValue": "={{ $json.id }}"
+              },
+              {
+                "keyName": "status",
+                "condition": "eq",
+                "keyValue": "aguardando_revisao"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "status",
+                "fieldValue": "aprovado"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          336,
+          -80
+        ],
+        "id": "1ca79bcb-20a6-46ca-bcfd-d9941b16e7b2",
+        "name": "Aprovar_Contas_Fornecedor",
+        "credentials": {
+          "supabaseApi": {
+            "id": "OP3IGsLO3LJ2h9JA",
+            "name": "Supabase Accounting Payables"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://prosperidade-n8n.yc5mic.easypanel.host/webhook/sync-contas",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          560,
+          -80
+        ],
+        "id": "1f35fbaa-8dc1-4ff1-9c00-942565f0bfba",
+        "name": "Sync_Planilha_Contas",
+        "executeOnce": true
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://prosperidade-n8n.yc5mic.easypanel.host/webhook/fornecedores-sync",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          768,
+          -80
+        ],
+        "id": "93d01f5c-90f6-433e-a0ad-80871c9ff01c",
+        "name": "Sync_Planilha_Fornecedores",
+        "executeOnce": true
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Ler_Fornecedores_Excel",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Ler_Fornecedores_Excel": {
+        "main": [
+          [
+            {
+              "node": "Tipo_Operacao",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Tipo_Operacao": {
+        "main": [
+          [
+            {
+              "node": "Inserir_Fornecedor",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Atualizar_Fornecedor",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualizar_Fornecedor": {
+        "main": [
+          [
+            {
+              "node": "Merge_Resultados",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Inserir_Fornecedor": {
+        "main": [
+          [
+            {
+              "node": "Merge_Resultados",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Merge_Resultados": {
+        "main": [
+          [
+            {
+              "node": "Tem_CNPJ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Tem_CNPJ": {
+        "main": [
+          [
+            {
+              "node": "Aprovar_Contas_Fornecedor",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Aprovar_Contas_Fornecedor": {
+        "main": [
+          [
+            {
+              "node": "Sync_Planilha_Contas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Sync_Planilha_Contas": {
+        "main": [
+          [
+            {
+              "node": "Sync_Planilha_Fornecedores",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "system migration",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

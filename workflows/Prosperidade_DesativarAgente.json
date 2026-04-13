@@ -1,0 +1,751 @@
+{
+  "updatedAt": "2025-12-30T11:30:29.000Z",
+  "createdAt": "2025-12-06T10:36:32.579Z",
+  "id": "0qgygYt9wSDmE3GE",
+  "name": "Prosperidade_DesativarAgente",
+  "active": true,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "IdConversa"
+            },
+            {
+              "name": "TempoInatividadeAgente"
+            },
+            {
+              "name": "WhatsAppHumano"
+            }
+          ]
+        }
+      },
+      "id": "62c5a537-29c5-4501-8c36-fdd359a7898d",
+      "typeVersion": 1.1,
+      "name": "DesativarAgente",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        272,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $json.IdConversa }}_status",
+        "value": "Desativado",
+        "expire": true,
+        "ttl": "={{ $json.TempoInatividadeAgente }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        480,
+        416
+      ],
+      "id": "f9157957-3329-4071-93d7-4874b0ac88d8",
+      "name": "Redis",
+      "credentials": {
+        "redis": {
+          "id": "2YLmSxsr6T77RzwN",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d720d485-d934-4859-9f63-cc2b6f1232ea",
+              "leftValue": "={{ $json.WhatsAppHumano }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        704,
+        416
+      ],
+      "id": "cff5cb7f-22f6-46b0-b349-146d2edba7bc",
+      "name": "If"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        928,
+        512
+      ],
+      "id": "2028f87a-40d9-464a-80f3-b723af79d1eb",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryManager",
+      "typeVersion": 1.1,
+      "position": [
+        992,
+        112
+      ],
+      "id": "3af0e6d9-635f-4709-ae14-5eb821d31fb9",
+      "name": "Chat Memory Manager"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.IdConversa }}",
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        1104,
+        304
+      ],
+      "id": "ede0ea97-7f3c-4344-879a-a0ccf23b803f",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "0Z8zeX4ox8eTEGL1",
+          "name": "Postgres account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.messages }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=# Instruções | Faça um resumo da conversa realizada entre o usuário e a IA para ser repassado a um consultor especializado que irá dar seguimento nessa conversa.\n\n#Importante \n\n- Divida as mensagens de forma natural e humanizada;\n- Use quebras de linhas (\\n\\n) após pontos finais para legibilidade;\n- Para negrito (bold) use apenas um \"*\" nunca duas (exemplo: *negrito*)."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        1344,
+        112
+      ],
+      "id": "b097a5aa-91fb-49fa-8c79-7109b078a951",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1424,
+        336
+      ],
+      "id": "b15a67ba-2290-4f61-8bfd-536e16c3e9d6",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "47a3ptzhP4wlIUiz",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.z-api.io/instances/3EAC63EE98C5F14530FE227360D3178E/token/198DF2D98C4EB52EFD1319EA/send-text",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "phone",
+              "value": "={{ $('DesativarAgente').item.json.WhatsAppHumano }}"
+            },
+            {
+              "name": "message",
+              "value": "=⭐ Nova Solicitação de Atendimento\n\nℹ️ *IdConversa:* \n{{ $('DesativarAgente').item.json.IdConversa }}\n\n💭 *Resumo da Conversa*\n{{ $json.text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1712,
+        112
+      ],
+      "id": "f0922afe-532a-4242-9f77-079dcc93b2a4",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "8jRtMgiJTpVow7wP",
+          "name": "Z-API tutoriais no code"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        112
+      ],
+      "id": "1f3fd962-1a7b-4809-9b86-ee3cdaf2d9c0",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {
+        "content": "## Desativar Agente, Fazer Resumo da Conversa e Avisar Humano\n",
+        "height": 780,
+        "width": 2120,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        160,
+        -64
+      ],
+      "id": "762c44e6-357f-4a69-a266-8ffb5fae4c35",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/?utm_source=template-n8n",
+        "height": 126,
+        "width": 593,
+        "color": 7
+      },
+      "id": "fdc03188-86d9-4f66-94ac-6df841051b25",
+      "name": "Sticky Note23",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        768
+      ]
+    }
+  ],
+  "connections": {
+    "DesativarAgente": {
+      "main": [
+        [
+          {
+            "node": "Redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Chat Memory Manager",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Chat Memory Manager",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Memory Manager": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "0ca88974-c128-4d14-a23e-4362fd4a40ef",
+  "activeVersionId": "0ca88974-c128-4d14-a23e-4362fd4a40ef",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-06T10:36:32.588Z",
+      "createdAt": "2025-12-06T10:36:32.588Z",
+      "role": "workflow:owner",
+      "workflowId": "0qgygYt9wSDmE3GE",
+      "projectId": "SoH44tJE4dqRVTiw"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-01-31T19:17:10.384Z",
+    "createdAt": "2026-01-31T19:17:10.384Z",
+    "versionId": "0ca88974-c128-4d14-a23e-4362fd4a40ef",
+    "workflowId": "0qgygYt9wSDmE3GE",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "IdConversa"
+              },
+              {
+                "name": "TempoInatividadeAgente"
+              },
+              {
+                "name": "WhatsAppHumano"
+              }
+            ]
+          }
+        },
+        "id": "62c5a537-29c5-4501-8c36-fdd359a7898d",
+        "typeVersion": 1.1,
+        "name": "DesativarAgente",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "position": [
+          272,
+          416
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "set",
+          "key": "={{ $json.IdConversa }}_status",
+          "value": "Desativado",
+          "expire": true,
+          "ttl": "={{ $json.TempoInatividadeAgente }}"
+        },
+        "type": "n8n-nodes-base.redis",
+        "typeVersion": 1,
+        "position": [
+          480,
+          416
+        ],
+        "id": "f9157957-3329-4071-93d7-4874b0ac88d8",
+        "name": "Redis",
+        "credentials": {
+          "redis": {
+            "id": "2YLmSxsr6T77RzwN",
+            "name": "Redis account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "d720d485-d934-4859-9f63-cc2b6f1232ea",
+                "leftValue": "={{ $json.WhatsAppHumano }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          704,
+          416
+        ],
+        "id": "cff5cb7f-22f6-46b0-b349-146d2edba7bc",
+        "name": "If"
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [
+          928,
+          512
+        ],
+        "id": "2028f87a-40d9-464a-80f3-b723af79d1eb",
+        "name": "No Operation, do nothing"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.memoryManager",
+        "typeVersion": 1.1,
+        "position": [
+          992,
+          112
+        ],
+        "id": "3af0e6d9-635f-4709-ae14-5eb821d31fb9",
+        "name": "Chat Memory Manager"
+      },
+      {
+        "parameters": {
+          "sessionIdType": "customKey",
+          "sessionKey": "={{ $json.IdConversa }}",
+          "contextWindowLength": 20
+        },
+        "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+        "typeVersion": 1.3,
+        "position": [
+          1104,
+          304
+        ],
+        "id": "ede0ea97-7f3c-4344-879a-a0ccf23b803f",
+        "name": "Postgres Chat Memory",
+        "credentials": {
+          "postgres": {
+            "id": "0Z8zeX4ox8eTEGL1",
+            "name": "Postgres account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "={{ $json.messages }}",
+          "messages": {
+            "messageValues": [
+              {
+                "message": "=# Instruções | Faça um resumo da conversa realizada entre o usuário e a IA para ser repassado a um consultor especializado que irá dar seguimento nessa conversa.\n\n#Importante \n\n- Divida as mensagens de forma natural e humanizada;\n- Use quebras de linhas (\\n\\n) após pontos finais para legibilidade;\n- Para negrito (bold) use apenas um \"*\" nunca duas (exemplo: *negrito*)."
+              }
+            ]
+          },
+          "batching": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.chainLlm",
+        "typeVersion": 1.7,
+        "position": [
+          1344,
+          112
+        ],
+        "id": "b097a5aa-91fb-49fa-8c79-7109b078a951",
+        "name": "Basic LLM Chain"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gpt-4.1-mini"
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          1424,
+          336
+        ],
+        "id": "b15a67ba-2290-4f61-8bfd-536e16c3e9d6",
+        "name": "OpenAI Chat Model",
+        "credentials": {
+          "openAiApi": {
+            "id": "47a3ptzhP4wlIUiz",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.z-api.io/instances/3EAC63EE98C5F14530FE227360D3178E/token/198DF2D98C4EB52EFD1319EA/send-text",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "phone",
+                "value": "={{ $('DesativarAgente').item.json.WhatsAppHumano }}"
+              },
+              {
+                "name": "message",
+                "value": "=⭐ Nova Solicitação de Atendimento\n\nℹ️ *IdConversa:* \n{{ $('DesativarAgente').item.json.IdConversa }}\n\n💭 *Resumo da Conversa*\n{{ $json.text }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1712,
+          112
+        ],
+        "id": "f0922afe-532a-4242-9f77-079dcc93b2a4",
+        "name": "HTTP Request",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "8jRtMgiJTpVow7wP",
+            "name": "Z-API tutoriais no code"
+          }
+        }
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [
+          1920,
+          112
+        ],
+        "id": "1f3fd962-1a7b-4809-9b86-ee3cdaf2d9c0",
+        "name": "No Operation, do nothing1"
+      },
+      {
+        "parameters": {
+          "content": "## Desativar Agente, Fazer Resumo da Conversa e Avisar Humano\n",
+          "height": 780,
+          "width": 2120,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          160,
+          -64
+        ],
+        "id": "762c44e6-357f-4a69-a266-8ffb5fae4c35",
+        "name": "Sticky Note6"
+      },
+      {
+        "parameters": {
+          "content": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/?utm_source=template-n8n",
+          "height": 126,
+          "width": 593,
+          "color": 7
+        },
+        "id": "fdc03188-86d9-4f66-94ac-6df841051b25",
+        "name": "Sticky Note23",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          1680,
+          768
+        ]
+      }
+    ],
+    "connections": {
+      "DesativarAgente": {
+        "main": [
+          [
+            {
+              "node": "Redis",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Redis": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Chat Memory Manager",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "No Operation, do nothing",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Postgres Chat Memory": {
+        "ai_memory": [
+          [
+            {
+              "node": "Chat Memory Manager",
+              "type": "ai_memory",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Chat Memory Manager": {
+        "main": [
+          [
+            {
+              "node": "Basic LLM Chain",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Basic LLM Chain",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Basic LLM Chain": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "No Operation, do nothing1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "system migration",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": [
+    {
+      "updatedAt": "2025-12-04T00:12:32.689Z",
+      "createdAt": "2025-12-04T00:12:32.689Z",
+      "id": "JW0HiSC3YYTXh5aL",
+      "name": "NoCode StartUp"
+    }
+  ]
+}

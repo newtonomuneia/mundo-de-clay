@@ -1,0 +1,730 @@
+{
+  "updatedAt": "2025-12-30T00:45:46.000Z",
+  "createdAt": "2025-12-26T18:10:40.431Z",
+  "id": "AqqiJMtJWW98DDcP",
+  "name": "Tool - Salvar Endereço",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "salvar-endereco",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -480,
+        -16
+      ],
+      "id": "0fd40f7d-f345-47ee-82e6-0704cf46b29b",
+      "name": "Webhook - Endereço",
+      "webhookId": "47754362-55d1-4a87-a1a3-953947d1c5c7"
+    },
+    {
+      "parameters": {
+        "url": "=https://viacep.com.br/ws/{{ $('Webhook - Endereço').first().json.body.cep }}/json/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -336,
+        -16
+      ],
+      "id": "130c77b1-74b8-4916-ac4e-e4577482591b",
+      "name": "Validar CEP"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d07cae0d-f8f9-480b-b386-84e9619deeb4",
+              "leftValue": "={{ $json.erro }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -192,
+        -16
+      ],
+      "id": "ba99da17-7daf-4b24-9c55-ee3873767da6",
+      "name": "CEP válido?"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"erro\": \"CEP inválido. Por favor, verifique e tente novamente. O CEP deve ter 8 dígitos.\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        96
+      ],
+      "id": "5aacd183-c53e-43f5-b800-35f1aca93af7",
+      "name": "CEP Inválido"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "conversas",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "telefone",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook - Endereço').first().json.body.telefone }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        16,
+        -112
+      ],
+      "id": "c0d1d97b-c767-47f1-9835-09b7d40ce036",
+      "name": "Buscar Conversa",
+      "credentials": {
+        "supabaseApi": {
+          "id": "C87gCgyLKdnG6PSu",
+          "name": "baralho_prosperidade"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "enderecos",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "conversa_id",
+              "fieldValue": "={{ $('Buscar Conversa').first().json.id }}"
+            },
+            {
+              "fieldId": "cep",
+              "fieldValue": "={{ $('Validar CEP').first().json.cep }}"
+            },
+            {
+              "fieldId": "logradouro",
+              "fieldValue": "={{ $('Validar CEP').first().json.logradouro }}"
+            },
+            {
+              "fieldId": "numero",
+              "fieldValue": "={{ $('Webhook - Endereço').first().json.body.numero }}"
+            },
+            {
+              "fieldId": "complemento",
+              "fieldValue": "={{ $('Webhook - Endereço').first().json.body.complemento }}"
+            },
+            {
+              "fieldId": "bairro",
+              "fieldValue": "={{ $('Validar CEP').first().json.bairro }}"
+            },
+            {
+              "fieldId": "cidade",
+              "fieldValue": "={{ $('Validar CEP').first().json.localidade }}"
+            },
+            {
+              "fieldId": "estado",
+              "fieldValue": "={{ $('Validar CEP').first().json.uf }}"
+            },
+            {
+              "fieldId": "created_at",
+              "fieldValue": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        176,
+        -112
+      ],
+      "id": "0e6c9ead-f3c9-4382-a982-8672e08bb055",
+      "name": "Salvar Endereço",
+      "credentials": {
+        "supabaseApi": {
+          "id": "C87gCgyLKdnG6PSu",
+          "name": "baralho_prosperidade"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "id": {
+          "__rl": true,
+          "value": "={{ $('Buscar Conversa').first().json.trello_card_id }}",
+          "mode": "id"
+        },
+        "updateFields": {
+          "desc": "={{ $('Buscar Conversa').first().json.nome }}\nCPF: {{ $('Buscar Conversa').first().json.cpf }}\nTelefone: {{ $('Buscar Conversa').first().json.telefone }}\n\n✅ VENDA FINALIZADA\n\n📍 ENDEREÇO DE ENTREGA:\n\n{{ $('Validar CEP').first().json.logradouro }}, {{ $('Webhook - Endereço').first().json.body.numero }}{{ $('Webhook - Endereço').first().json.body.complemento ? ' - ' + $('Webhook - Endereço').first().json.body.complemento : '' }}\n{{ $('Validar CEP').first().json.bairro }}\n{{ $('Validar CEP').first().json.localidade }} - {{ $('Validar CEP').first().json.uf }}\nCEP {{ $('Validar CEP').first().json.cep }}\n\n📊 STATUS:\nStatus: finalizado\nFase: finalizado\n\n✅ Endereço confirmado em: {{ $now.toFormat('dd/MM/yyyy HH:mm') }}\n\n🚚 PRÓXIMO PASSO: Enviar produto\n📦 Aguardando postagem nos Correios"
+        }
+      },
+      "type": "n8n-nodes-base.trello",
+      "typeVersion": 1,
+      "position": [
+        336,
+        -112
+      ],
+      "id": "8b835e9e-ec18-4ec1-b819-0d2ac7f6d558",
+      "name": "Update a card",
+      "credentials": {
+        "trelloApi": {
+          "id": "Rw0karD0UnTWxue6",
+          "name": "Trello account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "conversas",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Buscar Conversa').first().json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "fase_atual",
+              "fieldValue": "finalizado"
+            },
+            {
+              "fieldId": "updated_at",
+              "fieldValue": "={{ $now }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "finalizado"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        496,
+        -112
+      ],
+      "id": "21490e43-2425-437e-ae58-1fdece481c33",
+      "name": "Atualizar Fase - Finalizado",
+      "credentials": {
+        "supabaseApi": {
+          "id": "C87gCgyLKdnG6PSu",
+          "name": "baralho_prosperidade"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"endereco_completo\": \"{{ $('Validar CEP').first().json.logradouro }}, {{ $('Webhook - Endereço').first().json.body.numero }}{{ $('Webhook - Endereço').first().json.body.complemento ? ' - ' + $('Webhook - Endereço').first().json.body.complemento : '' }}, {{ $('Validar CEP').first().json.bairro }}, {{ $('Validar CEP').first().json.localidade }} - {{ $('Validar CEP').first().json.uf }}, CEP {{ $('Validar CEP').first().json.cep }}\",\n  \"logradouro\": \"{{ $('Validar CEP').first().json.logradouro }}\",\n  \"numero\": \"{{ $('Webhook - Endereço').first().json.body.numero }}\",\n  \"complemento\": \"{{ $('Webhook - Endereço').first().json.body.complemento }}\",\n  \"bairro\": \"{{ $('Validar CEP').first().json.bairro }}\",\n  \"cidade\": \"{{ $('Validar CEP').first().json.localidade }}\",\n  \"estado\": \"{{ $('Validar CEP').first().json.uf }}\",\n  \"cep\": \"{{ $('Validar CEP').first().json.cep }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        704,
+        -112
+      ],
+      "id": "a7c931f6-dd8a-4d1a-82d5-ca8598e2e8ca",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "connections": {
+    "Webhook - Endereço": {
+      "main": [
+        [
+          {
+            "node": "Validar CEP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar CEP": {
+      "main": [
+        [
+          {
+            "node": "CEP válido?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CEP válido?": {
+      "main": [
+        [
+          {
+            "node": "Buscar Conversa",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "CEP Inválido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Conversa": {
+      "main": [
+        [
+          {
+            "node": "Salvar Endereço",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salvar Endereço": {
+      "main": [
+        [
+          {
+            "node": "Update a card",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a card": {
+      "main": [
+        [
+          {
+            "node": "Atualizar Fase - Finalizado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Fase - Finalizado": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "dd690771-00a0-457c-afa2-ed352bcfa0d1",
+  "activeVersionId": "dd690771-00a0-457c-afa2-ed352bcfa0d1",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-12-26T18:10:40.438Z",
+      "createdAt": "2025-12-26T18:10:40.438Z",
+      "role": "workflow:owner",
+      "workflowId": "AqqiJMtJWW98DDcP",
+      "projectId": "SoH44tJE4dqRVTiw"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-01-31T19:17:10.384Z",
+    "createdAt": "2026-01-31T19:17:10.384Z",
+    "versionId": "dd690771-00a0-457c-afa2-ed352bcfa0d1",
+    "workflowId": "AqqiJMtJWW98DDcP",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "salvar-endereco",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -480,
+          -16
+        ],
+        "id": "0fd40f7d-f345-47ee-82e6-0704cf46b29b",
+        "name": "Webhook - Endereço",
+        "webhookId": "47754362-55d1-4a87-a1a3-953947d1c5c7"
+      },
+      {
+        "parameters": {
+          "url": "=https://viacep.com.br/ws/{{ $('Webhook - Endereço').first().json.body.cep }}/json/",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -336,
+          -16
+        ],
+        "id": "130c77b1-74b8-4916-ac4e-e4577482591b",
+        "name": "Validar CEP"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "d07cae0d-f8f9-480b-b386-84e9619deeb4",
+                "leftValue": "={{ $json.erro }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "empty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -192,
+          -16
+        ],
+        "id": "ba99da17-7daf-4b24-9c55-ee3873767da6",
+        "name": "CEP válido?"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "{\n  \"success\": false,\n  \"erro\": \"CEP inválido. Por favor, verifique e tente novamente. O CEP deve ter 8 dígitos.\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.4,
+        "position": [
+          0,
+          96
+        ],
+        "id": "5aacd183-c53e-43f5-b800-35f1aca93af7",
+        "name": "CEP Inválido"
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "conversas",
+          "limit": 1,
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "telefone",
+                "condition": "eq",
+                "keyValue": "={{ $('Webhook - Endereço').first().json.body.telefone }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          16,
+          -112
+        ],
+        "id": "c0d1d97b-c767-47f1-9835-09b7d40ce036",
+        "name": "Buscar Conversa",
+        "credentials": {
+          "supabaseApi": {
+            "id": "C87gCgyLKdnG6PSu",
+            "name": "baralho_prosperidade"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "tableId": "enderecos",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "conversa_id",
+                "fieldValue": "={{ $('Buscar Conversa').first().json.id }}"
+              },
+              {
+                "fieldId": "cep",
+                "fieldValue": "={{ $('Validar CEP').first().json.cep }}"
+              },
+              {
+                "fieldId": "logradouro",
+                "fieldValue": "={{ $('Validar CEP').first().json.logradouro }}"
+              },
+              {
+                "fieldId": "numero",
+                "fieldValue": "={{ $('Webhook - Endereço').first().json.body.numero }}"
+              },
+              {
+                "fieldId": "complemento",
+                "fieldValue": "={{ $('Webhook - Endereço').first().json.body.complemento }}"
+              },
+              {
+                "fieldId": "bairro",
+                "fieldValue": "={{ $('Validar CEP').first().json.bairro }}"
+              },
+              {
+                "fieldId": "cidade",
+                "fieldValue": "={{ $('Validar CEP').first().json.localidade }}"
+              },
+              {
+                "fieldId": "estado",
+                "fieldValue": "={{ $('Validar CEP').first().json.uf }}"
+              },
+              {
+                "fieldId": "created_at",
+                "fieldValue": "={{ $now }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          176,
+          -112
+        ],
+        "id": "0e6c9ead-f3c9-4382-a982-8672e08bb055",
+        "name": "Salvar Endereço",
+        "credentials": {
+          "supabaseApi": {
+            "id": "C87gCgyLKdnG6PSu",
+            "name": "baralho_prosperidade"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "id": {
+            "__rl": true,
+            "value": "={{ $('Buscar Conversa').first().json.trello_card_id }}",
+            "mode": "id"
+          },
+          "updateFields": {
+            "desc": "={{ $('Buscar Conversa').first().json.nome }}\nCPF: {{ $('Buscar Conversa').first().json.cpf }}\nTelefone: {{ $('Buscar Conversa').first().json.telefone }}\n\n✅ VENDA FINALIZADA\n\n📍 ENDEREÇO DE ENTREGA:\n\n{{ $('Validar CEP').first().json.logradouro }}, {{ $('Webhook - Endereço').first().json.body.numero }}{{ $('Webhook - Endereço').first().json.body.complemento ? ' - ' + $('Webhook - Endereço').first().json.body.complemento : '' }}\n{{ $('Validar CEP').first().json.bairro }}\n{{ $('Validar CEP').first().json.localidade }} - {{ $('Validar CEP').first().json.uf }}\nCEP {{ $('Validar CEP').first().json.cep }}\n\n📊 STATUS:\nStatus: finalizado\nFase: finalizado\n\n✅ Endereço confirmado em: {{ $now.toFormat('dd/MM/yyyy HH:mm') }}\n\n🚚 PRÓXIMO PASSO: Enviar produto\n📦 Aguardando postagem nos Correios"
+          }
+        },
+        "type": "n8n-nodes-base.trello",
+        "typeVersion": 1,
+        "position": [
+          336,
+          -112
+        ],
+        "id": "8b835e9e-ec18-4ec1-b819-0d2ac7f6d558",
+        "name": "Update a card",
+        "credentials": {
+          "trelloApi": {
+            "id": "Rw0karD0UnTWxue6",
+            "name": "Trello account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "conversas",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('Buscar Conversa').first().json.id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "fase_atual",
+                "fieldValue": "finalizado"
+              },
+              {
+                "fieldId": "updated_at",
+                "fieldValue": "={{ $now }}"
+              },
+              {
+                "fieldId": "status",
+                "fieldValue": "finalizado"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          496,
+          -112
+        ],
+        "id": "21490e43-2425-437e-ae58-1fdece481c33",
+        "name": "Atualizar Fase - Finalizado",
+        "credentials": {
+          "supabaseApi": {
+            "id": "C87gCgyLKdnG6PSu",
+            "name": "baralho_prosperidade"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={\n  \"success\": true,\n  \"endereco_completo\": \"{{ $('Validar CEP').first().json.logradouro }}, {{ $('Webhook - Endereço').first().json.body.numero }}{{ $('Webhook - Endereço').first().json.body.complemento ? ' - ' + $('Webhook - Endereço').first().json.body.complemento : '' }}, {{ $('Validar CEP').first().json.bairro }}, {{ $('Validar CEP').first().json.localidade }} - {{ $('Validar CEP').first().json.uf }}, CEP {{ $('Validar CEP').first().json.cep }}\",\n  \"logradouro\": \"{{ $('Validar CEP').first().json.logradouro }}\",\n  \"numero\": \"{{ $('Webhook - Endereço').first().json.body.numero }}\",\n  \"complemento\": \"{{ $('Webhook - Endereço').first().json.body.complemento }}\",\n  \"bairro\": \"{{ $('Validar CEP').first().json.bairro }}\",\n  \"cidade\": \"{{ $('Validar CEP').first().json.localidade }}\",\n  \"estado\": \"{{ $('Validar CEP').first().json.uf }}\",\n  \"cep\": \"{{ $('Validar CEP').first().json.cep }}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.4,
+        "position": [
+          704,
+          -112
+        ],
+        "id": "a7c931f6-dd8a-4d1a-82d5-ca8598e2e8ca",
+        "name": "Respond to Webhook"
+      }
+    ],
+    "connections": {
+      "Webhook - Endereço": {
+        "main": [
+          [
+            {
+              "node": "Validar CEP",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validar CEP": {
+        "main": [
+          [
+            {
+              "node": "CEP válido?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "CEP válido?": {
+        "main": [
+          [
+            {
+              "node": "Buscar Conversa",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "CEP Inválido",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Buscar Conversa": {
+        "main": [
+          [
+            {
+              "node": "Salvar Endereço",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Salvar Endereço": {
+        "main": [
+          [
+            {
+              "node": "Update a card",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update a card": {
+        "main": [
+          [
+            {
+              "node": "Atualizar Fase - Finalizado",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualizar Fase - Finalizado": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "system migration",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

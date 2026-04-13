@@ -1,0 +1,1465 @@
+{
+  "updatedAt": "2026-04-10T19:49:49.220Z",
+  "createdAt": "2026-04-01T03:18:15.571Z",
+  "id": "odxHHXuNJHjPYXpo",
+  "name": "Módulo 06 — Efeitos Sonoros",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "43bc83fe-8d49-40fe-acb7-6426ba7e8a64",
+      "name": "Início Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "notes": "⚠️ TESTE MANUAL: clique 'Test workflow' com video_id no nó seguinte."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "test-vid",
+              "name": "video_id",
+              "value": "42058483-4694-465a-9346-4ca03c5818d2",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ee5aefdf-1791-42fe-9060-e55a29fd3e29",
+      "name": "Video ID Teste",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "notes": "⚠️ TROQUE O UUID AQUI para testar."
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "video_id"
+            }
+          ]
+        }
+      },
+      "id": "0f492a72-8b9d-4b1a-8c20-3733a7125943",
+      "name": "Trigger Externo",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        400
+      ],
+      "notes": "Recebe { video_id } do webhook tts/continuar."
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst video_id = item.video_id || null;\nif (!video_id) throw new Error('video_id não encontrado.');\nreturn [{ json: { video_id } }];"
+      },
+      "id": "b6843881-19ee-45e5-9c03-06fbff9636b8",
+      "name": "Normalizar Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        208
+      ],
+      "notes": "Unifica input. Saída: { video_id }"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg-url",
+              "name": "SUPABASE_URL",
+              "value": "https://vngtopghlmgqjaibqiyb.supabase.co",
+              "type": "string"
+            },
+            {
+              "id": "cfg-key",
+              "name": "SUPABASE_SERVICE_KEY",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuZ3RvcGdobG1ncWphaWJxaXliIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzUzOTg4NiwiZXhwIjoyMDg5MTE1ODg2fQ.xywZiNZ3h6_uVE9-ltt2LAXtZJ8jTezHCE4LmjBxzTk",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f5b6a3fc-4276-4c17-8c11-a4310c16fedb",
+      "name": "Configuração",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        608,
+        208
+      ],
+      "notes": "Supabase config."
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/cenas?video_id=eq.{{ $('Normalizar Input').first().json.video_id }}&opcao_id=is.null&efeito_status=eq.pendente&order=ordem.asc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "3fdb14e2-98e2-4f89-bf21-e57215c1ee16",
+      "name": "Ler Cenas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        112
+      ],
+      "notes": "GET todas as cenas, ordem ASC."
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/videos?id=eq.{{ $('Normalizar Input').first().json.video_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ geracao_efeitos_status: 'gerando' }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "8b1e9b10-1686-4749-b983-9f6f8c2dbee5",
+      "name": "Marcar Gerando",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        304
+      ],
+      "notes": "PATCH videos: geracao_efeitos_status = 'gerando'."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Buscar efeitos no banco para cada cena\nconst config = $('Configuração').first().json;\nconst videoId = $('Normalizar Input').first().json.video_id;\nconst cenasRaw = $('Ler Cenas').all().map(i => i.json);\nconst cenas = Array.isArray(cenasRaw[0]) ? cenasRaw[0] : cenasRaw;\n\nconst headers = {\n  'apikey': config.SUPABASE_SERVICE_KEY,\n  'Authorization': 'Bearer ' + config.SUPABASE_SERVICE_KEY\n};\n\nconst faltantes = [];\nconst items = [];\n\nfor (const c of cenas) {\n  // Parse efeitos_sonoros\n  let efx = c.efeitos_sonoros;\n  if (typeof efx === 'string') {\n    try { efx = JSON.parse(efx); } catch(e) { efx = []; }\n  }\n  if (!Array.isArray(efx)) efx = [];\n\n // Pular cenas de texto (tela final, etc.)\n  if (c.tipo_cena === 'texto') continue;\n\n  // (cenas sem narração ainda podem ter efeitos sonoros)\n\n  const resolvedEffects = [];\n\n  for (const ef of efx) {\n    if (ef.tipo === 'banco' && ef.tag) {\n      // Buscar no banco: menos usado primeiro\n      try {\n        const result = await this.helpers.httpRequest({\n          method: 'GET',\n          url: config.SUPABASE_URL + '/rest/v1/banco_efeitos?tag=eq.' + encodeURIComponent(ef.tag) + '&order=uso_count.asc&limit=1',\n          headers\n        });\n        if (result && result.length > 0) {\n          resolvedEffects.push({\n            tag: ef.tag,\n            weight: ef.weight || 0.5,\n            arquivo_url: result[0].arquivo_url,\n            banco_id: result[0].id\n          });\n        } else {\n          faltantes.push({ cena: c.numero, tag: ef.tag, tipo: 'banco' });\n        }\n      } catch(e) {\n        faltantes.push({ cena: c.numero, tag: ef.tag, tipo: 'banco', erro: e.message });\n      }\n    } else if (ef.tipo === 'stable_audio') {\n      // Stable Audio desabilitado — marcar como faltante\n      faltantes.push({ cena: c.numero, tag: ef.prompt || 'stable_audio', tipo: 'stable_audio_desabilitado' });\n    }\n  }\n\nitems.push({\n  json: {\n    cenaId: c.id,\n    cenaNumero: c.numero,\n    tts_url: c.tts_url || null,\n    duracao_real: c.duracao_real || 0,\n    effects: resolvedEffects,\n    _videoId: videoId\n  }\n});\n}\n\n// Salvar faltantes no staticData para verificação\nvar staticData = $getWorkflowStaticData('global');\nstaticData.faltantes = faltantes;\nstaticData.videoId = videoId;\n\n// Retornar items + flag\nreturn [{ json: {\n  _temFaltantes: faltantes.length > 0,\n  _faltantes: faltantes,\n  _totalCenas: items.length,\n  _items: items.map(i => i.json)\n} }];"
+      },
+      "id": "b2afd5a0-ed80-416d-96db-4c174f3721f5",
+      "name": "Buscar Efeitos no Banco",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        208
+      ],
+      "notes": "Para cada cena, busca efeitos no banco_efeitos pela tag (menos usado primeiro).\nMarca stable_audio como faltante (desabilitado).\nRetorna items resolvidos + lista de faltantes."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "tem-faltantes",
+              "leftValue": "={{ $json._temFaltantes }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f8a2f06e-7ccf-47e4-a7fa-29beb9247815",
+      "name": "IF Tem Faltantes",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1216,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Marcar cenas com efeitos faltantes no Supabase\nconst config = $('Configuração').first().json;\nconst faltantes = $('Buscar Efeitos no Banco').first().json._faltantes;\nconst videoId = $('Normalizar Input').first().json.video_id;\n\nconst headers = {\n  'apikey': config.SUPABASE_SERVICE_KEY,\n  'Authorization': 'Bearer ' + config.SUPABASE_SERVICE_KEY,\n  'Content-Type': 'application/json',\n  'Prefer': 'return=minimal'\n};\n\n// Marcar geracao_efeitos_status como concluido (parcial)\nawait this.helpers.httpRequest({\n  method: 'PATCH',\n  url: config.SUPABASE_URL + '/rest/v1/videos?id=eq.' + videoId,\n  headers,\n  body: { geracao_efeitos_status: 'concluido' }\n});\n\nconst lista = faltantes.map(f => 'Cena ' + f.cena + ': ' + f.tag + ' (' + f.tipo + ')').join('\\n');\nthrow new Error('❌ EFEITOS FALTANTES NO BANCO:\\n\\n' + lista + '\\n\\nAções:\\n1. Baixe os efeitos de freesound.org ou pixabay.com\\n2. Suba para o bucket banco-efeitos no Supabase\\n3. Adicione na tabela banco_efeitos com a tag correta\\n4. Re-dispare o M06');"
+      },
+      "id": "35baa4d0-e1c5-48ee-850f-664809abb6e0",
+      "name": "Erro Faltantes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1408,
+        112
+      ],
+      "notes": "Lista tags faltantes com instruções de correção."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Preparar items para o loop\nconst data = $('Buscar Efeitos no Banco').first().json;\nconst items = data._items || [];\nreturn items.map(i => ({ json: i }));"
+      },
+      "id": "958d93a4-0711-4d97-8791-f006c646beaf",
+      "name": "Preparar Geração",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        304
+      ],
+      "notes": "Expande items resolvidos para o loop."
+    },
+    {
+      "parameters": {
+        "command": "=mkdir -p /tmp/m06/{{ $('Normalizar Input').first().json.video_id }}"
+      },
+      "id": "9f979bed-4362-4daf-b8b5-69b7383154d4",
+      "name": "Setup Diretório",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        1392,
+        272
+      ],
+      "credentials": {
+        "sshPassword": {
+          "id": "Mw31xh0fiZfOM7X7",
+          "name": "Hostinger VPS"
+        }
+      },
+      "notes": "Cria diretório temporário no host para processamento FFmpeg."
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "id": "5bbc428a-381b-4966-8a57-fa794283f6dc",
+      "name": "Loop Cenas",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1808,
+        304
+      ],
+      "notes": "Itera cenas uma a uma.\n[done] → Cleanup + Concluído\n[loop] → Processar FFmpeg"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Monta script FFmpeg para esta cena\nconst item = $('Loop Cenas').first().json;\nconst config = $('Configuração').first().json;\nconst videoId = $('Normalizar Input').first().json.video_id;\nconst dir = '/tmp/m06/' + videoId;\nconst effects = item.effects || [];\nconst hasNarr = !!item.tts_url;\n\nlet script = 'set -e\\n';\nscript += 'cd ' + dir + '\\n\\n';\n\nif (hasNarr) {\n  // Download narração\n  script += '# Download narração\\n';\n  script += 'curl -sL -o narr.mp3 \"' + item.tts_url + '\"\\n\\n';\n\n  // Medir duração real da narração\n  script += '# Medir duração\\n';\n  script += 'NARR_DUR=$(ffprobe -v quiet -show_entries format=duration -of csv=p=0 narr.mp3)\\n\\n';\n\n  // Normalizar narração + atempo se > 5s + pad para 5s\n  script += '# Normalizar narração + atempo se > 5s + pad para 5s\\n';\n  script += 'NEED_ATEMPO=$(python3 -c \"d=float(\\'$NARR_DUR\\'); print(1 if d > 5.0 else 0)\")\\n';\n  script += 'if [ \"$NEED_ATEMPO\" = \"1\" ]; then\\n';\n  script += '  ATEMPO_VAL=$(python3 -c \"d=float(\\'$NARR_DUR\\'); print(round(d/5.0, 4))\")\\n';\n  script += '  ffmpeg -y -i narr.mp3 -af \"atempo=${ATEMPO_VAL},loudnorm=I=-16:TP=-1:LRA=11,apad=whole_dur=5\" -t 5 -c:a libmp3lame -q:a 0 narr_proc.mp3\\n';\n  script += 'else\\n';\n  script += '  ffmpeg -y -i narr.mp3 -af \"loudnorm=I=-16:TP=-1:LRA=11,apad=whole_dur=5\" -t 5 -c:a libmp3lame -q:a 0 narr_proc.mp3\\n';\n  script += 'fi\\n\\n';\n}\n\n// Download e processar cada efeito\nfor (let i = 0; i < effects.length; i++) {\n  const ef = effects[i];\n  script += '# Efeito ' + i + ': ' + ef.tag + '\\n';\n  script += 'curl -sL -o fx_' + i + '.raw \"' + ef.arquivo_url + '\"\\n';\n  script += 'ffmpeg -y -i fx_' + i + '.raw -af \"apad=whole_dur=5,afade=t=out:st=4.5:d=0.5\" -t 5 -c:a libmp3lame -q:a 0 fx_' + i + '_proc.mp3\\n\\n';\n}\n\n// Mixar\nconst narrInputs = hasNarr ? 1 : 0;\nconst totalInputs = narrInputs + effects.length;\nlet weights = hasNarr ? '1.0' : '';\nfor (const ef of effects) {\n  weights += (weights ? ' ' : '') + (ef.weight || 0.5);\n}\n\nif (totalInputs === 0) {\n  // Sem nada — gerar silêncio de 5s\n  script += '# Sem narração nem efeitos — silêncio\\n';\n  script += 'ffmpeg -y -f lavfi -i anullsrc=r=44100:cl=stereo -t 5 -c:a libmp3lame -q:a 0 mix.mp3\\n\\n';\n} else if (totalInputs === 1 && hasNarr && effects.length === 0) {\n  script += '# Só narração\\n';\n  script += 'cp narr_proc.mp3 mix.mp3\\n\\n';\n} else if (totalInputs === 1 && !hasNarr && effects.length === 1) {\n  script += '# Só um efeito\\n';\n  script += 'cp fx_0_proc.mp3 mix.mp3\\n\\n';\n} else {\n  script += '# Mixar\\n';\n  let inputs = '';\n  if (hasNarr) inputs += '-i narr_proc.mp3';\n  for (let i = 0; i < effects.length; i++) {\n    inputs += (inputs ? ' ' : '') + '-i fx_' + i + '_proc.mp3';\n  }\n  script += 'ffmpeg -y ' + inputs + ' -filter_complex \"amix=inputs=' + totalInputs + ':weights=' + weights + '\" -t 5 -c:a libmp3lame -q:a 0 mix.mp3\\n\\n';\n}\n\n// Upload para Supabase Storage\nconst storagePath = videoId + '/fx_' + item.cenaNumero + '.mp3';\nconst uploadUrl = config.SUPABASE_URL + '/storage/v1/object/efeitos/' + storagePath;\nconst publicUrl = config.SUPABASE_URL + '/storage/v1/object/public/efeitos/' + storagePath;\n\nscript += '# Upload para Supabase\\n';\nscript += 'curl -s -X POST \"' + uploadUrl + '\" ';\nscript += '-H \"apikey: ' + config.SUPABASE_SERVICE_KEY + '\" ';\nscript += '-H \"Authorization: Bearer ' + config.SUPABASE_SERVICE_KEY + '\" ';\nscript += '-H \"Content-Type: audio/mpeg\" ';\nscript += '-H \"x-upsert: true\" ';\nscript += '--data-binary @mix.mp3\\n\\n';\n\n// Cleanup\nscript += '# Cleanup\\n';\nscript += 'rm -f narr.mp3 narr_proc.mp3 fx_*.raw fx_*_proc.mp3 mix.mp3\\n';\n\nscript += 'echo \"SUCCESS\"\\n';\n\nreturn [{ json: { _script: script, cenaId: item.cenaId, cenaNumero: item.cenaNumero, publicUrl, _videoId: videoId } }];"
+      },
+      "id": "9529ffdf-78fe-4d85-a675-8bff85ad591f",
+      "name": "Montar Script FFmpeg",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2016,
+        400
+      ],
+      "notes": "Gera script bash dinamicamente:\n- curl download narração + efeitos\n- ffprobe mede duração\n- ffmpeg normaliza, atempo se >5s, pad 5s\n- ffmpeg corta/pad efeitos 5s + fade out\n- ffmpeg mixa com weights\n- curl upload resultado pro Supabase"
+    },
+    {
+      "parameters": {
+        "command": "={{ $json._script }}"
+      },
+      "id": "ab9011ac-c7e3-427e-8f38-961fb3ad97a7",
+      "name": "Executar FFmpeg",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        2208,
+        400
+      ],
+      "credentials": {
+        "sshPassword": {
+          "id": "Mw31xh0fiZfOM7X7",
+          "name": "Hostinger VPS"
+        }
+      },
+      "notes": "Executa script FFmpeg via SSH no host.\nProcessa narração + efeitos → MP3 mixado → upload Supabase."
+    },
+    {
+      "parameters": {
+        "jsCode": "const sshOutput = $('Executar FFmpeg').first().json;\nconst meta = $('Montar Script FFmpeg').first().json;\n\n// Verificar sucesso\nconst stdout = sshOutput.stdout || '';\nconst stderr = sshOutput.stderr || '';\n\nif (!stdout.includes('SUCCESS')) {\n  throw new Error('❌ FFmpeg ERRO na cena ' + meta.cenaNumero + ':\\n' + stderr.substring(0, 500));\n}\n\nreturn [{ json: {\n  cenaId: meta.cenaId,\n  cenaNumero: meta.cenaNumero,\n  videoId: meta.videoId,\n  publicUrl: meta.publicUrl,\n  bancoIds: meta.bancoIds\n} }];"
+      },
+      "id": "f78abadb-03c9-4143-b5e0-6425dc4f709a",
+      "name": "Verificar Resultado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2416,
+        400
+      ],
+      "notes": "Checa stdout por SUCCESS. Se falhou, para com erro."
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/cenas?id=eq.{{ $json.cenaId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ efeito_url: $json.publicUrl, efeito_status: 'gerada' }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "9e3e1e86-755e-43f4-9c22-096a638a3b32",
+      "name": "Atualizar Cena",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2608,
+        400
+      ],
+      "notes": "PATCH cena: efeito_url, efeito_status='gerada'."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Incrementar uso_count dos efeitos usados\nconst config = $('Configuração').first().json;\nconst meta = $('Verificar Resultado').first().json;\nconst bancoIds = meta.bancoIds || [];\n\nconst headers = {\n  'apikey': config.SUPABASE_SERVICE_KEY,\n  'Authorization': 'Bearer ' + config.SUPABASE_SERVICE_KEY,\n  'Content-Type': 'application/json',\n  'Prefer': 'return=minimal'\n};\n\nfor (const id of bancoIds) {\n  try {\n    // Ler uso_count atual\n    const result = await this.helpers.httpRequest({\n      method: 'GET',\n      url: config.SUPABASE_URL + '/rest/v1/banco_efeitos?id=eq.' + id + '&select=uso_count',\n      headers: { apikey: config.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + config.SUPABASE_SERVICE_KEY }\n    });\n    const current = (result && result[0]) ? (result[0].uso_count || 0) : 0;\n    // Incrementar\n    await this.helpers.httpRequest({\n      method: 'PATCH',\n      url: config.SUPABASE_URL + '/rest/v1/banco_efeitos?id=eq.' + id,\n      headers,\n      body: { uso_count: current + 1, ultima_vez: new Date().toISOString() }\n    });\n  } catch(e) {}\n}\n\nreturn [{ json: { _consolidado: true } }];"
+      },
+      "id": "6c93e183-3edf-45f0-85a5-ac75f62d78e3",
+      "name": "Atualizar Uso Banco",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2816,
+        400
+      ],
+      "notes": "Incrementa uso_count e atualiza ultima_vez nos efeitos usados."
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { _consolidado: true } }];"
+      },
+      "id": "a7452eac-62cb-457b-8a2f-15bc9f0ce44d",
+      "name": "Consolidar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3008,
+        208
+      ],
+      "notes": "Volta para o Loop Cenas."
+    },
+    {
+      "parameters": {
+        "command": "=rm -rf /tmp/m06/{{ $('Normalizar Input').first().json.video_id }}"
+      },
+      "id": "f8b15898-f440-4201-b785-7ddde092ccc5",
+      "name": "Cleanup",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        2016,
+        112
+      ],
+      "credentials": {
+        "sshPassword": {
+          "id": "Mw31xh0fiZfOM7X7",
+          "name": "Hostinger VPS"
+        }
+      },
+      "notes": "Remove diretório temporário do host."
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/videos?id=eq.{{ $('Normalizar Input').first().json.video_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ geracao_efeitos_status: 'concluido' }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "1a41965e-3e39-416a-9d2c-219999bb2b6c",
+      "name": "Marcar Concluído",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2208,
+        112
+      ],
+      "notes": "PATCH videos: geracao_efeitos_status = 'concluido'."
+    }
+  ],
+  "connections": {
+    "Início Manual": {
+      "main": [
+        [
+          {
+            "node": "Video ID Teste",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Video ID Teste": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Externo": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar Input": {
+      "main": [
+        [
+          {
+            "node": "Configuração",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configuração": {
+      "main": [
+        [
+          {
+            "node": "Ler Cenas",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Marcar Gerando",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler Cenas": {
+      "main": [
+        [
+          {
+            "node": "Buscar Efeitos no Banco",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar Gerando": {
+      "main": [
+        [
+          {
+            "node": "Buscar Efeitos no Banco",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Efeitos no Banco": {
+      "main": [
+        [
+          {
+            "node": "IF Tem Faltantes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Tem Faltantes": {
+      "main": [
+        [
+          {
+            "node": "Erro Faltantes",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Setup Diretório",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Geração": {
+      "main": [
+        [
+          {
+            "node": "Loop Cenas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Setup Diretório": {
+      "main": [
+        [
+          {
+            "node": "Preparar Geração",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Cenas": {
+      "main": [
+        [
+          {
+            "node": "Cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Montar Script FFmpeg",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar Script FFmpeg": {
+      "main": [
+        [
+          {
+            "node": "Executar FFmpeg",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Executar FFmpeg": {
+      "main": [
+        [
+          {
+            "node": "Verificar Resultado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar Resultado": {
+      "main": [
+        [
+          {
+            "node": "Atualizar Cena",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Cena": {
+      "main": [
+        [
+          {
+            "node": "Atualizar Uso Banco",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Uso Banco": {
+      "main": [
+        [
+          {
+            "node": "Consolidar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidar": {
+      "main": [
+        [
+          {
+            "node": "Loop Cenas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cleanup": {
+      "main": [
+        [
+          {
+            "node": "Marcar Concluído",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": {
+    "global": {
+      "faltantes": [],
+      "videoId": "0dbee9f6-6def-4099-a3e3-2adaaa94f8bf"
+    }
+  },
+  "meta": null,
+  "pinData": {},
+  "versionId": "aabdc68c-e181-4dcd-b2fd-f80119810057",
+  "activeVersionId": "aabdc68c-e181-4dcd-b2fd-f80119810057",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-04-01T03:18:15.583Z",
+      "createdAt": "2026-04-01T03:18:15.583Z",
+      "role": "workflow:owner",
+      "workflowId": "odxHHXuNJHjPYXpo",
+      "projectId": "SoH44tJE4dqRVTiw"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-04-10T19:50:21.000Z",
+    "createdAt": "2026-04-10T19:49:49.221Z",
+    "versionId": "aabdc68c-e181-4dcd-b2fd-f80119810057",
+    "workflowId": "odxHHXuNJHjPYXpo",
+    "nodes": [
+      {
+        "parameters": {},
+        "id": "43bc83fe-8d49-40fe-acb7-6426ba7e8a64",
+        "name": "Início Manual",
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "notes": "⚠️ TESTE MANUAL: clique 'Test workflow' com video_id no nó seguinte."
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "test-vid",
+                "name": "video_id",
+                "value": "42058483-4694-465a-9346-4ca03c5818d2",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "ee5aefdf-1791-42fe-9060-e55a29fd3e29",
+        "name": "Video ID Teste",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          208,
+          0
+        ],
+        "notes": "⚠️ TROQUE O UUID AQUI para testar."
+      },
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "video_id"
+              }
+            ]
+          }
+        },
+        "id": "0f492a72-8b9d-4b1a-8c20-3733a7125943",
+        "name": "Trigger Externo",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          0,
+          400
+        ],
+        "notes": "Recebe { video_id } do webhook tts/continuar."
+      },
+      {
+        "parameters": {
+          "jsCode": "const item = $input.first().json;\nconst video_id = item.video_id || null;\nif (!video_id) throw new Error('video_id não encontrado.');\nreturn [{ json: { video_id } }];"
+        },
+        "id": "b6843881-19ee-45e5-9c03-06fbff9636b8",
+        "name": "Normalizar Input",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          400,
+          208
+        ],
+        "notes": "Unifica input. Saída: { video_id }"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "cfg-url",
+                "name": "SUPABASE_URL",
+                "value": "https://vngtopghlmgqjaibqiyb.supabase.co",
+                "type": "string"
+              },
+              {
+                "id": "cfg-key",
+                "name": "SUPABASE_SERVICE_KEY",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuZ3RvcGdobG1ncWphaWJxaXliIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzUzOTg4NiwiZXhwIjoyMDg5MTE1ODg2fQ.xywZiNZ3h6_uVE9-ltt2LAXtZJ8jTezHCE4LmjBxzTk",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "f5b6a3fc-4276-4c17-8c11-a4310c16fedb",
+        "name": "Configuração",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          608,
+          208
+        ],
+        "notes": "Supabase config."
+      },
+      {
+        "parameters": {
+          "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/cenas?video_id=eq.{{ $('Normalizar Input').first().json.video_id }}&opcao_id=is.null&efeito_status=eq.pendente&order=ordem.asc",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "3fdb14e2-98e2-4f89-bf21-e57215c1ee16",
+        "name": "Ler Cenas",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          800,
+          112
+        ],
+        "notes": "GET todas as cenas, ordem ASC."
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/videos?id=eq.{{ $('Normalizar Input').first().json.video_id }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=minimal"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ geracao_efeitos_status: 'gerando' }) }}",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "8b1e9b10-1686-4749-b983-9f6f8c2dbee5",
+        "name": "Marcar Gerando",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          800,
+          304
+        ],
+        "notes": "PATCH videos: geracao_efeitos_status = 'gerando'."
+      },
+      {
+        "parameters": {
+          "jsCode": "// Buscar efeitos no banco para cada cena\nconst config = $('Configuração').first().json;\nconst videoId = $('Normalizar Input').first().json.video_id;\nconst cenasRaw = $('Ler Cenas').all().map(i => i.json);\nconst cenas = Array.isArray(cenasRaw[0]) ? cenasRaw[0] : cenasRaw;\n\nconst headers = {\n  'apikey': config.SUPABASE_SERVICE_KEY,\n  'Authorization': 'Bearer ' + config.SUPABASE_SERVICE_KEY\n};\n\nconst faltantes = [];\nconst items = [];\n\nfor (const c of cenas) {\n  // Parse efeitos_sonoros\n  let efx = c.efeitos_sonoros;\n  if (typeof efx === 'string') {\n    try { efx = JSON.parse(efx); } catch(e) { efx = []; }\n  }\n  if (!Array.isArray(efx)) efx = [];\n\n // Pular cenas de texto (tela final, etc.)\n  if (c.tipo_cena === 'texto') continue;\n\n  // (cenas sem narração ainda podem ter efeitos sonoros)\n\n  const resolvedEffects = [];\n\n  for (const ef of efx) {\n    if (ef.tipo === 'banco' && ef.tag) {\n      // Buscar no banco: menos usado primeiro\n      try {\n        const result = await this.helpers.httpRequest({\n          method: 'GET',\n          url: config.SUPABASE_URL + '/rest/v1/banco_efeitos?tag=eq.' + encodeURIComponent(ef.tag) + '&order=uso_count.asc&limit=1',\n          headers\n        });\n        if (result && result.length > 0) {\n          resolvedEffects.push({\n            tag: ef.tag,\n            weight: ef.weight || 0.5,\n            arquivo_url: result[0].arquivo_url,\n            banco_id: result[0].id\n          });\n        } else {\n          faltantes.push({ cena: c.numero, tag: ef.tag, tipo: 'banco' });\n        }\n      } catch(e) {\n        faltantes.push({ cena: c.numero, tag: ef.tag, tipo: 'banco', erro: e.message });\n      }\n    } else if (ef.tipo === 'stable_audio') {\n      // Stable Audio desabilitado — marcar como faltante\n      faltantes.push({ cena: c.numero, tag: ef.prompt || 'stable_audio', tipo: 'stable_audio_desabilitado' });\n    }\n  }\n\nitems.push({\n  json: {\n    cenaId: c.id,\n    cenaNumero: c.numero,\n    tts_url: c.tts_url || null,\n    duracao_real: c.duracao_real || 0,\n    effects: resolvedEffects,\n    _videoId: videoId\n  }\n});\n}\n\n// Salvar faltantes no staticData para verificação\nvar staticData = $getWorkflowStaticData('global');\nstaticData.faltantes = faltantes;\nstaticData.videoId = videoId;\n\n// Retornar items + flag\nreturn [{ json: {\n  _temFaltantes: faltantes.length > 0,\n  _faltantes: faltantes,\n  _totalCenas: items.length,\n  _items: items.map(i => i.json)\n} }];"
+        },
+        "id": "b2afd5a0-ed80-416d-96db-4c174f3721f5",
+        "name": "Buscar Efeitos no Banco",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1008,
+          208
+        ],
+        "notes": "Para cada cena, busca efeitos no banco_efeitos pela tag (menos usado primeiro).\nMarca stable_audio como faltante (desabilitado).\nRetorna items resolvidos + lista de faltantes."
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "tem-faltantes",
+                "leftValue": "={{ $json._temFaltantes }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "f8a2f06e-7ccf-47e4-a7fa-29beb9247815",
+        "name": "IF Tem Faltantes",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          1216,
+          208
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Marcar cenas com efeitos faltantes no Supabase\nconst config = $('Configuração').first().json;\nconst faltantes = $('Buscar Efeitos no Banco').first().json._faltantes;\nconst videoId = $('Normalizar Input').first().json.video_id;\n\nconst headers = {\n  'apikey': config.SUPABASE_SERVICE_KEY,\n  'Authorization': 'Bearer ' + config.SUPABASE_SERVICE_KEY,\n  'Content-Type': 'application/json',\n  'Prefer': 'return=minimal'\n};\n\n// Marcar geracao_efeitos_status como concluido (parcial)\nawait this.helpers.httpRequest({\n  method: 'PATCH',\n  url: config.SUPABASE_URL + '/rest/v1/videos?id=eq.' + videoId,\n  headers,\n  body: { geracao_efeitos_status: 'concluido' }\n});\n\nconst lista = faltantes.map(f => 'Cena ' + f.cena + ': ' + f.tag + ' (' + f.tipo + ')').join('\\n');\nthrow new Error('❌ EFEITOS FALTANTES NO BANCO:\\n\\n' + lista + '\\n\\nAções:\\n1. Baixe os efeitos de freesound.org ou pixabay.com\\n2. Suba para o bucket banco-efeitos no Supabase\\n3. Adicione na tabela banco_efeitos com a tag correta\\n4. Re-dispare o M06');"
+        },
+        "id": "35baa4d0-e1c5-48ee-850f-664809abb6e0",
+        "name": "Erro Faltantes",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1408,
+          112
+        ],
+        "notes": "Lista tags faltantes com instruções de correção."
+      },
+      {
+        "parameters": {
+          "jsCode": "// Preparar items para o loop\nconst data = $('Buscar Efeitos no Banco').first().json;\nconst items = data._items || [];\nreturn items.map(i => ({ json: i }));"
+        },
+        "id": "958d93a4-0711-4d97-8791-f006c646beaf",
+        "name": "Preparar Geração",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1600,
+          304
+        ],
+        "notes": "Expande items resolvidos para o loop."
+      },
+      {
+        "parameters": {
+          "command": "=mkdir -p /tmp/m06/{{ $('Normalizar Input').first().json.video_id }}"
+        },
+        "id": "9f979bed-4362-4daf-b8b5-69b7383154d4",
+        "name": "Setup Diretório",
+        "type": "n8n-nodes-base.ssh",
+        "typeVersion": 1,
+        "position": [
+          1392,
+          272
+        ],
+        "credentials": {
+          "sshPassword": {
+            "id": "Mw31xh0fiZfOM7X7",
+            "name": "Hostinger VPS"
+          }
+        },
+        "notes": "Cria diretório temporário no host para processamento FFmpeg."
+      },
+      {
+        "parameters": {
+          "options": {
+            "reset": false
+          }
+        },
+        "id": "5bbc428a-381b-4966-8a57-fa794283f6dc",
+        "name": "Loop Cenas",
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          1808,
+          304
+        ],
+        "notes": "Itera cenas uma a uma.\n[done] → Cleanup + Concluído\n[loop] → Processar FFmpeg"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Monta script FFmpeg para esta cena\nconst item = $('Loop Cenas').first().json;\nconst config = $('Configuração').first().json;\nconst videoId = $('Normalizar Input').first().json.video_id;\nconst dir = '/tmp/m06/' + videoId;\nconst effects = item.effects || [];\nconst hasNarr = !!item.tts_url;\n\nlet script = 'set -e\\n';\nscript += 'cd ' + dir + '\\n\\n';\n\nif (hasNarr) {\n  // Download narração\n  script += '# Download narração\\n';\n  script += 'curl -sL -o narr.mp3 \"' + item.tts_url + '\"\\n\\n';\n\n  // Medir duração real da narração\n  script += '# Medir duração\\n';\n  script += 'NARR_DUR=$(ffprobe -v quiet -show_entries format=duration -of csv=p=0 narr.mp3)\\n\\n';\n\n  // Normalizar narração + atempo se > 5s + pad para 5s\n  script += '# Normalizar narração + atempo se > 5s + pad para 5s\\n';\n  script += 'NEED_ATEMPO=$(python3 -c \"d=float(\\'$NARR_DUR\\'); print(1 if d > 5.0 else 0)\")\\n';\n  script += 'if [ \"$NEED_ATEMPO\" = \"1\" ]; then\\n';\n  script += '  ATEMPO_VAL=$(python3 -c \"d=float(\\'$NARR_DUR\\'); print(round(d/5.0, 4))\")\\n';\n  script += '  ffmpeg -y -i narr.mp3 -af \"atempo=${ATEMPO_VAL},loudnorm=I=-16:TP=-1:LRA=11,apad=whole_dur=5\" -t 5 -c:a libmp3lame -q:a 0 narr_proc.mp3\\n';\n  script += 'else\\n';\n  script += '  ffmpeg -y -i narr.mp3 -af \"loudnorm=I=-16:TP=-1:LRA=11,apad=whole_dur=5\" -t 5 -c:a libmp3lame -q:a 0 narr_proc.mp3\\n';\n  script += 'fi\\n\\n';\n}\n\n// Download e processar cada efeito\nfor (let i = 0; i < effects.length; i++) {\n  const ef = effects[i];\n  script += '# Efeito ' + i + ': ' + ef.tag + '\\n';\n  script += 'curl -sL -o fx_' + i + '.raw \"' + ef.arquivo_url + '\"\\n';\n  script += 'ffmpeg -y -i fx_' + i + '.raw -af \"apad=whole_dur=5,afade=t=out:st=4.5:d=0.5\" -t 5 -c:a libmp3lame -q:a 0 fx_' + i + '_proc.mp3\\n\\n';\n}\n\n// Mixar\nconst narrInputs = hasNarr ? 1 : 0;\nconst totalInputs = narrInputs + effects.length;\nlet weights = hasNarr ? '1.0' : '';\nfor (const ef of effects) {\n  weights += (weights ? ' ' : '') + (ef.weight || 0.5);\n}\n\nif (totalInputs === 0) {\n  // Sem nada — gerar silêncio de 5s\n  script += '# Sem narração nem efeitos — silêncio\\n';\n  script += 'ffmpeg -y -f lavfi -i anullsrc=r=44100:cl=stereo -t 5 -c:a libmp3lame -q:a 0 mix.mp3\\n\\n';\n} else if (totalInputs === 1 && hasNarr && effects.length === 0) {\n  script += '# Só narração\\n';\n  script += 'cp narr_proc.mp3 mix.mp3\\n\\n';\n} else if (totalInputs === 1 && !hasNarr && effects.length === 1) {\n  script += '# Só um efeito\\n';\n  script += 'cp fx_0_proc.mp3 mix.mp3\\n\\n';\n} else {\n  script += '# Mixar\\n';\n  let inputs = '';\n  if (hasNarr) inputs += '-i narr_proc.mp3';\n  for (let i = 0; i < effects.length; i++) {\n    inputs += (inputs ? ' ' : '') + '-i fx_' + i + '_proc.mp3';\n  }\n  script += 'ffmpeg -y ' + inputs + ' -filter_complex \"amix=inputs=' + totalInputs + ':weights=' + weights + '\" -t 5 -c:a libmp3lame -q:a 0 mix.mp3\\n\\n';\n}\n\n// Upload para Supabase Storage\nconst storagePath = videoId + '/fx_' + item.cenaNumero + '.mp3';\nconst uploadUrl = config.SUPABASE_URL + '/storage/v1/object/efeitos/' + storagePath;\nconst publicUrl = config.SUPABASE_URL + '/storage/v1/object/public/efeitos/' + storagePath;\n\nscript += '# Upload para Supabase\\n';\nscript += 'curl -s -X POST \"' + uploadUrl + '\" ';\nscript += '-H \"apikey: ' + config.SUPABASE_SERVICE_KEY + '\" ';\nscript += '-H \"Authorization: Bearer ' + config.SUPABASE_SERVICE_KEY + '\" ';\nscript += '-H \"Content-Type: audio/mpeg\" ';\nscript += '-H \"x-upsert: true\" ';\nscript += '--data-binary @mix.mp3\\n\\n';\n\n// Cleanup\nscript += '# Cleanup\\n';\nscript += 'rm -f narr.mp3 narr_proc.mp3 fx_*.raw fx_*_proc.mp3 mix.mp3\\n';\n\nscript += 'echo \"SUCCESS\"\\n';\n\nreturn [{ json: { _script: script, cenaId: item.cenaId, cenaNumero: item.cenaNumero, publicUrl, _videoId: videoId } }];"
+        },
+        "id": "9529ffdf-78fe-4d85-a675-8bff85ad591f",
+        "name": "Montar Script FFmpeg",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2016,
+          400
+        ],
+        "notes": "Gera script bash dinamicamente:\n- curl download narração + efeitos\n- ffprobe mede duração\n- ffmpeg normaliza, atempo se >5s, pad 5s\n- ffmpeg corta/pad efeitos 5s + fade out\n- ffmpeg mixa com weights\n- curl upload resultado pro Supabase"
+      },
+      {
+        "parameters": {
+          "command": "={{ $json._script }}"
+        },
+        "id": "ab9011ac-c7e3-427e-8f38-961fb3ad97a7",
+        "name": "Executar FFmpeg",
+        "type": "n8n-nodes-base.ssh",
+        "typeVersion": 1,
+        "position": [
+          2208,
+          400
+        ],
+        "credentials": {
+          "sshPassword": {
+            "id": "Mw31xh0fiZfOM7X7",
+            "name": "Hostinger VPS"
+          }
+        },
+        "notes": "Executa script FFmpeg via SSH no host.\nProcessa narração + efeitos → MP3 mixado → upload Supabase."
+      },
+      {
+        "parameters": {
+          "jsCode": "const sshOutput = $('Executar FFmpeg').first().json;\nconst meta = $('Montar Script FFmpeg').first().json;\n\n// Verificar sucesso\nconst stdout = sshOutput.stdout || '';\nconst stderr = sshOutput.stderr || '';\n\nif (!stdout.includes('SUCCESS')) {\n  throw new Error('❌ FFmpeg ERRO na cena ' + meta.cenaNumero + ':\\n' + stderr.substring(0, 500));\n}\n\nreturn [{ json: {\n  cenaId: meta.cenaId,\n  cenaNumero: meta.cenaNumero,\n  videoId: meta.videoId,\n  publicUrl: meta.publicUrl,\n  bancoIds: meta.bancoIds\n} }];"
+        },
+        "id": "f78abadb-03c9-4143-b5e0-6425dc4f709a",
+        "name": "Verificar Resultado",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2416,
+          400
+        ],
+        "notes": "Checa stdout por SUCCESS. Se falhou, para com erro."
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/cenas?id=eq.{{ $json.cenaId }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=minimal"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ efeito_url: $json.publicUrl, efeito_status: 'gerada' }) }}",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "9e3e1e86-755e-43f4-9c22-096a638a3b32",
+        "name": "Atualizar Cena",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2608,
+          400
+        ],
+        "notes": "PATCH cena: efeito_url, efeito_status='gerada'."
+      },
+      {
+        "parameters": {
+          "jsCode": "// Incrementar uso_count dos efeitos usados\nconst config = $('Configuração').first().json;\nconst meta = $('Verificar Resultado').first().json;\nconst bancoIds = meta.bancoIds || [];\n\nconst headers = {\n  'apikey': config.SUPABASE_SERVICE_KEY,\n  'Authorization': 'Bearer ' + config.SUPABASE_SERVICE_KEY,\n  'Content-Type': 'application/json',\n  'Prefer': 'return=minimal'\n};\n\nfor (const id of bancoIds) {\n  try {\n    // Ler uso_count atual\n    const result = await this.helpers.httpRequest({\n      method: 'GET',\n      url: config.SUPABASE_URL + '/rest/v1/banco_efeitos?id=eq.' + id + '&select=uso_count',\n      headers: { apikey: config.SUPABASE_SERVICE_KEY, Authorization: 'Bearer ' + config.SUPABASE_SERVICE_KEY }\n    });\n    const current = (result && result[0]) ? (result[0].uso_count || 0) : 0;\n    // Incrementar\n    await this.helpers.httpRequest({\n      method: 'PATCH',\n      url: config.SUPABASE_URL + '/rest/v1/banco_efeitos?id=eq.' + id,\n      headers,\n      body: { uso_count: current + 1, ultima_vez: new Date().toISOString() }\n    });\n  } catch(e) {}\n}\n\nreturn [{ json: { _consolidado: true } }];"
+        },
+        "id": "6c93e183-3edf-45f0-85a5-ac75f62d78e3",
+        "name": "Atualizar Uso Banco",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2816,
+          400
+        ],
+        "notes": "Incrementa uso_count e atualiza ultima_vez nos efeitos usados."
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { _consolidado: true } }];"
+        },
+        "id": "a7452eac-62cb-457b-8a2f-15bc9f0ce44d",
+        "name": "Consolidar",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3008,
+          208
+        ],
+        "notes": "Volta para o Loop Cenas."
+      },
+      {
+        "parameters": {
+          "command": "=rm -rf /tmp/m06/{{ $('Normalizar Input').first().json.video_id }}"
+        },
+        "id": "f8b15898-f440-4201-b785-7ddde092ccc5",
+        "name": "Cleanup",
+        "type": "n8n-nodes-base.ssh",
+        "typeVersion": 1,
+        "position": [
+          2016,
+          112
+        ],
+        "credentials": {
+          "sshPassword": {
+            "id": "Mw31xh0fiZfOM7X7",
+            "name": "Hostinger VPS"
+          }
+        },
+        "notes": "Remove diretório temporário do host."
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/videos?id=eq.{{ $('Normalizar Input').first().json.video_id }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=minimal"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ geracao_efeitos_status: 'concluido' }) }}",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "1a41965e-3e39-416a-9d2c-219999bb2b6c",
+        "name": "Marcar Concluído",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2208,
+          112
+        ],
+        "notes": "PATCH videos: geracao_efeitos_status = 'concluido'."
+      }
+    ],
+    "connections": {
+      "Início Manual": {
+        "main": [
+          [
+            {
+              "node": "Video ID Teste",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Video ID Teste": {
+        "main": [
+          [
+            {
+              "node": "Normalizar Input",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Trigger Externo": {
+        "main": [
+          [
+            {
+              "node": "Normalizar Input",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Normalizar Input": {
+        "main": [
+          [
+            {
+              "node": "Configuração",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Configuração": {
+        "main": [
+          [
+            {
+              "node": "Ler Cenas",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Marcar Gerando",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Ler Cenas": {
+        "main": [
+          [
+            {
+              "node": "Buscar Efeitos no Banco",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Marcar Gerando": {
+        "main": [
+          [
+            {
+              "node": "Buscar Efeitos no Banco",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Buscar Efeitos no Banco": {
+        "main": [
+          [
+            {
+              "node": "IF Tem Faltantes",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF Tem Faltantes": {
+        "main": [
+          [
+            {
+              "node": "Erro Faltantes",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Setup Diretório",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Preparar Geração": {
+        "main": [
+          [
+            {
+              "node": "Loop Cenas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Setup Diretório": {
+        "main": [
+          [
+            {
+              "node": "Preparar Geração",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Cenas": {
+        "main": [
+          [
+            {
+              "node": "Cleanup",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Montar Script FFmpeg",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Montar Script FFmpeg": {
+        "main": [
+          [
+            {
+              "node": "Executar FFmpeg",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Executar FFmpeg": {
+        "main": [
+          [
+            {
+              "node": "Verificar Resultado",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Verificar Resultado": {
+        "main": [
+          [
+            {
+              "node": "Atualizar Cena",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualizar Cena": {
+        "main": [
+          [
+            {
+              "node": "Atualizar Uso Banco",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualizar Uso Banco": {
+        "main": [
+          [
+            {
+              "node": "Consolidar",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Consolidar": {
+        "main": [
+          [
+            {
+              "node": "Loop Cenas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Cleanup": {
+        "main": [
+          [
+            {
+              "node": "Marcar Concluído",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Newton Omune",
+    "name": "Version aabdc68c",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

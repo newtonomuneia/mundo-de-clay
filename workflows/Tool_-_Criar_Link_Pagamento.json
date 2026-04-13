@@ -1,0 +1,1184 @@
+{
+  "updatedAt": "2025-12-30T00:04:27.000Z",
+  "createdAt": "2025-12-21T17:02:44.692Z",
+  "id": "eU8314mbzjTAMW6W",
+  "name": "Tool - Criar Link Pagamento",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "criar-link-pagamento",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1088,
+        -32
+      ],
+      "id": "5737812f-636b-49d7-83f6-00ae1ab7f1c9",
+      "name": "Webhook",
+      "webhookId": "46d77539-2891-485a-84c0-e26bb3a06918"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "conversas",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "telefone",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook').first().json.body.telefone }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -944,
+        -32
+      ],
+      "id": "6b254773-6ff0-414a-80d9-fbfa0e3b22cb",
+      "name": "Buscar Cliente",
+      "credentials": {
+        "supabaseApi": {
+          "id": "C87gCgyLKdnG6PSu",
+          "name": "baralho_prosperidade"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "167bd09a-ee67-4475-88d9-5e43a8079433",
+              "leftValue": "={{ $json.asaas_customer_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -800,
+        -32
+      ],
+      "id": "b1f28ad4-193b-4b28-b607-fecd6bbf2ca7",
+      "name": "Tem Customer Asaas?"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "conversas",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "telefone",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook').first().json.body.telefone }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "asaas_customer_id",
+              "fieldValue": "={{ $json.id }}"
+            },
+            {
+              "fieldId": "updated_at",
+              "fieldValue": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -528,
+        128
+      ],
+      "id": "8df686c7-e7dd-4f17-a96c-9cdddc461895",
+      "name": "Salvar Customer ID",
+      "credentials": {
+        "supabaseApi": {
+          "id": "C87gCgyLKdnG6PSu",
+          "name": "baralho_prosperidade"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -416,
+        -32
+      ],
+      "id": "c1c23c53-d2b3-4dab-8ee6-abfcaf018a5c",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sandbox.asaas.com/api/v3/payments",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"customer\": \"{{ $('Buscar Cliente').first().json.asaas_customer_id || $('Criar Customer Asaas').first().json.id }}\",\n  \"billingType\": \"UNDEFINED\",\n  \"value\": {{ $('Webhook').first().json.body.valor }},\n  \"dueDate\": \"{{ $now.plus(7, 'days').toFormat('yyyy-MM-dd') }}\",\n  \"description\": \"Baralho da Prosperidade - 52 cartas\",\n  \"externalReference\": \"{{ $('Webhook').first().json.body.telefone }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -96,
+        -208
+      ],
+      "id": "8860e371-c0de-461c-a272-0d039a04e850",
+      "name": "Criar Cobrança Asaas",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JgnnUcH6DjUWLRLV",
+          "name": "Credencial Asaas"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "id": {
+          "__rl": true,
+          "value": "={{ $('Buscar Cliente').first().json.trello_card_id }}",
+          "mode": "id"
+        },
+        "updateFields": {
+          "desc": "={{ $('Buscar Cliente').first().json.nome }}\nCPF: {{ $('Webhook').first().json.body.cpf }}\nTelefone: {{ $('Buscar Cliente').first().json.telefone }}\n\n💰 LINK DE PAGAMENTO GERADO\n\n💳 Valor: R$ {{ $('Criar Cobrança Asaas').first().json.value }}\n🔗 Link: {{ $('Criar Cobrança Asaas').first().json.invoiceUrl }}\n📅 Vencimento: {{ $('Criar Cobrança Asaas').first().json.dueDate }}\n\n📊 STATUS:\nStatus: aguardando_pagamento\nFase: aguardando_pagamento\n\n🕐 Link gerado em: {{ $now.toFormat('dd/MM/yyyy HH:mm') }}\n\n💬 Aguardando pagamento do cliente\n",
+          "idList": "69444209a93ede1c3ebed62a",
+          "name": "={{ $('Webhook').first().json.body.nome }}"
+        }
+      },
+      "type": "n8n-nodes-base.trello",
+      "typeVersion": 1,
+      "position": [
+        160,
+        -208
+      ],
+      "id": "e9543ad4-fadd-4e65-96a1-b0ac6695ff8b",
+      "name": "Mover Card - Aguardando Pagamento",
+      "credentials": {
+        "trelloApi": {
+          "id": "Rw0karD0UnTWxue6",
+          "name": "Trello account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "vendas",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "conversa_id",
+              "fieldValue": "={{ $('Buscar Cliente').first().json.id }}"
+            },
+            {
+              "fieldId": "valor",
+              "fieldValue": "={{ $('Webhook').first().json.body.valor }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "aguardando_pagamento"
+            },
+            {
+              "fieldId": "asaas_payment_id",
+              "fieldValue": "={{ $('Criar Cobrança Asaas').first().json.id }}"
+            },
+            {
+              "fieldId": "asaas_link",
+              "fieldValue": "={{ $('Criar Cobrança Asaas').first().json.invoiceUrl }}"
+            },
+            {
+              "fieldId": "asaas_customer_id",
+              "fieldValue": "={{ $('Buscar Cliente').first().json.asaas_customer_id || $('Criar Customer Asaas').first().json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        192,
+        -16
+      ],
+      "id": "5580fd73-3fdd-49a2-b4bd-af473078e527",
+      "name": "Criar Venda",
+      "credentials": {
+        "supabaseApi": {
+          "id": "C87gCgyLKdnG6PSu",
+          "name": "baralho_prosperidade"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "conversas",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "telefone",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook').first().json.body.telefone }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "aguardando_pagamento"
+            },
+            {
+              "fieldId": "ultima_interacao",
+              "fieldValue": "={{ $now }}"
+            },
+            {
+              "fieldId": "updated_at",
+              "fieldValue": "={{ $now }}"
+            },
+            {
+              "fieldId": "cpf",
+              "fieldValue": "={{ $('Webhook').first().json.body.cpf }}"
+            },
+            {
+              "fieldId": "nome",
+              "fieldValue": "={{ $('Webhook').first().json.body.nome }}"
+            },
+            {
+              "fieldId": "fase_atual",
+              "fieldValue": "aguardando_pagamento"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        336,
+        -16
+      ],
+      "id": "ea09e8b8-50e7-45a2-abf7-4dc96e71d260",
+      "name": "Atualizar Status Conversa",
+      "credentials": {
+        "supabaseApi": {
+          "id": "C87gCgyLKdnG6PSu",
+          "name": "baralho_prosperidade"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"link_pagamento\": \"{{ $('Criar Cobrança Asaas').first().json.invoiceUrl }}\",\n  \"payment_id\": \"{{ $('Criar Cobrança Asaas').first().json.id }}\",\n  \"valor\": {{ $('Webhook').first().json.body.valor }},\n  \"vencimento\": \"{{ $now.plus(7, 'days').toFormat('dd/MM/yyyy') }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        512,
+        -16
+      ],
+      "id": "2743d00c-afa0-4c87-bacf-3a4acb18d127",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-sandbox.asaas.com/v3/customers",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"{{ $('Webhook').first().json.body.nome }}\",\n  \"mobilePhone\": \"{{ $('Webhook').first().json.body.telefone }}\",\n  \"cpfCnpj\": \"{{ $('Webhook').first().json.body.cpf }}\",\n  \"externalReference\": \"{{ $('Webhook').first().json.body.telefone }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -704,
+        128
+      ],
+      "id": "9f303249-2424-40be-9f1a-43c5eeebf13f",
+      "name": "Criar Customer Asaas",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JgnnUcH6DjUWLRLV",
+          "name": "Credencial Asaas"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Função de validação de CPF\nfunction validarCPF(cpf) {\n  // Remove caracteres não numéricos\n  cpf = cpf.replace(/\\D/g, '');\n  \n  // Verifica se tem 11 dígitos\n  if (cpf.length !== 11) {\n    return { \n      valido: false, \n      erro: \"CPF deve ter exatamente 11 dígitos\" \n    };\n  }\n  \n  // Verifica se é sequência repetida (00000000000, 11111111111, etc)\n  if (/^(\\d)\\1{10}$/.test(cpf)) {\n    return { \n      valido: false, \n      erro: \"CPF não pode ser uma sequência de números repetidos\" \n    };\n  }\n  \n  // Validação do primeiro dígito verificador\n  let soma = 0;\n  for (let i = 0; i < 9; i++) {\n    soma += parseInt(cpf.charAt(i)) * (10 - i);\n  }\n  let resto = (soma * 10) % 11;\n  if (resto === 10 || resto === 11) resto = 0;\n  if (resto !== parseInt(cpf.charAt(9))) {\n    return { \n      valido: false, \n      erro: \"CPF inválido (dígito verificador incorreto)\" \n    };\n  }\n  \n  // Validação do segundo dígito verificador\n  soma = 0;\n  for (let i = 0; i < 10; i++) {\n    soma += parseInt(cpf.charAt(i)) * (11 - i);\n  }\n  resto = (soma * 10) % 11;\n  if (resto === 10 || resto === 11) resto = 0;\n  if (resto !== parseInt(cpf.charAt(10))) {\n    return { \n      valido: false, \n      erro: \"CPF inválido (dígito verificador incorreto)\" \n    };\n  }\n  \n  // CPF válido!\n  return { \n    valido: true, \n    cpf: cpf \n  };\n}\n\n// CORRIGIDO: Pega CPF do WEBHOOK (não do input)\nconst cpfRecebido = $('Webhook').first().json.body.cpf;\n\n// Valida\nconst resultado = validarCPF(cpfRecebido);\n\n// Retorna resultado\nreturn [{\n  json: {\n    valido: resultado.valido,\n    erro: resultado.erro || null,\n    cpf_validado: resultado.cpf || null,\n    cpf_original: cpfRecebido\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -288,
+        -16
+      ],
+      "id": "da3ca284-2ab7-47ae-b8b7-b36dbc43a5e4",
+      "name": "Code - Validar CPF"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "52630f06-edee-4c35-b1e8-5478bc3ea0cf",
+              "leftValue": "={{ $json.valido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -240,
+        160
+      ],
+      "id": "8e7d4a07-ca8d-411b-bc63-9ca850170881",
+      "name": "IF - CPF Válido?"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"error\": \"{{ $json.erro }}\",\n  \"cpf_recebido\": \"{{ $json.cpf_original }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -64,
+        208
+      ],
+      "id": "feaa6175-e766-4ec7-992a-bf07d1e4d8e1",
+      "name": "Respond - CPF Inválido"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Buscar Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Cliente": {
+      "main": [
+        [
+          {
+            "node": "Tem Customer Asaas?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tem Customer Asaas?": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Criar Customer Asaas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salvar Customer ID": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code - Validar CPF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar Cobrança Asaas": {
+      "main": [
+        [
+          {
+            "node": "Mover Card - Aguardando Pagamento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mover Card - Aguardando Pagamento": {
+      "main": [
+        [
+          {
+            "node": "Criar Venda",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar Venda": {
+      "main": [
+        [
+          {
+            "node": "Atualizar Status Conversa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Status Conversa": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar Customer Asaas": {
+      "main": [
+        [
+          {
+            "node": "Salvar Customer ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Validar CPF": {
+      "main": [
+        [
+          {
+            "node": "IF - CPF Válido?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - CPF Válido?": {
+      "main": [
+        [
+          {
+            "node": "Criar Cobrança Asaas",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond - CPF Inválido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "090af672-796a-4ee2-88f0-627cb4cb2d81",
+  "activeVersionId": "090af672-796a-4ee2-88f0-627cb4cb2d81",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-12-21T17:02:44.696Z",
+      "createdAt": "2025-12-21T17:02:44.696Z",
+      "role": "workflow:owner",
+      "workflowId": "eU8314mbzjTAMW6W",
+      "projectId": "SoH44tJE4dqRVTiw"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-01-31T19:17:10.384Z",
+    "createdAt": "2026-01-31T19:17:10.384Z",
+    "versionId": "090af672-796a-4ee2-88f0-627cb4cb2d81",
+    "workflowId": "eU8314mbzjTAMW6W",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "criar-link-pagamento",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -1088,
+          -32
+        ],
+        "id": "5737812f-636b-49d7-83f6-00ae1ab7f1c9",
+        "name": "Webhook",
+        "webhookId": "46d77539-2891-485a-84c0-e26bb3a06918"
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "conversas",
+          "limit": 1,
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "telefone",
+                "condition": "eq",
+                "keyValue": "={{ $('Webhook').first().json.body.telefone }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -944,
+          -32
+        ],
+        "id": "6b254773-6ff0-414a-80d9-fbfa0e3b22cb",
+        "name": "Buscar Cliente",
+        "credentials": {
+          "supabaseApi": {
+            "id": "C87gCgyLKdnG6PSu",
+            "name": "baralho_prosperidade"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "167bd09a-ee67-4475-88d9-5e43a8079433",
+                "leftValue": "={{ $json.asaas_customer_id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -800,
+          -32
+        ],
+        "id": "b1f28ad4-193b-4b28-b607-fecd6bbf2ca7",
+        "name": "Tem Customer Asaas?"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "conversas",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "telefone",
+                "condition": "eq",
+                "keyValue": "={{ $('Webhook').first().json.body.telefone }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "asaas_customer_id",
+                "fieldValue": "={{ $json.id }}"
+              },
+              {
+                "fieldId": "updated_at",
+                "fieldValue": "={{ $now }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -528,
+          128
+        ],
+        "id": "8df686c7-e7dd-4f17-a96c-9cdddc461895",
+        "name": "Salvar Customer ID",
+        "credentials": {
+          "supabaseApi": {
+            "id": "C87gCgyLKdnG6PSu",
+            "name": "baralho_prosperidade"
+          }
+        }
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          -416,
+          -32
+        ],
+        "id": "c1c23c53-d2b3-4dab-8ee6-abfcaf018a5c",
+        "name": "Merge"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://sandbox.asaas.com/api/v3/payments",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "accept",
+                "value": "application/json"
+              },
+              {
+                "name": "content-type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"customer\": \"{{ $('Buscar Cliente').first().json.asaas_customer_id || $('Criar Customer Asaas').first().json.id }}\",\n  \"billingType\": \"UNDEFINED\",\n  \"value\": {{ $('Webhook').first().json.body.valor }},\n  \"dueDate\": \"{{ $now.plus(7, 'days').toFormat('yyyy-MM-dd') }}\",\n  \"description\": \"Baralho da Prosperidade - 52 cartas\",\n  \"externalReference\": \"{{ $('Webhook').first().json.body.telefone }}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -96,
+          -208
+        ],
+        "id": "8860e371-c0de-461c-a272-0d039a04e850",
+        "name": "Criar Cobrança Asaas",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "JgnnUcH6DjUWLRLV",
+            "name": "Credencial Asaas"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "id": {
+            "__rl": true,
+            "value": "={{ $('Buscar Cliente').first().json.trello_card_id }}",
+            "mode": "id"
+          },
+          "updateFields": {
+            "desc": "={{ $('Buscar Cliente').first().json.nome }}\nCPF: {{ $('Webhook').first().json.body.cpf }}\nTelefone: {{ $('Buscar Cliente').first().json.telefone }}\n\n💰 LINK DE PAGAMENTO GERADO\n\n💳 Valor: R$ {{ $('Criar Cobrança Asaas').first().json.value }}\n🔗 Link: {{ $('Criar Cobrança Asaas').first().json.invoiceUrl }}\n📅 Vencimento: {{ $('Criar Cobrança Asaas').first().json.dueDate }}\n\n📊 STATUS:\nStatus: aguardando_pagamento\nFase: aguardando_pagamento\n\n🕐 Link gerado em: {{ $now.toFormat('dd/MM/yyyy HH:mm') }}\n\n💬 Aguardando pagamento do cliente\n",
+            "idList": "69444209a93ede1c3ebed62a",
+            "name": "={{ $('Webhook').first().json.body.nome }}"
+          }
+        },
+        "type": "n8n-nodes-base.trello",
+        "typeVersion": 1,
+        "position": [
+          160,
+          -208
+        ],
+        "id": "e9543ad4-fadd-4e65-96a1-b0ac6695ff8b",
+        "name": "Mover Card - Aguardando Pagamento",
+        "credentials": {
+          "trelloApi": {
+            "id": "Rw0karD0UnTWxue6",
+            "name": "Trello account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "tableId": "vendas",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "conversa_id",
+                "fieldValue": "={{ $('Buscar Cliente').first().json.id }}"
+              },
+              {
+                "fieldId": "valor",
+                "fieldValue": "={{ $('Webhook').first().json.body.valor }}"
+              },
+              {
+                "fieldId": "status",
+                "fieldValue": "aguardando_pagamento"
+              },
+              {
+                "fieldId": "asaas_payment_id",
+                "fieldValue": "={{ $('Criar Cobrança Asaas').first().json.id }}"
+              },
+              {
+                "fieldId": "asaas_link",
+                "fieldValue": "={{ $('Criar Cobrança Asaas').first().json.invoiceUrl }}"
+              },
+              {
+                "fieldId": "asaas_customer_id",
+                "fieldValue": "={{ $('Buscar Cliente').first().json.asaas_customer_id || $('Criar Customer Asaas').first().json.id }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          192,
+          -16
+        ],
+        "id": "5580fd73-3fdd-49a2-b4bd-af473078e527",
+        "name": "Criar Venda",
+        "credentials": {
+          "supabaseApi": {
+            "id": "C87gCgyLKdnG6PSu",
+            "name": "baralho_prosperidade"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "conversas",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "telefone",
+                "condition": "eq",
+                "keyValue": "={{ $('Webhook').first().json.body.telefone }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "status",
+                "fieldValue": "aguardando_pagamento"
+              },
+              {
+                "fieldId": "ultima_interacao",
+                "fieldValue": "={{ $now }}"
+              },
+              {
+                "fieldId": "updated_at",
+                "fieldValue": "={{ $now }}"
+              },
+              {
+                "fieldId": "cpf",
+                "fieldValue": "={{ $('Webhook').first().json.body.cpf }}"
+              },
+              {
+                "fieldId": "nome",
+                "fieldValue": "={{ $('Webhook').first().json.body.nome }}"
+              },
+              {
+                "fieldId": "fase_atual",
+                "fieldValue": "aguardando_pagamento"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          336,
+          -16
+        ],
+        "id": "ea09e8b8-50e7-45a2-abf7-4dc96e71d260",
+        "name": "Atualizar Status Conversa",
+        "credentials": {
+          "supabaseApi": {
+            "id": "C87gCgyLKdnG6PSu",
+            "name": "baralho_prosperidade"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={\n  \"success\": true,\n  \"link_pagamento\": \"{{ $('Criar Cobrança Asaas').first().json.invoiceUrl }}\",\n  \"payment_id\": \"{{ $('Criar Cobrança Asaas').first().json.id }}\",\n  \"valor\": {{ $('Webhook').first().json.body.valor }},\n  \"vencimento\": \"{{ $now.plus(7, 'days').toFormat('dd/MM/yyyy') }}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.4,
+        "position": [
+          512,
+          -16
+        ],
+        "id": "2743d00c-afa0-4c87-bacf-3a4acb18d127",
+        "name": "Respond to Webhook"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api-sandbox.asaas.com/v3/customers",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "accept",
+                "value": "application/json"
+              },
+              {
+                "name": "content-type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"name\": \"{{ $('Webhook').first().json.body.nome }}\",\n  \"mobilePhone\": \"{{ $('Webhook').first().json.body.telefone }}\",\n  \"cpfCnpj\": \"{{ $('Webhook').first().json.body.cpf }}\",\n  \"externalReference\": \"{{ $('Webhook').first().json.body.telefone }}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -704,
+          128
+        ],
+        "id": "9f303249-2424-40be-9f1a-43c5eeebf13f",
+        "name": "Criar Customer Asaas",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "JgnnUcH6DjUWLRLV",
+            "name": "Credencial Asaas"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Função de validação de CPF\nfunction validarCPF(cpf) {\n  // Remove caracteres não numéricos\n  cpf = cpf.replace(/\\D/g, '');\n  \n  // Verifica se tem 11 dígitos\n  if (cpf.length !== 11) {\n    return { \n      valido: false, \n      erro: \"CPF deve ter exatamente 11 dígitos\" \n    };\n  }\n  \n  // Verifica se é sequência repetida (00000000000, 11111111111, etc)\n  if (/^(\\d)\\1{10}$/.test(cpf)) {\n    return { \n      valido: false, \n      erro: \"CPF não pode ser uma sequência de números repetidos\" \n    };\n  }\n  \n  // Validação do primeiro dígito verificador\n  let soma = 0;\n  for (let i = 0; i < 9; i++) {\n    soma += parseInt(cpf.charAt(i)) * (10 - i);\n  }\n  let resto = (soma * 10) % 11;\n  if (resto === 10 || resto === 11) resto = 0;\n  if (resto !== parseInt(cpf.charAt(9))) {\n    return { \n      valido: false, \n      erro: \"CPF inválido (dígito verificador incorreto)\" \n    };\n  }\n  \n  // Validação do segundo dígito verificador\n  soma = 0;\n  for (let i = 0; i < 10; i++) {\n    soma += parseInt(cpf.charAt(i)) * (11 - i);\n  }\n  resto = (soma * 10) % 11;\n  if (resto === 10 || resto === 11) resto = 0;\n  if (resto !== parseInt(cpf.charAt(10))) {\n    return { \n      valido: false, \n      erro: \"CPF inválido (dígito verificador incorreto)\" \n    };\n  }\n  \n  // CPF válido!\n  return { \n    valido: true, \n    cpf: cpf \n  };\n}\n\n// CORRIGIDO: Pega CPF do WEBHOOK (não do input)\nconst cpfRecebido = $('Webhook').first().json.body.cpf;\n\n// Valida\nconst resultado = validarCPF(cpfRecebido);\n\n// Retorna resultado\nreturn [{\n  json: {\n    valido: resultado.valido,\n    erro: resultado.erro || null,\n    cpf_validado: resultado.cpf || null,\n    cpf_original: cpfRecebido\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -288,
+          -16
+        ],
+        "id": "da3ca284-2ab7-47ae-b8b7-b36dbc43a5e4",
+        "name": "Code - Validar CPF"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "52630f06-edee-4c35-b1e8-5478bc3ea0cf",
+                "leftValue": "={{ $json.valido }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -240,
+          160
+        ],
+        "id": "8e7d4a07-ca8d-411b-bc63-9ca850170881",
+        "name": "IF - CPF Válido?"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={\n  \"success\": false,\n  \"error\": \"{{ $json.erro }}\",\n  \"cpf_recebido\": \"{{ $json.cpf_original }}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.4,
+        "position": [
+          -64,
+          208
+        ],
+        "id": "feaa6175-e766-4ec7-992a-bf07d1e4d8e1",
+        "name": "Respond - CPF Inválido"
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Buscar Cliente",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Buscar Cliente": {
+        "main": [
+          [
+            {
+              "node": "Tem Customer Asaas?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Tem Customer Asaas?": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Criar Customer Asaas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Salvar Customer ID": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "Code - Validar CPF",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Criar Cobrança Asaas": {
+        "main": [
+          [
+            {
+              "node": "Mover Card - Aguardando Pagamento",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Mover Card - Aguardando Pagamento": {
+        "main": [
+          [
+            {
+              "node": "Criar Venda",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Criar Venda": {
+        "main": [
+          [
+            {
+              "node": "Atualizar Status Conversa",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualizar Status Conversa": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Criar Customer Asaas": {
+        "main": [
+          [
+            {
+              "node": "Salvar Customer ID",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code - Validar CPF": {
+        "main": [
+          [
+            {
+              "node": "IF - CPF Válido?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF - CPF Válido?": {
+        "main": [
+          [
+            {
+              "node": "Criar Cobrança Asaas",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Respond - CPF Inválido",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "system migration",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

@@ -1,0 +1,3281 @@
+{
+  "updatedAt": "2026-02-03T17:27:58.762Z",
+  "createdAt": "2026-01-06T13:50:47.844Z",
+  "id": "3EFUkYsUfkGLYIbP",
+  "name": "Módulo 3 - Entrada Manual",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "fornecedores",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "={{ $json.tipo_pessoa === 'pf' ? 'cpf' : 'cnpj' }}",
+              "condition": "eq",
+              "keyValue": "={{ $json['CNPJ/CPF'] }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2272,
+        -304
+      ],
+      "id": "169a93af-c300-40f6-b0e0-8a4e6cf0a58f",
+      "name": "Buscar Fornecedor",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "OP3IGsLO3LJ2h9JA",
+          "name": "Supabase Accounting Payables"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "fornecedores",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "nome",
+              "fieldValue": "={{ $('Validar CPF/CNPJ').item.json.Nome }}"
+            },
+            {
+              "fieldId": "cnpj",
+              "fieldValue": "={{ $('Validar CPF/CNPJ').item.json.tipo_pessoa === 'pj' ? $('Validar CPF/CNPJ').item.json.documento_limpo : null }}"
+            },
+            {
+              "fieldId": "banco",
+              "fieldValue": "={{ $('Validar CPF/CNPJ').item.json.Banco }}"
+            },
+            {
+              "fieldId": "agencia",
+              "fieldValue": "={{ $('Validar CPF/CNPJ').item.json['Agência'] }}"
+            },
+            {
+              "fieldId": "conta",
+              "fieldValue": "={{ $('Validar CPF/CNPJ').item.json.Conta }}"
+            },
+            {
+              "fieldId": "tipo_conta",
+              "fieldValue": "={{ $('Validar CPF/CNPJ').item.json['Tipo Conta'] }}"
+            },
+            {
+              "fieldId": "cpf",
+              "fieldValue": "={{ $('Validar CPF/CNPJ').item.json.tipo_pessoa === 'pf' ? $('Validar CPF/CNPJ').item.json.documento_limpo : null }}"
+            },
+            {
+              "fieldId": "tipo",
+              "fieldValue": "={{ $('Validar CPF/CNPJ').item.json.tipo_pessoa }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2592,
+        272
+      ],
+      "id": "fd5bdb76-e2d8-4a92-8b34-7155059f3e64",
+      "name": "Criar Fornecedor",
+      "credentials": {
+        "supabaseApi": {
+          "id": "OP3IGsLO3LJ2h9JA",
+          "name": "Supabase Accounting Payables"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "includeUnpaired": true
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -2272,
+        48
+      ],
+      "id": "5da08945-01ab-4471-a7ba-fe35680b3ffd",
+      "name": "Merge",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "tableId": "contas_a_pagar",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "fornecedor_id",
+              "fieldValue": "={{ $json.id }}"
+            },
+            {
+              "fieldId": "tipo_pagamento",
+              "fieldValue": "ted"
+            },
+            {
+              "fieldId": "valor",
+              "fieldValue": "={{ $('Validar CPF/CNPJ').item.json.Valor }}"
+            },
+            {
+              "fieldId": "vencimento",
+              "fieldValue": "={{ $('Validar CPF/CNPJ').item.json['Vencimento'].split('/').reverse().join('-') }}"
+            },
+            {
+              "fieldId": "descricao",
+              "fieldValue": "={{ $('Validar CPF/CNPJ').item.json['Descrição'] }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "aprovado"
+            },
+            {
+              "fieldId": "created_at",
+              "fieldValue": "={{ $now.setZone('America/Sao_Paulo').toFormat('yyyy-MM-dd HH:mm:ss') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1840,
+        256
+      ],
+      "id": "07460569-5076-4ab9-9422-f7ee3c6c70ba",
+      "name": "Inserir Conta no Supabase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "OP3IGsLO3LJ2h9JA",
+          "name": "Supabase Accounting Payables"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b96e7d88-b533-442e-b33c-07daea782729",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2544,
+        -64
+      ],
+      "id": "1896432a-69a1-4ab9-9d94-267ec1e84e05",
+      "name": "IF - Fornecedor Existe?",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M",
+          "mode": "list",
+          "cachedResultName": "Contas a Pagar - Automação",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Nova Conta Manual",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit#gid=0"
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1296,
+        -544
+      ],
+      "id": "b54c83f0-99f0-4336-8432-e6934c8c9153",
+      "name": "Limpar Linha da Planilha",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RruWc6BrI8tF2hiO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -3712,
+        -480
+      ],
+      "id": "8b06ad6a-56f6-43c3-96fe-c4a626b3e5c6",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const dados = $json.body || $json;\nlet documento = dados['CNPJ/CPF'].toString().replace(/\\D/g, '');\n\n// Completar zeros à esquerda\nif (documento.length > 11 && documento.length <= 14) {\n  documento = documento.padStart(14, '0'); // CNPJ\n} else if (documento.length <= 11) {\n  documento = documento.padStart(11, '0'); // CPF\n}\n\n// Validar CPF\nfunction validarCPF(cpf) {\n  if (cpf.length !== 11 || /^(\\d)\\1+$/.test(cpf)) return false;\n  \n  let soma = 0;\n  for (let i = 0; i < 9; i++) soma += parseInt(cpf[i]) * (10 - i);\n  let resto = (soma * 10) % 11;\n  if (resto === 10 || resto === 11) resto = 0;\n  if (resto !== parseInt(cpf[9])) return false;\n  \n  soma = 0;\n  for (let i = 0; i < 10; i++) soma += parseInt(cpf[i]) * (11 - i);\n  resto = (soma * 10) % 11;\n  if (resto === 10 || resto === 11) resto = 0;\n  return resto === parseInt(cpf[10]);\n}\n\n// Validar CNPJ\nfunction validarCNPJ(cnpj) {\n  if (cnpj.length !== 14 || /^(\\d)\\1+$/.test(cnpj)) return false;\n  \n  let tamanho = cnpj.length - 2;\n  let numeros = cnpj.substring(0, tamanho);\n  let digitos = cnpj.substring(tamanho);\n  let soma = 0;\n  let pos = tamanho - 7;\n  \n  for (let i = tamanho; i >= 1; i--) {\n    soma += numeros.charAt(tamanho - i) * pos--;\n    if (pos < 2) pos = 9;\n  }\n  \n  let resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;\n  if (resultado !== parseInt(digitos.charAt(0))) return false;\n  \n  tamanho = tamanho + 1;\n  numeros = cnpj.substring(0, tamanho);\n  soma = 0;\n  pos = tamanho - 7;\n  \n  for (let i = tamanho; i >= 1; i--) {\n    soma += numeros.charAt(tamanho - i) * pos--;\n    if (pos < 2) pos = 9;\n  }\n  \n  resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;\n  return resultado === parseInt(digitos.charAt(1));\n}\n\n// Validar\nlet valido, tipo;\nif (documento.length === 11) {\n  tipo = 'pf';\n  valido = validarCPF(documento);\n} else if (documento.length === 14) {\n  tipo = 'pj';\n  valido = validarCNPJ(documento);\n} else {\n  valido = false;\n  tipo = null;\n}\n\nreturn {\n  ...dados,\n  'CNPJ/CPF': documento,\n  documento_limpo: documento,\n  tipo_pessoa: tipo,\n  documento_valido: valido\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3312,
+        48
+      ],
+      "id": "1989a264-5820-4721-b725-8d52553dec31",
+      "name": "Validar CPF/CNPJ"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2bd934f1-ce9e-4e62-a29f-60afb2eb39f0",
+              "leftValue": "={{ $json.documento_valido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3088,
+        64
+      ],
+      "id": "4ad7302d-6266-4b8e-ab8e-a4c33ad4869f",
+      "name": "IF Documento Válido?"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "planilha-manual",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3872,
+        -400
+      ],
+      "id": "427e195f-52e0-491c-8076-efa664bd40e5",
+      "name": "Webhook Planilha Manual",
+      "webhookId": "dc3d7dcd-735d-4cd7-91b6-cb601b74d8df"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://prosperidade-n8n.yc5mic.easypanel.host/webhook/sync-contas",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -1056,
+        -544
+      ],
+      "id": "5d8f5f78-e66e-4330-8b85-bd4abcdd8e34",
+      "name": "Sync_Planilha_Contas",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://prosperidade-n8n.yc5mic.easypanel.host/webhook/fornecedores-sync",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -864,
+        -544
+      ],
+      "id": "26151fa5-aa5d-48d6-9ac6-cf10f3af612d",
+      "name": "Sync_Planilha_Fornecedores",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const dados = $json.body || $json;\nconst codigoBarras = String(dados[\"Código de Barras\"] || '').replace(/\\D/g, '');\n\nlet erros = [];\nlet validacao_ok = true;\nlet valorExtraido = null;\n\n// Validação 1: Código de barras obrigatório\nif (!codigoBarras) {\n  erros.push('Código de Barras é obrigatório para Concessionária');\n  validacao_ok = false;\n}\n\n// Validação 2: Deve ter 48 dígitos\nif (codigoBarras && codigoBarras.length !== 48) {\n  erros.push('Código de Barras deve ter 48 dígitos (tem ' + codigoBarras.length + ')');\n  validacao_ok = false;\n}\n\n// Validação 3: Deve começar com 8\nif (codigoBarras && !codigoBarras.startsWith('8')) {\n  erros.push('Código de Barras de Concessionária deve começar com 8');\n  validacao_ok = false;\n}\n\n// Validação 4: Módulo 10 ou 11 (FEBRABAN) e extração de valor\nif (codigoBarras && codigoBarras.length === 48) {\n  const tipoValor = codigoBarras[2];\n  \n  // Extrair valor (posições 4-14, 11 dígitos)\n  const valorCentavos = parseInt(codigoBarras.substring(4, 15));\n  if (valorCentavos > 0) {\n    valorExtraido = valorCentavos / 100;\n  }\n  \n  function modulo10(bloco) {\n    let soma = 0;\n    let peso = 2;\n    for (let i = bloco.length - 1; i >= 0; i--) {\n      let resultado = parseInt(bloco[i]) * peso;\n      soma += resultado >= 10 ? Math.floor(resultado / 10) + (resultado % 10) : resultado;\n      peso = peso === 2 ? 1 : 2;\n    }\n    let resto = soma % 10;\n    return resto === 0 ? 0 : 10 - resto;\n  }\n  \n  function modulo11(bloco) {\n    let soma = 0;\n    let peso = 2;\n    for (let i = bloco.length - 1; i >= 0; i--) {\n      soma += parseInt(bloco[i]) * peso;\n      peso = peso === 9 ? 2 : peso + 1;\n    }\n    let resto = soma % 11;\n    if (resto === 0 || resto === 1) return 0;\n    if (resto === 10) return 1;\n    return 11 - resto;\n  }\n  \n  const bloco1 = codigoBarras.substring(0, 12);\n  const bloco2 = codigoBarras.substring(12, 24);\n  const bloco3 = codigoBarras.substring(24, 36);\n  const bloco4 = codigoBarras.substring(36, 48);\n  \n  const blocos = [bloco1, bloco2, bloco3, bloco4];\n  const usarModulo10 = tipoValor === '6' || tipoValor === '7';\n  \n  for (let i = 0; i < blocos.length; i++) {\n    const bloco = blocos[i];\n    const digitosBloco = bloco.substring(0, 11);\n    const dvBloco = parseInt(bloco[11]);\n    \n    const dvCalculado = usarModulo10 ? modulo10(digitosBloco) : modulo11(digitosBloco);\n    \n    if (dvBloco !== dvCalculado) {\n      erros.push('Dígito verificador do bloco ' + (i + 1) + ' inválido');\n      validacao_ok = false;\n      break;\n    }\n  }\n}\n\n// Converter vencimento de DD/MM/YYYY para YYYY-MM-DD\nlet vencimentoFormatado = '';\nconst vencOriginal = String(dados.Vencimento || '');\n\nif (vencOriginal.includes('/')) {\n  const partes = vencOriginal.split('/');\n  vencimentoFormatado = partes[2] + '-' + partes[1] + '-' + partes[0];\n} else if (vencOriginal.includes('T')) {\n  vencimentoFormatado = vencOriginal.split('T')[0];\n} else {\n  vencimentoFormatado = vencOriginal;\n}\n\nreturn {\n  json: {\n    ...dados,\n    codigo_barras_limpo: codigoBarras,\n    tipo_pagamento: 'concessionaria',\n    valor_extraido: valorExtraido,\n    vencimento_formatado: vencimentoFormatado,\n    validacao_ok: validacao_ok,\n    validacao_erros: erros\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3280,
+        -608
+      ],
+      "id": "c1597c7d-9124-4b14-ad44-c956c278d48b",
+      "name": "Validar_Codigo_Barras_Concess"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "38af51f3-e62c-4031-a571-6a64aec6cf3f",
+              "leftValue": "={{ $json.validacao_ok }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -3072,
+        -672
+      ],
+      "id": "a0e84adb-c6d8-49b1-8971-dd1884a616a8",
+      "name": "IF_Concess_Valida"
+    },
+    {
+      "parameters": {
+        "tableId": "contas_a_pagar",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "tipo_pagamento",
+              "fieldValue": "concessionaria"
+            },
+            {
+              "fieldId": "valor",
+              "fieldValue": "={{ $json.Valor }}"
+            },
+            {
+              "fieldId": "vencimento",
+              "fieldValue": "={{ $json.vencimento_formatado }}"
+            },
+            {
+              "fieldId": "descricao",
+              "fieldValue": "={{ $json.Descrição }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "aprovado"
+            },
+            {
+              "fieldId": "created_at",
+              "fieldValue": "={{ $now.setZone('America/Sao_Paulo').toFormat('yyyy-MM-dd HH:mm:ss') }}"
+            },
+            {
+              "fieldId": "codigo_barras",
+              "fieldValue": "={{ $json.codigo_barras_limpo }}"
+            },
+            {
+              "fieldId": "nome_cedente_original",
+              "fieldValue": "={{ $json.Nome }}"
+            },
+            {
+              "fieldId": "valor",
+              "fieldValue": "={{ $json.valor_extraido }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2704,
+        -656
+      ],
+      "id": "60828610-4f16-4a81-a754-ea6136847a27",
+      "name": "Inserir_Conta_Concess",
+      "credentials": {
+        "supabaseApi": {
+          "id": "OP3IGsLO3LJ2h9JA",
+          "name": "Supabase Accounting Payables"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "45775454-227e-4caa-bbcf-176c9f3b1731",
+              "leftValue": "={{ $json.body[\"Forma de Pagamento\"] }}",
+              "rightValue": "Concessionária",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -3504,
+        -384
+      ],
+      "id": "6c77f0b5-6d8d-4586-9216-b94f28561fc6",
+      "name": "É concessionária?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2bc33788-97ec-485b-82f8-734790a94ea5",
+              "leftValue": "={{ $('Webhook Planilha Manual').item.json.body['Forma de Pagamento'] }}",
+              "rightValue": "Boleto",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2256,
+        288
+      ],
+      "id": "06986969-63e7-43de-ab92-8517fad5f803",
+      "name": "É Boleto?"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const fornecedor = $json;\nconst dadosPlanilha = $('IF_Dados_OK').first().json;\nconst linhaDigitavel = String(dadosPlanilha[\"Código de Barras\"] || '').replace(/\\D/g, '');\n\nlet erros = [];\nlet validacao_ok = true;\nlet valorExtraido = null;\nlet vencimentoExtraido = null;\nlet codigoBarras44 = '';\n\nif (!linhaDigitavel) {\n  erros.push('Código de Barras é obrigatório para Boleto');\n  validacao_ok = false;\n}\n\nif (linhaDigitavel && linhaDigitavel.length !== 47) {\n  erros.push('Código de Barras deve ter 47 dígitos (tem ' + linhaDigitavel.length + ')');\n  validacao_ok = false;\n}\n\nif (linhaDigitavel && linhaDigitavel.length === 47) {\n  \n  function modulo10(numero) {\n    let soma = 0;\n    let peso = 2;\n    for (let i = numero.length - 1; i >= 0; i--) {\n      let produto = parseInt(numero[i]) * peso;\n      if (produto >= 10) {\n        produto = Math.floor(produto / 10) + (produto % 10);\n      }\n      soma += produto;\n      peso = peso === 2 ? 1 : 2;\n    }\n    const resto = soma % 10;\n    return resto === 0 ? 0 : 10 - resto;\n  }\n  \n  function modulo11Boleto(numero) {\n    let soma = 0;\n    let peso = 2;\n    for (let i = numero.length - 1; i >= 0; i--) {\n      soma += parseInt(numero[i]) * peso;\n      peso = peso >= 9 ? 2 : peso + 1;\n    }\n    const resto = soma % 11;\n    const dv = 11 - resto;\n    if (dv === 0 || dv === 10 || dv === 11) return 1;\n    return dv;\n  }\n  \n  const campo1 = linhaDigitavel.substring(0, 9);\n  const dv1 = parseInt(linhaDigitavel.substring(9, 10));\n  const campo2 = linhaDigitavel.substring(10, 20);\n  const dv2 = parseInt(linhaDigitavel.substring(20, 21));\n  const campo3 = linhaDigitavel.substring(21, 31);\n  const dv3 = parseInt(linhaDigitavel.substring(31, 32));\n  const dvGeral = parseInt(linhaDigitavel.substring(32, 33));\n  const fatorVencimento = linhaDigitavel.substring(33, 37);\n  const valorStr = linhaDigitavel.substring(37, 47);\n  \n  const banco = linhaDigitavel.substring(0, 3);\n  const moeda = linhaDigitavel.substring(3, 4);\n  const campoLivre = linhaDigitavel.substring(4, 9) + campo2 + campo3;\n  \n  codigoBarras44 = banco + moeda + dvGeral + fatorVencimento + valorStr + campoLivre;\n  const codigoBarrasSemDV = banco + moeda + fatorVencimento + valorStr + campoLivre;\n  \n  if (dv1 !== modulo10(campo1)) {\n    erros.push('Campo 1: DV inválido');\n    validacao_ok = false;\n  }\n  if (dv2 !== modulo10(campo2)) {\n    erros.push('Campo 2: DV inválido');\n    validacao_ok = false;\n  }\n  if (dv3 !== modulo10(campo3)) {\n    erros.push('Campo 3: DV inválido');\n    validacao_ok = false;\n  }\n  if (dvGeral !== modulo11Boleto(codigoBarrasSemDV)) {\n    erros.push('DV Geral inválido');\n    validacao_ok = false;\n  }\n  \n  // Extrair valor\n  const valorCentavos = parseInt(valorStr);\n  if (valorCentavos > 0) {\n    valorExtraido = valorCentavos / 100;\n  }\n  \n  // Extrair vencimento\n  const fator = parseInt(fatorVencimento);\n  if (fator > 0) {\n    const dataBaseOriginal = new Date(1997, 9, 7); // 07/10/1997\n    let dataVenc = new Date(dataBaseOriginal.getTime() + fator * 86400000);\n    \n    // Nova base FEBRABAN: fator resetou em 22/02/2025 (fator 1000)\n    // Se a data calculada for anterior a 2025, usar nova base\n    if (dataVenc.getFullYear() < 2025) {\n      const dataBaseNova = new Date(2025, 1, 22); // 22/02/2025\n      dataVenc = new Date(dataBaseNova.getTime() + (fator - 1000) * 86400000);\n    }\n    \n    const ano = dataVenc.getFullYear();\n    const mes = String(dataVenc.getMonth() + 1).padStart(2, '0');\n    const dia = String(dataVenc.getDate()).padStart(2, '0');\n    vencimentoExtraido = ano + '-' + mes + '-' + dia;\n  }\n}\n\nreturn {\n  json: {\n    ...dadosPlanilha,\n    fornecedor_id: fornecedor.id,\n    fornecedor_nome: fornecedor.nome,\n    codigo_barras_44: codigoBarras44,\n    codigo_barras_47: linhaDigitavel,\n    tipo_pagamento: 'boleto',\n    valor_extraido: valorExtraido,\n    vencimento_extraido: vencimentoExtraido,\n    validacao_ok: validacao_ok,\n    validacao_erros: erros\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2016,
+        -400
+      ],
+      "id": "5ff4b817-26c9-42ae-9194-65b7802d8bdb",
+      "name": "Validar_Codigo_Barras_Boleto"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5e6860b8-8d0c-46ee-bbbd-211d4ade8ad8",
+              "leftValue": "={{ $json.validacao_ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1824,
+        -400
+      ],
+      "id": "98dd63aa-67ea-4a52-8ef1-24b670d92eae",
+      "name": "IF_Boleto_Valido"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M",
+          "mode": "list",
+          "cachedResultName": "Contas a Pagar - Automação",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Nova Conta Manual",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Erro": "={{ $json.validacao_erros.join(\", \") }}",
+            "Nome": "={{ $json.Nome }}"
+          },
+          "matchingColumns": [
+            "Nome"
+          ],
+          "schema": [
+            {
+              "id": "Forma de Pagamento",
+              "displayName": "Forma de Pagamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "CNPJ/CPF",
+              "displayName": "CNPJ/CPF",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Nome",
+              "displayName": "Nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Valor",
+              "displayName": "Valor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Vencimento",
+              "displayName": "Vencimento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Banco",
+              "displayName": "Banco",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Agência",
+              "displayName": "Agência",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Conta",
+              "displayName": "Conta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Tipo Conta",
+              "displayName": "Tipo Conta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Descrição",
+              "displayName": "Descrição",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Código de Barras",
+              "displayName": "Código de Barras",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Erro",
+              "displayName": "Erro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -2896,
+        -432
+      ],
+      "id": "e945dd7b-c6c0-41e0-9bcd-a891f8d4b914",
+      "name": "Marcar Erro Codigo Barras",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RruWc6BrI8tF2hiO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M",
+          "mode": "list",
+          "cachedResultName": "Contas a Pagar - Automação",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Nova Conta Manual",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Erro": "Faltam Dados",
+            "CNPJ/CPF": "={{ $json['CNPJ/CPF'] }}"
+          },
+          "matchingColumns": [
+            "CNPJ/CPF"
+          ],
+          "schema": [
+            {
+              "id": "Forma de Pagamento",
+              "displayName": "Forma de Pagamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "CNPJ/CPF",
+              "displayName": "CNPJ/CPF",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Nome",
+              "displayName": "Nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Valor",
+              "displayName": "Valor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Vencimento",
+              "displayName": "Vencimento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Banco",
+              "displayName": "Banco",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Agência",
+              "displayName": "Agência",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Conta",
+              "displayName": "Conta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Tipo Conta",
+              "displayName": "Tipo Conta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Descrição",
+              "displayName": "Descrição",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Código de Barras",
+              "displayName": "Código de Barras",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Erro",
+              "displayName": "Erro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -2784,
+        -48
+      ],
+      "id": "d3e5b235-f57e-4cff-9c4a-d46046d2b487",
+      "name": "Marcar Erro Faltam Dados",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RruWc6BrI8tF2hiO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M",
+          "mode": "list",
+          "cachedResultName": "Contas a Pagar - Automação",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Nova Conta Manual",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Erro": "CPF/CNPJ inválido",
+            "CNPJ/CPF": "={{ $json['CNPJ/CPF'] }}"
+          },
+          "matchingColumns": [
+            "CNPJ/CPF"
+          ],
+          "schema": [
+            {
+              "id": "Forma de Pagamento",
+              "displayName": "Forma de Pagamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "CNPJ/CPF",
+              "displayName": "CNPJ/CPF",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Nome",
+              "displayName": "Nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Valor",
+              "displayName": "Valor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Vencimento",
+              "displayName": "Vencimento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Banco",
+              "displayName": "Banco",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Agência",
+              "displayName": "Agência",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Conta",
+              "displayName": "Conta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Tipo Conta",
+              "displayName": "Tipo Conta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Descrição",
+              "displayName": "Descrição",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Código de Barras",
+              "displayName": "Código de Barras",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Erro",
+              "displayName": "Erro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -2848,
+        192
+      ],
+      "id": "add2e7a3-2c6c-445f-871c-0c90883e7863",
+      "name": "Marcar Erro Documento Válido",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RruWc6BrI8tF2hiO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "contas_a_pagar",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "tipo_pagamento",
+              "fieldValue": "boleto"
+            },
+            {
+              "fieldId": "valor",
+              "fieldValue": "={{ $json.valor_extraido }}"
+            },
+            {
+              "fieldId": "vencimento",
+              "fieldValue": "={{ $json.vencimento_extraido }}"
+            },
+            {
+              "fieldId": "codigo_barras",
+              "fieldValue": "={{ $json.codigo_barras_44 }}"
+            },
+            {
+              "fieldId": "descricao",
+              "fieldValue": "={{ $json.Descrição }}"
+            },
+            {
+              "fieldId": "nome_cedente_original",
+              "fieldValue": "={{ $json.Nome }}"
+            },
+            {
+              "fieldId": "fornecedor_id",
+              "fieldValue": "={{ $json.fornecedor_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1616,
+        -448
+      ],
+      "id": "1a857729-78f9-4e02-b66e-450a47b76680",
+      "name": "Inserir_Conta_Boleto",
+      "credentials": {
+        "supabaseApi": {
+          "id": "OP3IGsLO3LJ2h9JA",
+          "name": "Supabase Accounting Payables"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M",
+          "mode": "list",
+          "cachedResultName": "Contas a Pagar - Automação",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Nova Conta Manual",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Erro": "={{ $json.validacao_erros ? $json.validacao_erros.join(\", \") : \"Erro de validação\" }}",
+            "CNPJ/CPF": "={{ $('Webhook Planilha Manual').item.json.body['CNPJ/CPF'] }}"
+          },
+          "matchingColumns": [
+            "CNPJ/CPF"
+          ],
+          "schema": [
+            {
+              "id": "Forma de Pagamento",
+              "displayName": "Forma de Pagamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "CNPJ/CPF",
+              "displayName": "CNPJ/CPF",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Nome",
+              "displayName": "Nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Valor",
+              "displayName": "Valor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Vencimento",
+              "displayName": "Vencimento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Banco",
+              "displayName": "Banco",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Agência",
+              "displayName": "Agência",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Conta",
+              "displayName": "Conta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Tipo Conta",
+              "displayName": "Tipo Conta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Descrição",
+              "displayName": "Descrição",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Código de Barras",
+              "displayName": "Código de Barras",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Erro",
+              "displayName": "Erro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1968,
+        -144
+      ],
+      "id": "e34684d0-57a2-47ee-8026-56db415d6859",
+      "name": "Marcar Erro código boleto",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RruWc6BrI8tF2hiO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const dados = $json;\nconst forma = (dados[\"Forma de Pagamento\"] || '').toLowerCase();\nlet faltamDados = false;\nlet erros = [];\n\nif (forma === 'ted') {\n  if (!dados['CNPJ/CPF'] || !dados['CNPJ/CPF'].toString().trim()) erros.push('CNPJ/CPF');\n  if (!dados.Banco) erros.push('Banco');\n  if (!dados['Agência']) erros.push('Agência');\n  if (!dados.Conta) erros.push('Conta');\n  if (!dados['Tipo Conta']) erros.push('Tipo Conta');\n  if (!dados.Nome || !dados.Nome.toString().trim()) erros.push('Nome');\n  if (!dados.Valor) erros.push('Valor');\n  if (!dados.Vencimento) erros.push('Vencimento');\n} else if (forma === 'boleto') {\n  if (!dados['CNPJ/CPF'] || !dados['CNPJ/CPF'].toString().trim()) erros.push('CNPJ/CPF');\n  if (!dados.Nome || !dados.Nome.toString().trim()) erros.push('Nome');\n  if (!dados['Código de Barras'] || !dados['Código de Barras'].toString().trim()) erros.push('Código de Barras');\n}\n\nfaltamDados = erros.length > 0;\n\nreturn {\n  json: {\n    ...dados,\n    faltam_dados: faltamDados,\n    campos_faltando: erros\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2976,
+        -224
+      ],
+      "id": "da0dfb1f-1a01-4723-905a-0e9f83794443",
+      "name": "If_Faltam_Dados"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "72a56cba-786e-4f38-83a2-f2b6a379857d",
+              "leftValue": "={{ $json.faltam_dados }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2608,
+        -384
+      ],
+      "id": "59b90730-0654-4fc0-872b-f1d40515f625",
+      "name": "IF_Dados_OK"
+    }
+  ],
+  "connections": {
+    "Buscar Fornecedor": {
+      "main": [
+        [
+          {
+            "node": "IF - Fornecedor Existe?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar Fornecedor": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "É Boleto?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Fornecedor Existe?": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Criar Fornecedor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserir Conta no Supabase": {
+      "main": [
+        [
+          {
+            "node": "Limpar Linha da Planilha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "É concessionária?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpar Linha da Planilha": {
+      "main": [
+        [
+          {
+            "node": "Sync_Planilha_Contas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Documento Válido?": {
+      "main": [
+        [
+          {
+            "node": "If_Faltam_Dados",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Marcar Erro Documento Válido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar CPF/CNPJ": {
+      "main": [
+        [
+          {
+            "node": "IF Documento Válido?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Planilha Manual": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sync_Planilha_Contas": {
+      "main": [
+        [
+          {
+            "node": "Sync_Planilha_Fornecedores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar_Codigo_Barras_Concess": {
+      "main": [
+        [
+          {
+            "node": "IF_Concess_Valida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF_Concess_Valida": {
+      "main": [
+        [
+          {
+            "node": "Inserir_Conta_Concess",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Marcar Erro Codigo Barras",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserir_Conta_Concess": {
+      "main": [
+        [
+          {
+            "node": "Limpar Linha da Planilha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "É concessionária?": {
+      "main": [
+        [
+          {
+            "node": "Validar_Codigo_Barras_Concess",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Validar CPF/CNPJ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "É Boleto?": {
+      "main": [
+        [
+          {
+            "node": "Validar_Codigo_Barras_Boleto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Inserir Conta no Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar_Codigo_Barras_Boleto": {
+      "main": [
+        [
+          {
+            "node": "IF_Boleto_Valido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar Erro Faltam Dados": {
+      "main": [
+        []
+      ]
+    },
+    "Marcar Erro Documento Válido": {
+      "main": [
+        []
+      ]
+    },
+    "IF_Boleto_Valido": {
+      "main": [
+        [
+          {
+            "node": "Inserir_Conta_Boleto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Marcar Erro código boleto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserir_Conta_Boleto": {
+      "main": [
+        [
+          {
+            "node": "Limpar Linha da Planilha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If_Faltam_Dados": {
+      "main": [
+        [
+          {
+            "node": "IF_Dados_OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF_Dados_OK": {
+      "main": [
+        [
+          {
+            "node": "Buscar Fornecedor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Marcar Erro Faltam Dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "b53b6aed-2731-4792-ab4c-4be035668316",
+  "activeVersionId": "b53b6aed-2731-4792-ab4c-4be035668316",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-01-06T13:50:47.863Z",
+      "createdAt": "2026-01-06T13:50:47.863Z",
+      "role": "workflow:owner",
+      "workflowId": "3EFUkYsUfkGLYIbP",
+      "projectId": "SoH44tJE4dqRVTiw"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-02-03T17:28:01.000Z",
+    "createdAt": "2026-02-03T17:27:58.764Z",
+    "versionId": "b53b6aed-2731-4792-ab4c-4be035668316",
+    "workflowId": "3EFUkYsUfkGLYIbP",
+    "nodes": [
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "fornecedores",
+          "limit": 1,
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "={{ $json.tipo_pessoa === 'pf' ? 'cpf' : 'cnpj' }}",
+                "condition": "eq",
+                "keyValue": "={{ $json['CNPJ/CPF'] }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -2272,
+          -304
+        ],
+        "id": "169a93af-c300-40f6-b0e0-8a4e6cf0a58f",
+        "name": "Buscar Fornecedor",
+        "alwaysOutputData": true,
+        "credentials": {
+          "supabaseApi": {
+            "id": "OP3IGsLO3LJ2h9JA",
+            "name": "Supabase Accounting Payables"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "tableId": "fornecedores",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "nome",
+                "fieldValue": "={{ $('Validar CPF/CNPJ').item.json.Nome }}"
+              },
+              {
+                "fieldId": "cnpj",
+                "fieldValue": "={{ $('Validar CPF/CNPJ').item.json.tipo_pessoa === 'pj' ? $('Validar CPF/CNPJ').item.json.documento_limpo : null }}"
+              },
+              {
+                "fieldId": "banco",
+                "fieldValue": "={{ $('Validar CPF/CNPJ').item.json.Banco }}"
+              },
+              {
+                "fieldId": "agencia",
+                "fieldValue": "={{ $('Validar CPF/CNPJ').item.json['Agência'] }}"
+              },
+              {
+                "fieldId": "conta",
+                "fieldValue": "={{ $('Validar CPF/CNPJ').item.json.Conta }}"
+              },
+              {
+                "fieldId": "tipo_conta",
+                "fieldValue": "={{ $('Validar CPF/CNPJ').item.json['Tipo Conta'] }}"
+              },
+              {
+                "fieldId": "cpf",
+                "fieldValue": "={{ $('Validar CPF/CNPJ').item.json.tipo_pessoa === 'pf' ? $('Validar CPF/CNPJ').item.json.documento_limpo : null }}"
+              },
+              {
+                "fieldId": "tipo",
+                "fieldValue": "={{ $('Validar CPF/CNPJ').item.json.tipo_pessoa }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -2592,
+          272
+        ],
+        "id": "fd5bdb76-e2d8-4a92-8b34-7155059f3e64",
+        "name": "Criar Fornecedor",
+        "credentials": {
+          "supabaseApi": {
+            "id": "OP3IGsLO3LJ2h9JA",
+            "name": "Supabase Accounting Payables"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "combine",
+          "combineBy": "combineByPosition",
+          "options": {
+            "includeUnpaired": true
+          }
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          -2272,
+          48
+        ],
+        "id": "5da08945-01ab-4471-a7ba-fe35680b3ffd",
+        "name": "Merge",
+        "alwaysOutputData": false
+      },
+      {
+        "parameters": {
+          "tableId": "contas_a_pagar",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "fornecedor_id",
+                "fieldValue": "={{ $json.id }}"
+              },
+              {
+                "fieldId": "tipo_pagamento",
+                "fieldValue": "ted"
+              },
+              {
+                "fieldId": "valor",
+                "fieldValue": "={{ $('Validar CPF/CNPJ').item.json.Valor }}"
+              },
+              {
+                "fieldId": "vencimento",
+                "fieldValue": "={{ $('Validar CPF/CNPJ').item.json['Vencimento'].split('/').reverse().join('-') }}"
+              },
+              {
+                "fieldId": "descricao",
+                "fieldValue": "={{ $('Validar CPF/CNPJ').item.json['Descrição'] }}"
+              },
+              {
+                "fieldId": "status",
+                "fieldValue": "aprovado"
+              },
+              {
+                "fieldId": "created_at",
+                "fieldValue": "={{ $now.setZone('America/Sao_Paulo').toFormat('yyyy-MM-dd HH:mm:ss') }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -1840,
+          256
+        ],
+        "id": "07460569-5076-4ab9-9422-f7ee3c6c70ba",
+        "name": "Inserir Conta no Supabase",
+        "credentials": {
+          "supabaseApi": {
+            "id": "OP3IGsLO3LJ2h9JA",
+            "name": "Supabase Accounting Payables"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "b96e7d88-b533-442e-b33c-07daea782729",
+                "leftValue": "={{ $json.id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -2544,
+          -64
+        ],
+        "id": "1896432a-69a1-4ab9-9d94-267ec1e84e05",
+        "name": "IF - Fornecedor Existe?",
+        "alwaysOutputData": false
+      },
+      {
+        "parameters": {
+          "operation": "delete",
+          "documentId": {
+            "__rl": true,
+            "value": "1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M",
+            "mode": "list",
+            "cachedResultName": "Contas a Pagar - Automação",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "Nova Conta Manual",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit#gid=0"
+          }
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          -1296,
+          -544
+        ],
+        "id": "b54c83f0-99f0-4336-8432-e6934c8c9153",
+        "name": "Limpar Linha da Planilha",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "RruWc6BrI8tF2hiO",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          -3712,
+          -480
+        ],
+        "id": "8b06ad6a-56f6-43c3-96fe-c4a626b3e5c6",
+        "name": "Loop Over Items"
+      },
+      {
+        "parameters": {
+          "mode": "runOnceForEachItem",
+          "jsCode": "const dados = $json.body || $json;\nlet documento = dados['CNPJ/CPF'].toString().replace(/\\D/g, '');\n\n// Completar zeros à esquerda\nif (documento.length > 11 && documento.length <= 14) {\n  documento = documento.padStart(14, '0'); // CNPJ\n} else if (documento.length <= 11) {\n  documento = documento.padStart(11, '0'); // CPF\n}\n\n// Validar CPF\nfunction validarCPF(cpf) {\n  if (cpf.length !== 11 || /^(\\d)\\1+$/.test(cpf)) return false;\n  \n  let soma = 0;\n  for (let i = 0; i < 9; i++) soma += parseInt(cpf[i]) * (10 - i);\n  let resto = (soma * 10) % 11;\n  if (resto === 10 || resto === 11) resto = 0;\n  if (resto !== parseInt(cpf[9])) return false;\n  \n  soma = 0;\n  for (let i = 0; i < 10; i++) soma += parseInt(cpf[i]) * (11 - i);\n  resto = (soma * 10) % 11;\n  if (resto === 10 || resto === 11) resto = 0;\n  return resto === parseInt(cpf[10]);\n}\n\n// Validar CNPJ\nfunction validarCNPJ(cnpj) {\n  if (cnpj.length !== 14 || /^(\\d)\\1+$/.test(cnpj)) return false;\n  \n  let tamanho = cnpj.length - 2;\n  let numeros = cnpj.substring(0, tamanho);\n  let digitos = cnpj.substring(tamanho);\n  let soma = 0;\n  let pos = tamanho - 7;\n  \n  for (let i = tamanho; i >= 1; i--) {\n    soma += numeros.charAt(tamanho - i) * pos--;\n    if (pos < 2) pos = 9;\n  }\n  \n  let resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;\n  if (resultado !== parseInt(digitos.charAt(0))) return false;\n  \n  tamanho = tamanho + 1;\n  numeros = cnpj.substring(0, tamanho);\n  soma = 0;\n  pos = tamanho - 7;\n  \n  for (let i = tamanho; i >= 1; i--) {\n    soma += numeros.charAt(tamanho - i) * pos--;\n    if (pos < 2) pos = 9;\n  }\n  \n  resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;\n  return resultado === parseInt(digitos.charAt(1));\n}\n\n// Validar\nlet valido, tipo;\nif (documento.length === 11) {\n  tipo = 'pf';\n  valido = validarCPF(documento);\n} else if (documento.length === 14) {\n  tipo = 'pj';\n  valido = validarCNPJ(documento);\n} else {\n  valido = false;\n  tipo = null;\n}\n\nreturn {\n  ...dados,\n  'CNPJ/CPF': documento,\n  documento_limpo: documento,\n  tipo_pessoa: tipo,\n  documento_valido: valido\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -3312,
+          48
+        ],
+        "id": "1989a264-5820-4721-b725-8d52553dec31",
+        "name": "Validar CPF/CNPJ"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "2bd934f1-ce9e-4e62-a29f-60afb2eb39f0",
+                "leftValue": "={{ $json.documento_valido }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -3088,
+          64
+        ],
+        "id": "4ad7302d-6266-4b8e-ab8e-a4c33ad4869f",
+        "name": "IF Documento Válido?"
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "planilha-manual",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -3872,
+          -400
+        ],
+        "id": "427e195f-52e0-491c-8076-efa664bd40e5",
+        "name": "Webhook Planilha Manual",
+        "webhookId": "dc3d7dcd-735d-4cd7-91b6-cb601b74d8df"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://prosperidade-n8n.yc5mic.easypanel.host/webhook/sync-contas",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -1056,
+          -544
+        ],
+        "id": "5d8f5f78-e66e-4330-8b85-bd4abcdd8e34",
+        "name": "Sync_Planilha_Contas",
+        "executeOnce": false
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://prosperidade-n8n.yc5mic.easypanel.host/webhook/fornecedores-sync",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -864,
+          -544
+        ],
+        "id": "26151fa5-aa5d-48d6-9ac6-cf10f3af612d",
+        "name": "Sync_Planilha_Fornecedores",
+        "executeOnce": false
+      },
+      {
+        "parameters": {
+          "mode": "runOnceForEachItem",
+          "jsCode": "const dados = $json.body || $json;\nconst codigoBarras = String(dados[\"Código de Barras\"] || '').replace(/\\D/g, '');\n\nlet erros = [];\nlet validacao_ok = true;\nlet valorExtraido = null;\n\n// Validação 1: Código de barras obrigatório\nif (!codigoBarras) {\n  erros.push('Código de Barras é obrigatório para Concessionária');\n  validacao_ok = false;\n}\n\n// Validação 2: Deve ter 48 dígitos\nif (codigoBarras && codigoBarras.length !== 48) {\n  erros.push('Código de Barras deve ter 48 dígitos (tem ' + codigoBarras.length + ')');\n  validacao_ok = false;\n}\n\n// Validação 3: Deve começar com 8\nif (codigoBarras && !codigoBarras.startsWith('8')) {\n  erros.push('Código de Barras de Concessionária deve começar com 8');\n  validacao_ok = false;\n}\n\n// Validação 4: Módulo 10 ou 11 (FEBRABAN) e extração de valor\nif (codigoBarras && codigoBarras.length === 48) {\n  const tipoValor = codigoBarras[2];\n  \n  // Extrair valor (posições 4-14, 11 dígitos)\n  const valorCentavos = parseInt(codigoBarras.substring(4, 15));\n  if (valorCentavos > 0) {\n    valorExtraido = valorCentavos / 100;\n  }\n  \n  function modulo10(bloco) {\n    let soma = 0;\n    let peso = 2;\n    for (let i = bloco.length - 1; i >= 0; i--) {\n      let resultado = parseInt(bloco[i]) * peso;\n      soma += resultado >= 10 ? Math.floor(resultado / 10) + (resultado % 10) : resultado;\n      peso = peso === 2 ? 1 : 2;\n    }\n    let resto = soma % 10;\n    return resto === 0 ? 0 : 10 - resto;\n  }\n  \n  function modulo11(bloco) {\n    let soma = 0;\n    let peso = 2;\n    for (let i = bloco.length - 1; i >= 0; i--) {\n      soma += parseInt(bloco[i]) * peso;\n      peso = peso === 9 ? 2 : peso + 1;\n    }\n    let resto = soma % 11;\n    if (resto === 0 || resto === 1) return 0;\n    if (resto === 10) return 1;\n    return 11 - resto;\n  }\n  \n  const bloco1 = codigoBarras.substring(0, 12);\n  const bloco2 = codigoBarras.substring(12, 24);\n  const bloco3 = codigoBarras.substring(24, 36);\n  const bloco4 = codigoBarras.substring(36, 48);\n  \n  const blocos = [bloco1, bloco2, bloco3, bloco4];\n  const usarModulo10 = tipoValor === '6' || tipoValor === '7';\n  \n  for (let i = 0; i < blocos.length; i++) {\n    const bloco = blocos[i];\n    const digitosBloco = bloco.substring(0, 11);\n    const dvBloco = parseInt(bloco[11]);\n    \n    const dvCalculado = usarModulo10 ? modulo10(digitosBloco) : modulo11(digitosBloco);\n    \n    if (dvBloco !== dvCalculado) {\n      erros.push('Dígito verificador do bloco ' + (i + 1) + ' inválido');\n      validacao_ok = false;\n      break;\n    }\n  }\n}\n\n// Converter vencimento de DD/MM/YYYY para YYYY-MM-DD\nlet vencimentoFormatado = '';\nconst vencOriginal = String(dados.Vencimento || '');\n\nif (vencOriginal.includes('/')) {\n  const partes = vencOriginal.split('/');\n  vencimentoFormatado = partes[2] + '-' + partes[1] + '-' + partes[0];\n} else if (vencOriginal.includes('T')) {\n  vencimentoFormatado = vencOriginal.split('T')[0];\n} else {\n  vencimentoFormatado = vencOriginal;\n}\n\nreturn {\n  json: {\n    ...dados,\n    codigo_barras_limpo: codigoBarras,\n    tipo_pagamento: 'concessionaria',\n    valor_extraido: valorExtraido,\n    vencimento_formatado: vencimentoFormatado,\n    validacao_ok: validacao_ok,\n    validacao_erros: erros\n  }\n};\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -3280,
+          -608
+        ],
+        "id": "c1597c7d-9124-4b14-ad44-c956c278d48b",
+        "name": "Validar_Codigo_Barras_Concess"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "38af51f3-e62c-4031-a571-6a64aec6cf3f",
+                "leftValue": "={{ $json.validacao_ok }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -3072,
+          -672
+        ],
+        "id": "a0e84adb-c6d8-49b1-8971-dd1884a616a8",
+        "name": "IF_Concess_Valida"
+      },
+      {
+        "parameters": {
+          "tableId": "contas_a_pagar",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "tipo_pagamento",
+                "fieldValue": "concessionaria"
+              },
+              {
+                "fieldId": "valor",
+                "fieldValue": "={{ $json.Valor }}"
+              },
+              {
+                "fieldId": "vencimento",
+                "fieldValue": "={{ $json.vencimento_formatado }}"
+              },
+              {
+                "fieldId": "descricao",
+                "fieldValue": "={{ $json.Descrição }}"
+              },
+              {
+                "fieldId": "status",
+                "fieldValue": "aprovado"
+              },
+              {
+                "fieldId": "created_at",
+                "fieldValue": "={{ $now.setZone('America/Sao_Paulo').toFormat('yyyy-MM-dd HH:mm:ss') }}"
+              },
+              {
+                "fieldId": "codigo_barras",
+                "fieldValue": "={{ $json.codigo_barras_limpo }}"
+              },
+              {
+                "fieldId": "nome_cedente_original",
+                "fieldValue": "={{ $json.Nome }}"
+              },
+              {
+                "fieldId": "valor",
+                "fieldValue": "={{ $json.valor_extraido }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -2704,
+          -656
+        ],
+        "id": "60828610-4f16-4a81-a754-ea6136847a27",
+        "name": "Inserir_Conta_Concess",
+        "credentials": {
+          "supabaseApi": {
+            "id": "OP3IGsLO3LJ2h9JA",
+            "name": "Supabase Accounting Payables"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "45775454-227e-4caa-bbcf-176c9f3b1731",
+                "leftValue": "={{ $json.body[\"Forma de Pagamento\"] }}",
+                "rightValue": "Concessionária",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -3504,
+          -384
+        ],
+        "id": "6c77f0b5-6d8d-4586-9216-b94f28561fc6",
+        "name": "É concessionária?"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "2bc33788-97ec-485b-82f8-734790a94ea5",
+                "leftValue": "={{ $('Webhook Planilha Manual').item.json.body['Forma de Pagamento'] }}",
+                "rightValue": "Boleto",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -2256,
+          288
+        ],
+        "id": "06986969-63e7-43de-ab92-8517fad5f803",
+        "name": "É Boleto?"
+      },
+      {
+        "parameters": {
+          "mode": "runOnceForEachItem",
+          "jsCode": "const fornecedor = $json;\nconst dadosPlanilha = $('IF_Dados_OK').first().json;\nconst linhaDigitavel = String(dadosPlanilha[\"Código de Barras\"] || '').replace(/\\D/g, '');\n\nlet erros = [];\nlet validacao_ok = true;\nlet valorExtraido = null;\nlet vencimentoExtraido = null;\nlet codigoBarras44 = '';\n\nif (!linhaDigitavel) {\n  erros.push('Código de Barras é obrigatório para Boleto');\n  validacao_ok = false;\n}\n\nif (linhaDigitavel && linhaDigitavel.length !== 47) {\n  erros.push('Código de Barras deve ter 47 dígitos (tem ' + linhaDigitavel.length + ')');\n  validacao_ok = false;\n}\n\nif (linhaDigitavel && linhaDigitavel.length === 47) {\n  \n  function modulo10(numero) {\n    let soma = 0;\n    let peso = 2;\n    for (let i = numero.length - 1; i >= 0; i--) {\n      let produto = parseInt(numero[i]) * peso;\n      if (produto >= 10) {\n        produto = Math.floor(produto / 10) + (produto % 10);\n      }\n      soma += produto;\n      peso = peso === 2 ? 1 : 2;\n    }\n    const resto = soma % 10;\n    return resto === 0 ? 0 : 10 - resto;\n  }\n  \n  function modulo11Boleto(numero) {\n    let soma = 0;\n    let peso = 2;\n    for (let i = numero.length - 1; i >= 0; i--) {\n      soma += parseInt(numero[i]) * peso;\n      peso = peso >= 9 ? 2 : peso + 1;\n    }\n    const resto = soma % 11;\n    const dv = 11 - resto;\n    if (dv === 0 || dv === 10 || dv === 11) return 1;\n    return dv;\n  }\n  \n  const campo1 = linhaDigitavel.substring(0, 9);\n  const dv1 = parseInt(linhaDigitavel.substring(9, 10));\n  const campo2 = linhaDigitavel.substring(10, 20);\n  const dv2 = parseInt(linhaDigitavel.substring(20, 21));\n  const campo3 = linhaDigitavel.substring(21, 31);\n  const dv3 = parseInt(linhaDigitavel.substring(31, 32));\n  const dvGeral = parseInt(linhaDigitavel.substring(32, 33));\n  const fatorVencimento = linhaDigitavel.substring(33, 37);\n  const valorStr = linhaDigitavel.substring(37, 47);\n  \n  const banco = linhaDigitavel.substring(0, 3);\n  const moeda = linhaDigitavel.substring(3, 4);\n  const campoLivre = linhaDigitavel.substring(4, 9) + campo2 + campo3;\n  \n  codigoBarras44 = banco + moeda + dvGeral + fatorVencimento + valorStr + campoLivre;\n  const codigoBarrasSemDV = banco + moeda + fatorVencimento + valorStr + campoLivre;\n  \n  if (dv1 !== modulo10(campo1)) {\n    erros.push('Campo 1: DV inválido');\n    validacao_ok = false;\n  }\n  if (dv2 !== modulo10(campo2)) {\n    erros.push('Campo 2: DV inválido');\n    validacao_ok = false;\n  }\n  if (dv3 !== modulo10(campo3)) {\n    erros.push('Campo 3: DV inválido');\n    validacao_ok = false;\n  }\n  if (dvGeral !== modulo11Boleto(codigoBarrasSemDV)) {\n    erros.push('DV Geral inválido');\n    validacao_ok = false;\n  }\n  \n  // Extrair valor\n  const valorCentavos = parseInt(valorStr);\n  if (valorCentavos > 0) {\n    valorExtraido = valorCentavos / 100;\n  }\n  \n  // Extrair vencimento\n  const fator = parseInt(fatorVencimento);\n  if (fator > 0) {\n    const dataBaseOriginal = new Date(1997, 9, 7); // 07/10/1997\n    let dataVenc = new Date(dataBaseOriginal.getTime() + fator * 86400000);\n    \n    // Nova base FEBRABAN: fator resetou em 22/02/2025 (fator 1000)\n    // Se a data calculada for anterior a 2025, usar nova base\n    if (dataVenc.getFullYear() < 2025) {\n      const dataBaseNova = new Date(2025, 1, 22); // 22/02/2025\n      dataVenc = new Date(dataBaseNova.getTime() + (fator - 1000) * 86400000);\n    }\n    \n    const ano = dataVenc.getFullYear();\n    const mes = String(dataVenc.getMonth() + 1).padStart(2, '0');\n    const dia = String(dataVenc.getDate()).padStart(2, '0');\n    vencimentoExtraido = ano + '-' + mes + '-' + dia;\n  }\n}\n\nreturn {\n  json: {\n    ...dadosPlanilha,\n    fornecedor_id: fornecedor.id,\n    fornecedor_nome: fornecedor.nome,\n    codigo_barras_44: codigoBarras44,\n    codigo_barras_47: linhaDigitavel,\n    tipo_pagamento: 'boleto',\n    valor_extraido: valorExtraido,\n    vencimento_extraido: vencimentoExtraido,\n    validacao_ok: validacao_ok,\n    validacao_erros: erros\n  }\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2016,
+          -400
+        ],
+        "id": "5ff4b817-26c9-42ae-9194-65b7802d8bdb",
+        "name": "Validar_Codigo_Barras_Boleto"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "5e6860b8-8d0c-46ee-bbbd-211d4ade8ad8",
+                "leftValue": "={{ $json.validacao_ok }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -1824,
+          -400
+        ],
+        "id": "98dd63aa-67ea-4a52-8ef1-24b670d92eae",
+        "name": "IF_Boleto_Valido"
+      },
+      {
+        "parameters": {
+          "operation": "appendOrUpdate",
+          "documentId": {
+            "__rl": true,
+            "value": "1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M",
+            "mode": "list",
+            "cachedResultName": "Contas a Pagar - Automação",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "Nova Conta Manual",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit#gid=0"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Erro": "={{ $json.validacao_erros.join(\", \") }}",
+              "Nome": "={{ $json.Nome }}"
+            },
+            "matchingColumns": [
+              "Nome"
+            ],
+            "schema": [
+              {
+                "id": "Forma de Pagamento",
+                "displayName": "Forma de Pagamento",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "CNPJ/CPF",
+                "displayName": "CNPJ/CPF",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Nome",
+                "displayName": "Nome",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Valor",
+                "displayName": "Valor",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Vencimento",
+                "displayName": "Vencimento",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Banco",
+                "displayName": "Banco",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Agência",
+                "displayName": "Agência",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Conta",
+                "displayName": "Conta",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Tipo Conta",
+                "displayName": "Tipo Conta",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Descrição",
+                "displayName": "Descrição",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Código de Barras",
+                "displayName": "Código de Barras",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Erro",
+                "displayName": "Erro",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          -2896,
+          -432
+        ],
+        "id": "e945dd7b-c6c0-41e0-9bcd-a891f8d4b914",
+        "name": "Marcar Erro Codigo Barras",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "RruWc6BrI8tF2hiO",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "appendOrUpdate",
+          "documentId": {
+            "__rl": true,
+            "value": "1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M",
+            "mode": "list",
+            "cachedResultName": "Contas a Pagar - Automação",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "Nova Conta Manual",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit#gid=0"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Erro": "Faltam Dados",
+              "CNPJ/CPF": "={{ $json['CNPJ/CPF'] }}"
+            },
+            "matchingColumns": [
+              "CNPJ/CPF"
+            ],
+            "schema": [
+              {
+                "id": "Forma de Pagamento",
+                "displayName": "Forma de Pagamento",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "CNPJ/CPF",
+                "displayName": "CNPJ/CPF",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Nome",
+                "displayName": "Nome",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Valor",
+                "displayName": "Valor",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Vencimento",
+                "displayName": "Vencimento",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Banco",
+                "displayName": "Banco",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Agência",
+                "displayName": "Agência",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Conta",
+                "displayName": "Conta",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Tipo Conta",
+                "displayName": "Tipo Conta",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Descrição",
+                "displayName": "Descrição",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Código de Barras",
+                "displayName": "Código de Barras",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Erro",
+                "displayName": "Erro",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          -2784,
+          -48
+        ],
+        "id": "d3e5b235-f57e-4cff-9c4a-d46046d2b487",
+        "name": "Marcar Erro Faltam Dados",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "RruWc6BrI8tF2hiO",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "appendOrUpdate",
+          "documentId": {
+            "__rl": true,
+            "value": "1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M",
+            "mode": "list",
+            "cachedResultName": "Contas a Pagar - Automação",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "Nova Conta Manual",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit#gid=0"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Erro": "CPF/CNPJ inválido",
+              "CNPJ/CPF": "={{ $json['CNPJ/CPF'] }}"
+            },
+            "matchingColumns": [
+              "CNPJ/CPF"
+            ],
+            "schema": [
+              {
+                "id": "Forma de Pagamento",
+                "displayName": "Forma de Pagamento",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "CNPJ/CPF",
+                "displayName": "CNPJ/CPF",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Nome",
+                "displayName": "Nome",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Valor",
+                "displayName": "Valor",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Vencimento",
+                "displayName": "Vencimento",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Banco",
+                "displayName": "Banco",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Agência",
+                "displayName": "Agência",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Conta",
+                "displayName": "Conta",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Tipo Conta",
+                "displayName": "Tipo Conta",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Descrição",
+                "displayName": "Descrição",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Código de Barras",
+                "displayName": "Código de Barras",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Erro",
+                "displayName": "Erro",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          -2848,
+          192
+        ],
+        "id": "add2e7a3-2c6c-445f-871c-0c90883e7863",
+        "name": "Marcar Erro Documento Válido",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "RruWc6BrI8tF2hiO",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "tableId": "contas_a_pagar",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "tipo_pagamento",
+                "fieldValue": "boleto"
+              },
+              {
+                "fieldId": "valor",
+                "fieldValue": "={{ $json.valor_extraido }}"
+              },
+              {
+                "fieldId": "vencimento",
+                "fieldValue": "={{ $json.vencimento_extraido }}"
+              },
+              {
+                "fieldId": "codigo_barras",
+                "fieldValue": "={{ $json.codigo_barras_44 }}"
+              },
+              {
+                "fieldId": "descricao",
+                "fieldValue": "={{ $json.Descrição }}"
+              },
+              {
+                "fieldId": "nome_cedente_original",
+                "fieldValue": "={{ $json.Nome }}"
+              },
+              {
+                "fieldId": "fornecedor_id",
+                "fieldValue": "={{ $json.fornecedor_id }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -1616,
+          -448
+        ],
+        "id": "1a857729-78f9-4e02-b66e-450a47b76680",
+        "name": "Inserir_Conta_Boleto",
+        "credentials": {
+          "supabaseApi": {
+            "id": "OP3IGsLO3LJ2h9JA",
+            "name": "Supabase Accounting Payables"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "appendOrUpdate",
+          "documentId": {
+            "__rl": true,
+            "value": "1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M",
+            "mode": "list",
+            "cachedResultName": "Contas a Pagar - Automação",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "Nova Conta Manual",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit#gid=0"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Erro": "={{ $json.validacao_erros ? $json.validacao_erros.join(\", \") : \"Erro de validação\" }}",
+              "CNPJ/CPF": "={{ $('Webhook Planilha Manual').item.json.body['CNPJ/CPF'] }}"
+            },
+            "matchingColumns": [
+              "CNPJ/CPF"
+            ],
+            "schema": [
+              {
+                "id": "Forma de Pagamento",
+                "displayName": "Forma de Pagamento",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "CNPJ/CPF",
+                "displayName": "CNPJ/CPF",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Nome",
+                "displayName": "Nome",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Valor",
+                "displayName": "Valor",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Vencimento",
+                "displayName": "Vencimento",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Banco",
+                "displayName": "Banco",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Agência",
+                "displayName": "Agência",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Conta",
+                "displayName": "Conta",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Tipo Conta",
+                "displayName": "Tipo Conta",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Descrição",
+                "displayName": "Descrição",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Código de Barras",
+                "displayName": "Código de Barras",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Erro",
+                "displayName": "Erro",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          -1968,
+          -144
+        ],
+        "id": "e34684d0-57a2-47ee-8026-56db415d6859",
+        "name": "Marcar Erro código boleto",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "RruWc6BrI8tF2hiO",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const dados = $json;\nconst forma = (dados[\"Forma de Pagamento\"] || '').toLowerCase();\nlet faltamDados = false;\nlet erros = [];\n\nif (forma === 'ted') {\n  if (!dados['CNPJ/CPF'] || !dados['CNPJ/CPF'].toString().trim()) erros.push('CNPJ/CPF');\n  if (!dados.Banco) erros.push('Banco');\n  if (!dados['Agência']) erros.push('Agência');\n  if (!dados.Conta) erros.push('Conta');\n  if (!dados['Tipo Conta']) erros.push('Tipo Conta');\n  if (!dados.Nome || !dados.Nome.toString().trim()) erros.push('Nome');\n  if (!dados.Valor) erros.push('Valor');\n  if (!dados.Vencimento) erros.push('Vencimento');\n} else if (forma === 'boleto') {\n  if (!dados['CNPJ/CPF'] || !dados['CNPJ/CPF'].toString().trim()) erros.push('CNPJ/CPF');\n  if (!dados.Nome || !dados.Nome.toString().trim()) erros.push('Nome');\n  if (!dados['Código de Barras'] || !dados['Código de Barras'].toString().trim()) erros.push('Código de Barras');\n}\n\nfaltamDados = erros.length > 0;\n\nreturn {\n  json: {\n    ...dados,\n    faltam_dados: faltamDados,\n    campos_faltando: erros\n  }\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2976,
+          -224
+        ],
+        "id": "da0dfb1f-1a01-4723-905a-0e9f83794443",
+        "name": "If_Faltam_Dados"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "72a56cba-786e-4f38-83a2-f2b6a379857d",
+                "leftValue": "={{ $json.faltam_dados }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "false",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "or"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -2608,
+          -384
+        ],
+        "id": "59b90730-0654-4fc0-872b-f1d40515f625",
+        "name": "IF_Dados_OK"
+      }
+    ],
+    "connections": {
+      "Buscar Fornecedor": {
+        "main": [
+          [
+            {
+              "node": "IF - Fornecedor Existe?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Criar Fornecedor": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "É Boleto?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF - Fornecedor Existe?": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Criar Fornecedor",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Inserir Conta no Supabase": {
+        "main": [
+          [
+            {
+              "node": "Limpar Linha da Planilha",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Items": {
+        "main": [
+          [],
+          [
+            {
+              "node": "É concessionária?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Limpar Linha da Planilha": {
+        "main": [
+          [
+            {
+              "node": "Sync_Planilha_Contas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF Documento Válido?": {
+        "main": [
+          [
+            {
+              "node": "If_Faltam_Dados",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Marcar Erro Documento Válido",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validar CPF/CNPJ": {
+        "main": [
+          [
+            {
+              "node": "IF Documento Válido?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook Planilha Manual": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Sync_Planilha_Contas": {
+        "main": [
+          [
+            {
+              "node": "Sync_Planilha_Fornecedores",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validar_Codigo_Barras_Concess": {
+        "main": [
+          [
+            {
+              "node": "IF_Concess_Valida",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF_Concess_Valida": {
+        "main": [
+          [
+            {
+              "node": "Inserir_Conta_Concess",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Marcar Erro Codigo Barras",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Inserir_Conta_Concess": {
+        "main": [
+          [
+            {
+              "node": "Limpar Linha da Planilha",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "É concessionária?": {
+        "main": [
+          [
+            {
+              "node": "Validar_Codigo_Barras_Concess",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Validar CPF/CNPJ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "É Boleto?": {
+        "main": [
+          [
+            {
+              "node": "Validar_Codigo_Barras_Boleto",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Inserir Conta no Supabase",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validar_Codigo_Barras_Boleto": {
+        "main": [
+          [
+            {
+              "node": "IF_Boleto_Valido",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Marcar Erro Faltam Dados": {
+        "main": [
+          []
+        ]
+      },
+      "Marcar Erro Documento Válido": {
+        "main": [
+          []
+        ]
+      },
+      "IF_Boleto_Valido": {
+        "main": [
+          [
+            {
+              "node": "Inserir_Conta_Boleto",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Marcar Erro código boleto",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Inserir_Conta_Boleto": {
+        "main": [
+          [
+            {
+              "node": "Limpar Linha da Planilha",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If_Faltam_Dados": {
+        "main": [
+          [
+            {
+              "node": "IF_Dados_OK",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF_Dados_OK": {
+        "main": [
+          [
+            {
+              "node": "Buscar Fornecedor",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Marcar Erro Faltam Dados",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Newton Omune",
+    "name": "Version b53b6aed",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

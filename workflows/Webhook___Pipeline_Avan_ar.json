@@ -1,0 +1,314 @@
+{
+  "updatedAt": "2026-04-10T15:48:58.000Z",
+  "createdAt": "2026-04-10T15:48:58.131Z",
+  "id": "9ulpUqAU8M0GU1TM",
+  "name": "Webhook — Pipeline Avançar",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pipeline/avancar",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "99332011-f743-4b5b-bd5c-e646dcaa56f8",
+      "name": "Webhook Avançar",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "pipeline-avancar",
+      "notes": "POST /pipeline/avancar { video_id }\nRead-only: lê status das cenas e retorna próxima tela.\nNão dispara módulos nem marca status.\n\nOrdem de prioridade:\n1. imagem != aprovada → /imagens/{id}\n2. tts != aprovada → /narracao/{id}\n3. efeito|video != aprovada → /preview/{id}\n4. tudo aprovada → /preview/{id} (com montagem liberada)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst video_id = item.video_id || (item.body && item.body.video_id) || null;\nif (!video_id) throw new Error('video_id obrigatório.');\nreturn [{ json: { video_id } }];"
+      },
+      "id": "52f31bf6-01f9-45bd-a1df-2afa771e7357",
+      "name": "Normalizar Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg-url",
+              "name": "SUPABASE_URL",
+              "value": "https://vngtopghlmgqjaibqiyb.supabase.co",
+              "type": "string"
+            },
+            {
+              "id": "cfg-key",
+              "name": "SUPABASE_SERVICE_KEY",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuZ3RvcGdobG1ncWphaWJxaXliIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzUzOTg4NiwiZXhwIjoyMDg5MTE1ODg2fQ.xywZiNZ3h6_uVE9-ltt2LAXtZJ8jTezHCE4LmjBxzTk",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a2de744a-8a02-4f86-a8d4-613aff882593",
+      "name": "Configuração",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===================================================================\n// DECIDIR PRÓXIMA TELA — Pipeline Avançar\n// ===================================================================\n// Lê todas as cenas do vídeo e determina o próximo frontend\n// baseado no status dos módulos. Não escreve nada, só lê.\n// ===================================================================\n\nconst config = $('Configuração').first().json;\nconst video_id = $('Normalizar Input').first().json.video_id;\n\nconst headers = {\n  apikey: config.SUPABASE_SERVICE_KEY,\n  Authorization: 'Bearer ' + config.SUPABASE_SERVICE_KEY\n};\n\nconst cenas = await this.helpers.httpRequest({\n  method: 'GET',\n  url: config.SUPABASE_URL + '/rest/v1/cenas?video_id=eq.' + video_id + '&opcao_id=is.null&select=numero,tipo_cena,imagem_status,tts_status,efeito_status,video_status',\n  headers,\n  json: true\n});\n\n// Ignora cenas tipo_cena='texto' (não entram na cadeia de regeneração)\nconst cenasRelevantes = (cenas || []).filter(c => c.tipo_cena !== 'texto');\n\nif (cenasRelevantes.length === 0) {\n  return [{ json: { success: false, erro: 'Nenhuma cena encontrada para este vídeo' } }];\n}\n\n// Ordem de prioridade: imagem → tts → (efeito|video)\nconst temImagemPendente = cenasRelevantes.some(c => c.imagem_status !== 'aprovada');\nconst temTtsPendente = cenasRelevantes.some(c => c.tts_status !== 'aprovada');\nconst temEfeitoPendente = cenasRelevantes.some(c => c.efeito_status !== 'aprovada');\nconst temVideoPendente = cenasRelevantes.some(c => c.video_status !== 'aprovada');\n\nlet proximaTela;\nlet motivo;\n\nif (temImagemPendente) {\n  proximaTela = '/imagens/' + video_id;\n  motivo = 'imagem';\n} else if (temTtsPendente) {\n  proximaTela = '/narracao/' + video_id;\n  motivo = 'tts';\n} else if (temEfeitoPendente || temVideoPendente) {\n  proximaTela = '/preview/' + video_id;\n  motivo = temEfeitoPendente && temVideoPendente ? 'efeito+video' : (temEfeitoPendente ? 'efeito' : 'video');\n} else {\n  // Tudo aprovada → preview com montagem liberada\n  proximaTela = '/preview/' + video_id;\n  motivo = 'tudo_aprovado';\n}\n\nreturn [{\n  json: {\n    success: true,\n    proximaTela,\n    motivo,\n    totalCenas: cenasRelevantes.length\n  }\n}];"
+      },
+      "id": "e2960b55-b0de-455f-b240-f16cd4c773f8",
+      "name": "Decidir Próxima Tela",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "notes": "Lê status das cenas via GET Supabase. Determina próxima tela pela ordem: imagem → tts → efeito/video → tudo aprovado."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "3289634c-da6b-4d2f-9a4e-29e98177206e",
+      "name": "Responder Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        832,
+        0
+      ],
+      "notes": "Retorna { success, proximaTela, motivo, totalCenas }"
+    }
+  ],
+  "connections": {
+    "Webhook Avançar": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar Input": {
+      "main": [
+        [
+          {
+            "node": "Configuração",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configuração": {
+      "main": [
+        [
+          {
+            "node": "Decidir Próxima Tela",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decidir Próxima Tela": {
+      "main": [
+        [
+          {
+            "node": "Responder Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "7a0c00ce-7ce2-492a-8e63-db200b9bab95",
+  "activeVersionId": "7a0c00ce-7ce2-492a-8e63-db200b9bab95",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-04-10T15:48:58.139Z",
+      "createdAt": "2026-04-10T15:48:58.139Z",
+      "role": "workflow:owner",
+      "workflowId": "9ulpUqAU8M0GU1TM",
+      "projectId": "SoH44tJE4dqRVTiw"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-04-10T15:49:19.000Z",
+    "createdAt": "2026-04-10T15:48:58.140Z",
+    "versionId": "7a0c00ce-7ce2-492a-8e63-db200b9bab95",
+    "workflowId": "9ulpUqAU8M0GU1TM",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "pipeline/avancar",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "99332011-f743-4b5b-bd5c-e646dcaa56f8",
+        "name": "Webhook Avançar",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          0,
+          0
+        ],
+        "webhookId": "pipeline-avancar",
+        "notes": "POST /pipeline/avancar { video_id }\nRead-only: lê status das cenas e retorna próxima tela.\nNão dispara módulos nem marca status.\n\nOrdem de prioridade:\n1. imagem != aprovada → /imagens/{id}\n2. tts != aprovada → /narracao/{id}\n3. efeito|video != aprovada → /preview/{id}\n4. tudo aprovada → /preview/{id} (com montagem liberada)"
+      },
+      {
+        "parameters": {
+          "jsCode": "const item = $input.first().json;\nconst video_id = item.video_id || (item.body && item.body.video_id) || null;\nif (!video_id) throw new Error('video_id obrigatório.');\nreturn [{ json: { video_id } }];"
+        },
+        "id": "52f31bf6-01f9-45bd-a1df-2afa771e7357",
+        "name": "Normalizar Input",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          208,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "cfg-url",
+                "name": "SUPABASE_URL",
+                "value": "https://vngtopghlmgqjaibqiyb.supabase.co",
+                "type": "string"
+              },
+              {
+                "id": "cfg-key",
+                "name": "SUPABASE_SERVICE_KEY",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuZ3RvcGdobG1ncWphaWJxaXliIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzUzOTg4NiwiZXhwIjoyMDg5MTE1ODg2fQ.xywZiNZ3h6_uVE9-ltt2LAXtZJ8jTezHCE4LmjBxzTk",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "a2de744a-8a02-4f86-a8d4-613aff882593",
+        "name": "Configuração",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          416,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// ===================================================================\n// DECIDIR PRÓXIMA TELA — Pipeline Avançar\n// ===================================================================\n// Lê todas as cenas do vídeo e determina o próximo frontend\n// baseado no status dos módulos. Não escreve nada, só lê.\n// ===================================================================\n\nconst config = $('Configuração').first().json;\nconst video_id = $('Normalizar Input').first().json.video_id;\n\nconst headers = {\n  apikey: config.SUPABASE_SERVICE_KEY,\n  Authorization: 'Bearer ' + config.SUPABASE_SERVICE_KEY\n};\n\nconst cenas = await this.helpers.httpRequest({\n  method: 'GET',\n  url: config.SUPABASE_URL + '/rest/v1/cenas?video_id=eq.' + video_id + '&opcao_id=is.null&select=numero,tipo_cena,imagem_status,tts_status,efeito_status,video_status',\n  headers,\n  json: true\n});\n\n// Ignora cenas tipo_cena='texto' (não entram na cadeia de regeneração)\nconst cenasRelevantes = (cenas || []).filter(c => c.tipo_cena !== 'texto');\n\nif (cenasRelevantes.length === 0) {\n  return [{ json: { success: false, erro: 'Nenhuma cena encontrada para este vídeo' } }];\n}\n\n// Ordem de prioridade: imagem → tts → (efeito|video)\nconst temImagemPendente = cenasRelevantes.some(c => c.imagem_status !== 'aprovada');\nconst temTtsPendente = cenasRelevantes.some(c => c.tts_status !== 'aprovada');\nconst temEfeitoPendente = cenasRelevantes.some(c => c.efeito_status !== 'aprovada');\nconst temVideoPendente = cenasRelevantes.some(c => c.video_status !== 'aprovada');\n\nlet proximaTela;\nlet motivo;\n\nif (temImagemPendente) {\n  proximaTela = '/imagens/' + video_id;\n  motivo = 'imagem';\n} else if (temTtsPendente) {\n  proximaTela = '/narracao/' + video_id;\n  motivo = 'tts';\n} else if (temEfeitoPendente || temVideoPendente) {\n  proximaTela = '/preview/' + video_id;\n  motivo = temEfeitoPendente && temVideoPendente ? 'efeito+video' : (temEfeitoPendente ? 'efeito' : 'video');\n} else {\n  // Tudo aprovada → preview com montagem liberada\n  proximaTela = '/preview/' + video_id;\n  motivo = 'tudo_aprovado';\n}\n\nreturn [{\n  json: {\n    success: true,\n    proximaTela,\n    motivo,\n    totalCenas: cenasRelevantes.length\n  }\n}];"
+        },
+        "id": "e2960b55-b0de-455f-b240-f16cd4c773f8",
+        "name": "Decidir Próxima Tela",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          624,
+          0
+        ],
+        "notes": "Lê status das cenas via GET Supabase. Determina próxima tela pela ordem: imagem → tts → efeito/video → tudo aprovado."
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify($json) }}",
+          "options": {}
+        },
+        "id": "3289634c-da6b-4d2f-9a4e-29e98177206e",
+        "name": "Responder Webhook",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          832,
+          0
+        ],
+        "notes": "Retorna { success, proximaTela, motivo, totalCenas }"
+      }
+    ],
+    "connections": {
+      "Webhook Avançar": {
+        "main": [
+          [
+            {
+              "node": "Normalizar Input",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Normalizar Input": {
+        "main": [
+          [
+            {
+              "node": "Configuração",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Configuração": {
+        "main": [
+          [
+            {
+              "node": "Decidir Próxima Tela",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Decidir Próxima Tela": {
+        "main": [
+          [
+            {
+              "node": "Responder Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Newton Omune",
+    "name": "Version 7a0c00ce",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

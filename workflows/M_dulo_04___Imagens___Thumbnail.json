@@ -1,0 +1,2981 @@
+{
+  "updatedAt": "2026-04-13T14:39:14.251Z",
+  "createdAt": "2026-03-28T01:07:34.522Z",
+  "id": "q9a97KpjBXTUmD4X",
+  "name": "Módulo 04 — Imagens + Thumbnail",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "c482f742-f780-4ba8-ab1f-7782eef6a2ae",
+      "name": "Início Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "notes": "⚠️ TESTE MANUAL: clique 'Test workflow' com video_id no nó seguinte."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "test-vid",
+              "name": "video_id",
+              "value": "42058483-4694-465a-9346-4ca03c5818d2",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "aa781e5e-2f8d-40b7-962e-941c2b1fc52d",
+      "name": "Video ID Teste",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "notes": "⚠️ TROQUE O UUID AQUI para testar."
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "video_id"
+            }
+          ]
+        }
+      },
+      "id": "b3270eb7-1fc6-40e4-a4fd-a00ed46b7f86",
+      "name": "Chamado pelo 03",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        400
+      ],
+      "notes": "Recebe { video_id } do Módulo 03 via Execute Workflow."
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst video_id = item.video_id || null;\nif (!video_id) throw new Error('video_id não encontrado.');\nreturn [{ json: { video_id } }];"
+      },
+      "id": "2d0bcd44-0f53-4298-becc-57bf2f3189e9",
+      "name": "Normalizar Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        208
+      ],
+      "notes": "Unifica input. Saída: { video_id }"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg-url",
+              "name": "SUPABASE_URL",
+              "value": "https://vngtopghlmgqjaibqiyb.supabase.co",
+              "type": "string"
+            },
+            {
+              "id": "cfg-key",
+              "name": "SUPABASE_SERVICE_KEY",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuZ3RvcGdobG1ncWphaWJxaXliIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzUzOTg4NiwiZXhwIjoyMDg5MTE1ODg2fQ.xywZiNZ3h6_uVE9-ltt2LAXtZJ8jTezHCE4LmjBxzTk",
+              "type": "string"
+            },
+            {
+              "id": "cfg-nv",
+              "name": "NETWORK_VOLUME_ID",
+              "value": "1kyj01kp0v",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "44d48211-0264-4260-af08-927b074babf6",
+      "name": "Configuração",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        608,
+        208
+      ],
+      "notes": "Supabase + RunPod config."
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/videos?id=eq.{{ $('Normalizar Input').first().json.video_id }}&select=titulo,formato,sinopse,tom,thumbnail_prompt",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "f401a7bb-29f8-4127-8e25-bd5139eb4972",
+      "name": "Ler Vídeo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        112
+      ],
+      "notes": "GET metadados do vídeo (formato, thumbnail_prompt)."
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/cenas?video_id=eq.{{ $('Normalizar Input').first().json.video_id }}&opcao_id=is.null&order=ordem.asc&prompt_flux=not.is.null",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "c9d01d08-8674-4fe8-8764-81e7b7ea1686",
+      "name": "Ler Cenas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        304
+      ],
+      "notes": "GET cenas aprovadas com prompt_flux preenchido, ordem ASC."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Preparar criação do pod RunPod\nconst config = $('Configuração').first().json;\nconst nvId = config.NETWORK_VOLUME_ID;\n\nconst createBody = {\n  query: `mutation { podFindAndDeployOnDemand(input: { name: \"clay-comfyui\", cloudType: SECURE, gpuTypeId: \"NVIDIA A40\", gpuCount: 1, containerDiskInGb: 10, networkVolumeId: \"${nvId}\", ports: \"8188/http,8080/http,8888/http\", volumeMountPath: \"/workspace\", imageName: \"runpod/comfyui:latest\" }) { id desiredStatus } }`\n};\n\nreturn [{ json: { createBody } }];"
+      },
+      "id": "53b8bdb9-a597-4f08-ac9e-113d77848919",
+      "name": "Prep Criar Pod",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        208
+      ],
+      "notes": "Prepara mutation GraphQL para criar pod."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.runpod.io/graphql",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": []
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.createBody) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "d3a7fc7c-0eb8-4bf1-9334-e1abf927d9cd",
+      "name": "Criar Pod",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        208
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "zQVkS3cYGiH3Ff5m",
+          "name": "RunPod API"
+        }
+      },
+      "notes": "POST RunPod GraphQL: criar pod A40."
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nif (response.errors && response.errors.length > 0) {\n  throw new Error('RunPod API erro: ' + response.errors.map(e => e.message).join('; '));\n}\nconst newPodId = response?.data?.podFindAndDeployOnDemand?.id;\nif (!newPodId) throw new Error('Falha ao criar pod: ' + JSON.stringify(response));\n\nvar staticData = $getWorkflowStaticData('global');\nstaticData.podId = newPodId;\nstaticData.comfyuiUrl = 'https://' + newPodId + '-8188.proxy.runpod.net';\nstaticData.podRetries = 0;\n\nreturn [{ json: { podId: newPodId, comfyuiUrl: staticData.comfyuiUrl } }];"
+      },
+      "id": "ff2e1e36-ee03-4d03-886f-3e0021578d7a",
+      "name": "Processar Novo Pod",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1408,
+        208
+      ],
+      "notes": "Extrai pod ID e monta URL ComfyUI."
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "id": "b5652d8b-548d-4d9e-b806-334c765cab83",
+      "name": "Wait Pod",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1600,
+        208
+      ],
+      "webhookId": "e1ca2d99-ed60-45d1-841b-d05c0289564b",
+      "notes": "Espera 15s para pod iniciar."
+    },
+    {
+      "parameters": {
+        "jsCode": "var staticData = $getWorkflowStaticData('global');\nreturn [{ json: {\n  podStatusBody: { query: '{ pod(input: {podId: \"' + staticData.podId + '\"}) { id desiredStatus runtime { uptimeInSeconds } } }' }\n} }];"
+      },
+      "id": "eafb55ad-8523-4209-938a-c3dddf5283ba",
+      "name": "Prep Checar Pod",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1808,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.runpod.io/graphql",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.podStatusBody) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "d071ad56-00fc-488f-b9bf-f9b5298d5e74",
+      "name": "Checar Pod",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2000,
+        208
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "zQVkS3cYGiH3Ff5m",
+          "name": "RunPod API"
+        }
+      },
+      "notes": "Query status do pod."
+    },
+    {
+      "parameters": {
+        "jsCode": "var response = $('Checar Pod').first().json;\nvar staticData = $getWorkflowStaticData('global');\nstaticData.podRetries = (staticData.podRetries || 0) + 1;\n\nvar running = false;\ntry {\n  var status = response.data.pod.desiredStatus;\n  var uptime = response.data.pod.runtime.uptimeInSeconds;\n  running = (status === 'RUNNING' && uptime > 0);\n} catch(e) {}\n\nreturn [{ json: {\n  _podReady: running,\n  _podTimeout: (!running && staticData.podRetries >= 20)\n} }];"
+      },
+      "id": "e8902647-531d-402a-8608-29b1f770061c",
+      "name": "Avaliar Pod",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2208,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "pod-ready",
+              "leftValue": "={{ $json._podReady }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "947393c4-87b7-4e9d-b4e0-4a32818b1f6b",
+      "name": "IF Pod Pronto",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "pod-timeout",
+              "leftValue": "={{ $json._podTimeout }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c7e6cde9-fc84-4455-abc1-bef6a219f552",
+      "name": "IF Pod Timeout",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.runpod.io/graphql",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.stopBody) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "9383a0c8-f3a2-4a69-97f8-e247d2ac25be",
+      "name": "Desligar Pod Erro",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2704,
+        736
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "zQVkS3cYGiH3Ff5m",
+          "name": "RunPod API"
+        }
+      },
+      "notes": "Termina pod em caso de timeout."
+    },
+    {
+      "parameters": {
+        "jsCode": "var staticData = $getWorkflowStaticData('global');\nstaticData.comfyRetries = 0;\nreturn [{ json: { checkUrl: staticData.comfyuiUrl + '/object_info' } }];"
+      },
+      "id": "66e3e560-945d-47b7-aed7-3adc47bc08d8",
+      "name": "Prep Polling ComfyUI",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2800,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "id": "a209db24-2e7f-41eb-846c-44d2345ba822",
+      "name": "Wait ComfyUI",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3008,
+        208
+      ],
+      "webhookId": "220cd88c-1dea-4a13-8e49-44005b5bef34",
+      "notes": "Espera 10s entre checks do ComfyUI."
+    },
+    {
+      "parameters": {
+        "jsCode": "var staticData = $getWorkflowStaticData('global');\nreturn [{ json: { checkUrl: staticData.comfyuiUrl + '/object_info' } }];"
+      },
+      "id": "a933cee4-5456-4ec8-a463-d08a96be3ff8",
+      "name": "Prep Checar ComfyUI",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3200,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.checkUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "d29931ee-24a9-49e1-894a-08769187151e",
+      "name": "Checar ComfyUI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3408,
+        208
+      ],
+      "notes": "GET /object_info — retorna nodes do ComfyUI quando pronto."
+    },
+    {
+      "parameters": {
+        "jsCode": "var response = $('Checar ComfyUI').first().json;\nvar staticData = $getWorkflowStaticData('global');\nstaticData.comfyRetries = (staticData.comfyRetries || 0) + 1;\n\nvar ready = false;\ntry {\n  var keys = Object.keys(response);\n  ready = (keys.length > 50);\n} catch(e) {}\n\nreturn [{ json: {\n  _comfyReady: ready,\n  _comfyTimeout: (!ready && staticData.comfyRetries >= 40)\n} }];"
+      },
+      "id": "6e31674a-df1c-4080-8887-a76b5512d503",
+      "name": "Avaliar ComfyUI",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3600,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "comfy-ready",
+              "leftValue": "={{ $json._comfyReady }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "0eecfadc-3ea4-4637-bc19-6abf59a7a735",
+      "name": "IF ComfyUI Pronto",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3808,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "comfy-timeout",
+              "leftValue": "={{ $json._comfyTimeout }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "385fff33-a217-4633-82eb-3f2d6729e93e",
+      "name": "IF ComfyUI Timeout",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3808,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Preparar array de cenas para geração + thumbnail se longo\nconst cenaItems = $('Ler Cenas').all().map(i => i.json);\nconst cenas = Array.isArray(cenaItems[0]) ? cenaItems[0] : cenaItems;\nconst videoItem = $('Ler Vídeo').first().json;\nconst video = Array.isArray(videoItem) ? videoItem[0] : videoItem;\nconst videoId = $('Normalizar Input').first().json.video_id;\n\nvar staticData = $getWorkflowStaticData('global');\nstaticData.lastPersonagemImage = null;\n\nconst items = cenas.map(c => ({\n  json: {\n    ...c,\n    _videoId: videoId,\n    _formato: video.formato,\n    _isThumbnail: false\n  }\n}));\n\n// Adicionar thumbnail se formato longo\nif (video.formato === 'longo' && video.thumbnail_prompt) {\n  // Montar prompt_flux para thumbnail com setup fixo\n  const thumbPrompt = 'claymation_stoners, stop motion photography, miniature set photography, Canon C500 Mark II, macro lens, Cooke Speed Panchro vintage 50mm, 16:9 horizontal frame, shallow depth of field, creamy bokeh, visible clay textures, plasticine texture, handmade imperfections, Kodak Vision3 500T emulation, medium film grain, subtle halation, organic texture, NO TEXT, NO WATERMARK, NO LOGO, NO PLASTIC HDR, NO OVERSHARPEN, ' + video.thumbnail_prompt;\n  \n  items.push({\n    json: {\n      _videoId: videoId,\n      _formato: 'longo',\n      _isThumbnail: true,\n      prompt_flux: thumbPrompt,\n      personagem_presente: false,\n      redux_strength: null,\n      continuidade: false,\n      numero: 'thumbnail',\n      id: null\n    }\n  });\n}\n\nreturn items;"
+      },
+      "id": "b3e7e1b5-7ee2-4e5c-8eea-fa37db6acddc",
+      "name": "Preparar Geração",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4208,
+        208
+      ],
+      "notes": "Prepara array de cenas + thumbnail (se longo).\nReseta lastPersonagemImage para Regra 29."
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "id": "47ebf8d5-179a-4f88-a9b9-54e2c9dbc0dd",
+      "name": "Loop Cenas",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        4400,
+        208
+      ],
+      "notes": "Itera cenas uma a uma (ordem ASC obrigatória — Regra 29).\n[done] → Desligar Pod\n[loop] → Gerar imagem"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Montar payload ComfyUI — Redux (personagem) ou TXT2IMG (ambiente/ameaca/thumbnail)\nconst item = $('Loop Cenas').first().json;\nvar staticData = $getWorkflowStaticData('global');\nconst comfyuiUrl = staticData.comfyuiUrl;\n\nconst isShorts = item._formato === 'shorts';\nconst width = item._isThumbnail ? 1280 : (isShorts ? 768 : 1344);\nconst height = item._isThumbnail ? 720 : (isShorts ? 1344 : 768);\nconst seed = Math.floor(Math.random() * 999999999999999);\n\nconst useRedux = item.personagem_presente === true && !item._isThumbnail;\nlet referenceImage = 'Imagem Mestre Personagem.png';\n\n// Regra 29: usar imagem da cena anterior se continuidade + anterior tinha personagem\nif (useRedux && item.continuidade === true && staticData.lastPersonagemImage) {\n  referenceImage = staticData.lastPersonagemImage;\n}\n\nconst loraStrength = (item.redux_strength !== null && item.redux_strength !== undefined) ? item.redux_strength : 0.7;\n\nlet payload;\n\nif (useRedux) {\n  payload = {\n    \"6\": {\"inputs\":{\"text\": item.prompt_flux, \"clip\":[\"55\",1]},\"class_type\":\"CLIPTextEncode\",\"_meta\":{\"title\":\"CLIP Text Encode (Positive Prompt)\"}},\n    \"8\": {\"inputs\":{\"samples\":[\"13\",0],\"vae\":[\"10\",0]},\"class_type\":\"VAEDecode\",\"_meta\":{\"title\":\"VAE Decode\"}},\n    \"9\": {\"inputs\":{\"filename_prefix\":\"Flux2\",\"images\":[\"8\",0]},\"class_type\":\"SaveImage\",\"_meta\":{\"title\":\"Save Image\"}},\n    \"10\": {\"inputs\":{\"vae_name\":\"flux2-vae.safetensors\"},\"class_type\":\"VAELoader\",\"_meta\":{\"title\":\"Load VAE\"}},\n    \"13\": {\"inputs\":{\"noise\":[\"25\",0],\"guider\":[\"22\",0],\"sampler\":[\"16\",0],\"sigmas\":[\"48\",0],\"latent_image\":[\"47\",0]},\"class_type\":\"SamplerCustomAdvanced\",\"_meta\":{\"title\":\"SamplerCustomAdvanced\"}},\n    \"16\": {\"inputs\":{\"sampler_name\":\"euler\"},\"class_type\":\"KSamplerSelect\",\"_meta\":{\"title\":\"KSamplerSelect\"}},\n    \"22\": {\"inputs\":{\"model\":[\"55\",0],\"conditioning\":[\"60\",0]},\"class_type\":\"BasicGuider\",\"_meta\":{\"title\":\"BasicGuider\"}},\n    \"25\": {\"inputs\":{\"noise_seed\": seed},\"class_type\":\"RandomNoise\",\"_meta\":{\"title\":\"RandomNoise\"}},\n    \"26\": {\"inputs\":{\"guidance\":4,\"conditioning\":[\"6\",0]},\"class_type\":\"FluxGuidance\",\"_meta\":{\"title\":\"FluxGuidance\"}},\n    \"40\": {\"inputs\":{\"pixels\":[\"41\",0],\"vae\":[\"10\",0]},\"class_type\":\"VAEEncode\",\"_meta\":{\"title\":\"VAE Encode\"}},\n    \"41\": {\"inputs\":{\"upscale_method\":\"area\",\"megapixels\":1,\"resolution_steps\":1,\"image\":[\"42\",0]},\"class_type\":\"ImageScaleToTotalPixels\",\"_meta\":{\"title\":\"ImageScaleToTotalPixels\"}},\n    \"42\": {\"inputs\":{\"image\": referenceImage},\"class_type\":\"LoadImage\",\"_meta\":{\"title\":\"Load Image\"}},\n    \"47\": {\"inputs\":{\"width\":width,\"height\":height,\"batch_size\":1},\"class_type\":\"EmptyFlux2LatentImage\",\"_meta\":{\"title\":\"Empty Flux 2 Latent\"}},\n    \"48\": {\"inputs\":{\"steps\":20,\"width\":width,\"height\":height},\"class_type\":\"Flux2Scheduler\",\"_meta\":{\"title\":\"Flux2Scheduler\"}},\n    \"52\": {\"inputs\":{\"unet_name\":\"flux2-dev-Q4_K_S.gguf\"},\"class_type\":\"UnetLoaderGGUF\",\"_meta\":{\"title\":\"Unet Loader (GGUF)\"}},\n    \"53\": {\"inputs\":{\"clip_name\":\"mistral_3_small_flux2_fp8.safetensors\",\"type\":\"flux2\",\"device\":\"default\"},\"class_type\":\"CLIPLoader\",\"_meta\":{\"title\":\"Load CLIP\"}},\n    \"55\": {\"inputs\":{\"PowerLoraLoaderHeaderWidget\":{\"type\":\"PowerLoraLoaderHeaderWidget\"},\"lora_1\":{\"on\":true,\"lora\":\"claymation_stoners.safetensors\",\"strength\":loraStrength},\"\\u2795 Add Lora\":\"\",\"model\":[\"52\",0],\"clip\":[\"53\",0]},\"class_type\":\"Power Lora Loader (rgthree)\",\"_meta\":{\"title\":\"Power Lora Loader (rgthree)\"}},\n    \"60\": {\"inputs\":{\"conditioning\":[\"26\",0],\"latent\":[\"40\",0]},\"class_type\":\"ReferenceLatent\",\"_meta\":{\"title\":\"ReferenceLatent\"}}\n  };\n} else {\n  payload = {\n    \"6\": {\"inputs\":{\"text\": item.prompt_flux, \"clip\":[\"83\",1]},\"class_type\":\"CLIPTextEncode\",\"_meta\":{\"title\":\"CLIP Text Encode (Positive Prompt)\"}},\n    \"8\": {\"inputs\":{\"samples\":[\"63\",0],\"vae\":[\"10\",0]},\"class_type\":\"VAEDecode\",\"_meta\":{\"title\":\"VAE Decode\"}},\n    \"9\": {\"inputs\":{\"filename_prefix\":\"Flux2\",\"images\":[\"8\",0]},\"class_type\":\"SaveImage\",\"_meta\":{\"title\":\"Save Image\"}},\n    \"10\": {\"inputs\":{\"vae_name\":\"flux2-vae.safetensors\"},\"class_type\":\"VAELoader\",\"_meta\":{\"title\":\"Load VAE\"}},\n    \"26\": {\"inputs\":{\"guidance\":4,\"conditioning\":[\"6\",0]},\"class_type\":\"FluxGuidance\",\"_meta\":{\"title\":\"FluxGuidance\"}},\n    \"47\": {\"inputs\":{\"width\":width,\"height\":height,\"batch_size\":1},\"class_type\":\"EmptyFlux2LatentImage\",\"_meta\":{\"title\":\"Empty Flux 2 Latent\"}},\n    \"63\": {\"inputs\":{\"seed\":seed,\"steps\":20,\"cfg\":1,\"sampler_name\":\"euler\",\"scheduler\":\"simple\",\"denoise\":1,\"model\":[\"83\",0],\"positive\":[\"26\",0],\"negative\":[\"79\",0],\"latent_image\":[\"47\",0]},\"class_type\":\"KSampler\",\"_meta\":{\"title\":\"KSampler\"}},\n    \"79\": {\"inputs\":{\"conditioning\":[\"26\",0]},\"class_type\":\"ConditioningZeroOut\",\"_meta\":{\"title\":\"ConditioningZeroOut\"}},\n    \"83\": {\"inputs\":{\"PowerLoraLoaderHeaderWidget\":{\"type\":\"PowerLoraLoaderHeaderWidget\"},\"lora_1\":{\"on\":true,\"lora\":\"claymation_stoners.safetensors\",\"strength\":0.7},\"\\u2795 Add Lora\":\"\",\"model\":[\"85\",0],\"clip\":[\"88\",0]},\"class_type\":\"Power Lora Loader (rgthree)\",\"_meta\":{\"title\":\"Power Lora Loader (rgthree)\"}},\n    \"85\": {\"inputs\":{\"unet_name\":\"flux2-dev-Q4_K_S.gguf\"},\"class_type\":\"UnetLoaderGGUF\",\"_meta\":{\"title\":\"Unet Loader (GGUF)\"}},\n    \"88\": {\"inputs\":{\"clip_name\":\"mistral_3_small_flux2_fp8.safetensors\",\"type\":\"flux2\",\"device\":\"default\"},\"class_type\":\"CLIPLoader\",\"_meta\":{\"title\":\"Load CLIP\"}}\n  };\n}\n\nreturn [{\n  json: {\n    promptUrl: comfyuiUrl + '/prompt',\n    promptBody: { prompt: payload },\n    cenaId: item.id || null,\n    cenaNumero: item.numero || 'thumbnail',\n    videoId: item._videoId,\n    personagem_presente: item.personagem_presente || false,\n    _isThumbnail: item._isThumbnail || false,\n    seed: seed\n  }\n}];"
+      },
+      "id": "1a2a309f-da3a-468c-b3f7-2df61012054e",
+      "name": "Montar Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4608,
+        400
+      ],
+      "notes": "Monta payload ComfyUI:\n- personagem → CLAY_REDUX_CORRIGIDO (com Regra 29)\n- ambiente/ameaca → FLUX2_TXT2IMG\n- thumbnail → TXT2IMG 1280×720"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.promptUrl }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.promptBody) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "4fda67a5-ef75-45b5-ae10-fe0d6b35aabe",
+      "name": "Enviar ComfyUI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4800,
+        400
+      ],
+      "notes": "POST /prompt — envia prompt para fila do ComfyUI."
+    },
+    {
+      "parameters": {
+        "jsCode": "var response = $input.first().json;\nvar staticData = $getWorkflowStaticData('global');\nvar meta = $('Montar Payload').first().json;\n\nvar promptId = response.prompt_id;\nstaticData.imgPromptId = promptId;\nstaticData.imgHistoryUrl = staticData.comfyuiUrl + '/history/' + promptId;\nstaticData.imgRetries = 0;\n\nreturn [{ json: {\n  promptId: promptId,\n  cenaId: meta.cenaId,\n  cenaNumero: meta.cenaNumero,\n  videoId: meta.videoId,\n  personagem_presente: meta.personagem_presente,\n  _isThumbnail: meta._isThumbnail\n} }];"
+      },
+      "id": "e355cf18-adbd-438b-b6fb-ca4e5c53db77",
+      "name": "Preparar Polling Imagem",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5008,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "id": "ab3ba748-9b2e-498e-8627-8b048cf8eea2",
+      "name": "Wait Imagem",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        5200,
+        400
+      ],
+      "webhookId": "f333f9c8-3e98-4160-9366-f0c3f0908b61",
+      "notes": "Espera 30s entre checks de geração."
+    },
+    {
+      "parameters": {
+        "jsCode": "var staticData = $getWorkflowStaticData('global');\nreturn [{ json: { historyUrl: staticData.imgHistoryUrl, promptId: staticData.imgPromptId } }];"
+      },
+      "id": "58d1e2b9-e611-434e-adb1-bb6c88453a54",
+      "name": "Prep Buscar Resultado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5408,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.historyUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "e772a885-1ffe-43e2-aeb6-a2695d48602e",
+      "name": "Buscar Resultado",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5600,
+        400
+      ],
+      "notes": "GET /history/{promptId} — verifica se imagem ficou pronta."
+    },
+    {
+      "parameters": {
+        "jsCode": "var input = $('Buscar Resultado').first().json;\nvar staticData = $getWorkflowStaticData('global');\nvar promptId = staticData.imgPromptId;\nstaticData.imgRetries = (staticData.imgRetries || 0) + 1;\n\nvar pronto = false;\nvar filename = null;\n\ntry {\n  var hist = input[promptId];\n  if (hist && hist.outputs) {\n    var keys = Object.keys(hist.outputs);\n    for (var k = 0; k < keys.length; k++) {\n      var nodeOut = hist.outputs[keys[k]];\n      if (nodeOut.images && nodeOut.images.length > 0) {\n        filename = nodeOut.images[0].filename;\n        pronto = true;\n        break;\n      }\n    }\n  }\n} catch(e) {}\n\nvar meta = $('Preparar Polling Imagem').first().json;\n\nreturn [{ json: {\n  _ready: pronto,\n  filename: filename,\n  downloadUrl: pronto ? (staticData.comfyuiUrl + '/view?filename=' + encodeURIComponent(filename) + '&type=output') : null,\n  cenaId: meta.cenaId,\n  cenaNumero: meta.cenaNumero,\n  videoId: meta.videoId,\n  personagem_presente: meta.personagem_presente,\n  _isThumbnail: meta._isThumbnail\n} }];"
+      },
+      "id": "98ee4ac0-3a59-409e-abd8-3815d7faa687",
+      "name": "Avaliar Resultado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5808,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "img-ready",
+              "leftValue": "={{ $json._ready }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ab41626b-b51b-4ac3-9e7a-24d03174ed92",
+      "name": "IF Imagem Pronta",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        6000,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { _consolidado: true } }];"
+      },
+      "id": "d8a0d6a8-4aee-4256-ac8a-dcde9b71f9b3",
+      "name": "Consolidar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7168,
+        96
+      ],
+      "notes": "Volta para o Loop Cenas."
+    },
+    {
+      "parameters": {
+        "jsCode": "var staticData = $getWorkflowStaticData('global');\nvar podId = staticData.podId || '';\nreturn [{ json: {\n  stopBody: { query: 'mutation { podTerminate(input: {podId: \"' + podId + '\"}) }' }\n} }];"
+      },
+      "id": "5d90a26d-b440-43c3-9141-539d4eef69f9",
+      "name": "Prep Desligar Pod",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4608,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.runpod.io/graphql",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.stopBody) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "7a9ee613-cc0e-41b3-ab59-3238f83e3974",
+      "name": "Desligar Pod",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4800,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "zQVkS3cYGiH3Ff5m",
+          "name": "RunPod API"
+        }
+      },
+      "notes": "Termina o pod após todas as imagens geradas."
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/videos?id=eq.{{ $('Normalizar Input').first().json.video_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ modulo_atual: '05', status: 'processando' }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "0ff321ac-9185-442b-9b5e-3eb47c91a281",
+      "name": "Avançar Módulo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5008,
+        0
+      ],
+      "notes": "PATCH videos: avança modulo_atual para '05'."
+    },
+    {
+      "parameters": {
+        "jsCode": "var staticData = $getWorkflowStaticData('global');\nvar podId = staticData.podId || 'unknown';\nreturn [{ json: {\n  stopBody: { query: 'mutation { podTerminate(input: {podId: \"' + podId + '\"}) }' },\n  erro: 'Pod ou ComfyUI timeout'\n} }];"
+      },
+      "id": "733a3744-5805-4b3c-8946-67d1b8e7f8e5",
+      "name": "Prep Desligar Timeout",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2544,
+        592
+      ],
+      "notes": "Prepara mutation para desligar pod em caso de timeout."
+    },
+    {
+      "parameters": {
+        "jsCode": "const meta = $input.first().json;\nvar staticData = $getWorkflowStaticData('global');\nconst config = $('Configuração').first().json;\n\nconst storagePath = meta._isThumbnail\n  ? meta.videoId + '/thumbnail.png'\n  : meta.videoId + '/cena_' + meta.cenaNumero + '.png';\n\nconst publicUrl = config.SUPABASE_URL + '/storage/v1/object/public/imagens/' + storagePath;\n\n// ==========================================================\n// REGRA 29 — continuidade visual entre cenas\n// Copia a imagem recém-gerada do /output do ComfyUI pro /input\n// com nome fixo 'continuity_{videoId}.png', pra próxima cena\n// com continuidade=true usar como Redux reference.\n// ==========================================================\nif (meta.personagem_presente && !meta._isThumbnail) {\n  try {\n    const comfyuiUrl = staticData.comfyuiUrl;\n    const continuityName = 'continuity_' + meta.videoId + '.png';\n\n    // 1. Baixar a imagem do /output via /view\n    const imageBuffer = await this.helpers.httpRequest({\n      method: 'GET',\n      url: comfyuiUrl + '/view',\n      qs: {\n        filename: meta.filename,\n        type: 'output',\n        subfolder: ''\n      },\n      encoding: 'arraybuffer',\n      returnFullResponse: false\n    });\n\n    // 2. Reupload via /upload/image como multipart\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: comfyuiUrl + '/upload/image',\n      formData: {\n        image: {\n          value: Buffer.from(imageBuffer),\n          options: {\n            filename: continuityName,\n            contentType: 'image/png'\n          }\n        },\n        overwrite: 'true',\n        type: 'input',\n        subfolder: ''\n      }\n    });\n\n    // 3. Guardar referência pra próxima cena usar no LoadImage\n    staticData.lastPersonagemImage = continuityName;\n  } catch (e) {\n    console.log('Regra 29 falhou: ' + e.message);\n  }\n}\n\nreturn [{ json: {\n  downloadUrl: meta.downloadUrl,\n  uploadUrl: config.SUPABASE_URL + '/storage/v1/object/imagens/' + storagePath,\n  publicUrl: publicUrl,\n  cenaId: meta.cenaId,\n  cenaNumero: meta.cenaNumero,\n  videoId: meta.videoId,\n  _isThumbnail: meta._isThumbnail,\n  supabaseKey: config.SUPABASE_SERVICE_KEY\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6208,
+        384
+      ],
+      "id": "89c09df8-8d78-4770-bae1-490f886be7a7",
+      "name": "Prep Download"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.downloadUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        6352,
+        384
+      ],
+      "id": "6718c736-c812-4228-9331-9db78ae44eef",
+      "name": "Baixar Imagem"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Prep Download').first().json.uploadUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Prep Download').first().json.supabaseKey }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Prep Download').first().json.supabaseKey }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "image/png"
+            },
+            {
+              "name": "x-upsert",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        6528,
+        384
+      ],
+      "id": "c991278c-372e-4311-a79a-359650b1897b",
+      "name": "Upload Supabase Storage"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $('Prep Download').first().json.uploadUrl.split('/storage/')[0] }}/rest/v1/cenas?id=eq.{{ $('Prep Download').first().json.cenaId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Prep Download').first().json.supabaseKey }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Prep Download').first().json.supabaseKey }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ imagem_url: $('Prep Download').first().json.publicUrl, imagem_status: 'gerada' }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        6880,
+        400
+      ],
+      "id": "bde6ee8c-a938-4276-8238-47fec116eb4c",
+      "name": "Atualizar Cena"
+    }
+  ],
+  "connections": {
+    "Início Manual": {
+      "main": [
+        [
+          {
+            "node": "Video ID Teste",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Video ID Teste": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chamado pelo 03": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar Input": {
+      "main": [
+        [
+          {
+            "node": "Configuração",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configuração": {
+      "main": [
+        [
+          {
+            "node": "Ler Vídeo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler Vídeo": {
+      "main": [
+        [
+          {
+            "node": "Ler Cenas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler Cenas": {
+      "main": [
+        [
+          {
+            "node": "Prep Criar Pod",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Criar Pod": {
+      "main": [
+        [
+          {
+            "node": "Criar Pod",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar Pod": {
+      "main": [
+        [
+          {
+            "node": "Processar Novo Pod",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Processar Novo Pod": {
+      "main": [
+        [
+          {
+            "node": "Wait Pod",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Pod": {
+      "main": [
+        [
+          {
+            "node": "Prep Checar Pod",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Checar Pod": {
+      "main": [
+        [
+          {
+            "node": "Checar Pod",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Checar Pod": {
+      "main": [
+        [
+          {
+            "node": "Avaliar Pod",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Avaliar Pod": {
+      "main": [
+        [
+          {
+            "node": "IF Pod Pronto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Pod Pronto": {
+      "main": [
+        [
+          {
+            "node": "Prep Polling ComfyUI",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF Pod Timeout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Pod Timeout": {
+      "main": [
+        [
+          {
+            "node": "Prep Desligar Timeout",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait Pod",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Polling ComfyUI": {
+      "main": [
+        [
+          {
+            "node": "Wait ComfyUI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait ComfyUI": {
+      "main": [
+        [
+          {
+            "node": "Prep Checar ComfyUI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Checar ComfyUI": {
+      "main": [
+        [
+          {
+            "node": "Checar ComfyUI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Checar ComfyUI": {
+      "main": [
+        [
+          {
+            "node": "Avaliar ComfyUI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Avaliar ComfyUI": {
+      "main": [
+        [
+          {
+            "node": "IF ComfyUI Pronto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF ComfyUI Pronto": {
+      "main": [
+        [
+          {
+            "node": "Preparar Geração",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF ComfyUI Timeout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF ComfyUI Timeout": {
+      "main": [
+        [
+          {
+            "node": "Prep Desligar Timeout",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait ComfyUI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Geração": {
+      "main": [
+        [
+          {
+            "node": "Loop Cenas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Cenas": {
+      "main": [
+        [
+          {
+            "node": "Prep Desligar Pod",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Montar Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar Payload": {
+      "main": [
+        [
+          {
+            "node": "Enviar ComfyUI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar ComfyUI": {
+      "main": [
+        [
+          {
+            "node": "Preparar Polling Imagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Polling Imagem": {
+      "main": [
+        [
+          {
+            "node": "Wait Imagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Imagem": {
+      "main": [
+        [
+          {
+            "node": "Prep Buscar Resultado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Buscar Resultado": {
+      "main": [
+        [
+          {
+            "node": "Buscar Resultado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Resultado": {
+      "main": [
+        [
+          {
+            "node": "Avaliar Resultado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Avaliar Resultado": {
+      "main": [
+        [
+          {
+            "node": "IF Imagem Pronta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Imagem Pronta": {
+      "main": [
+        [
+          {
+            "node": "Prep Download",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait Imagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidar": {
+      "main": [
+        [
+          {
+            "node": "Loop Cenas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Desligar Pod": {
+      "main": [
+        [
+          {
+            "node": "Desligar Pod",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Desligar Pod": {
+      "main": [
+        [
+          {
+            "node": "Avançar Módulo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Desligar Timeout": {
+      "main": [
+        [
+          {
+            "node": "Desligar Pod Erro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Download": {
+      "main": [
+        [
+          {
+            "node": "Baixar Imagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Baixar Imagem": {
+      "main": [
+        [
+          {
+            "node": "Upload Supabase Storage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Supabase Storage": {
+      "main": [
+        [
+          {
+            "node": "Atualizar Cena",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Cena": {
+      "main": [
+        [
+          {
+            "node": "Consolidar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": {
+    "global": {
+      "podId": "goqucmhuvxp30y",
+      "comfyuiUrl": "https://goqucmhuvxp30y-8188.proxy.runpod.net",
+      "podRetries": 2,
+      "comfyRetries": 4,
+      "lastPersonagemImage": null,
+      "imgPromptId": "81619e47-feed-4d65-8859-4fefb359542f",
+      "imgHistoryUrl": "https://goqucmhuvxp30y-8188.proxy.runpod.net/history/81619e47-feed-4d65-8859-4fefb359542f",
+      "imgRetries": 7
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "738b28a7-4ee0-46d7-8672-8b0f3bbebbd1",
+  "activeVersionId": "738b28a7-4ee0-46d7-8672-8b0f3bbebbd1",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-28T01:07:34.528Z",
+      "createdAt": "2026-03-28T01:07:34.528Z",
+      "role": "workflow:owner",
+      "workflowId": "q9a97KpjBXTUmD4X",
+      "projectId": "SoH44tJE4dqRVTiw"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-04-13T14:39:27.000Z",
+    "createdAt": "2026-04-13T14:39:14.253Z",
+    "versionId": "738b28a7-4ee0-46d7-8672-8b0f3bbebbd1",
+    "workflowId": "q9a97KpjBXTUmD4X",
+    "nodes": [
+      {
+        "parameters": {},
+        "id": "c482f742-f780-4ba8-ab1f-7782eef6a2ae",
+        "name": "Início Manual",
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "notes": "⚠️ TESTE MANUAL: clique 'Test workflow' com video_id no nó seguinte."
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "test-vid",
+                "name": "video_id",
+                "value": "42058483-4694-465a-9346-4ca03c5818d2",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "aa781e5e-2f8d-40b7-962e-941c2b1fc52d",
+        "name": "Video ID Teste",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          208,
+          0
+        ],
+        "notes": "⚠️ TROQUE O UUID AQUI para testar."
+      },
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "video_id"
+              }
+            ]
+          }
+        },
+        "id": "b3270eb7-1fc6-40e4-a4fd-a00ed46b7f86",
+        "name": "Chamado pelo 03",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          0,
+          400
+        ],
+        "notes": "Recebe { video_id } do Módulo 03 via Execute Workflow."
+      },
+      {
+        "parameters": {
+          "jsCode": "const item = $input.first().json;\nconst video_id = item.video_id || null;\nif (!video_id) throw new Error('video_id não encontrado.');\nreturn [{ json: { video_id } }];"
+        },
+        "id": "2d0bcd44-0f53-4298-becc-57bf2f3189e9",
+        "name": "Normalizar Input",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          400,
+          208
+        ],
+        "notes": "Unifica input. Saída: { video_id }"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "cfg-url",
+                "name": "SUPABASE_URL",
+                "value": "https://vngtopghlmgqjaibqiyb.supabase.co",
+                "type": "string"
+              },
+              {
+                "id": "cfg-key",
+                "name": "SUPABASE_SERVICE_KEY",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuZ3RvcGdobG1ncWphaWJxaXliIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzUzOTg4NiwiZXhwIjoyMDg5MTE1ODg2fQ.xywZiNZ3h6_uVE9-ltt2LAXtZJ8jTezHCE4LmjBxzTk",
+                "type": "string"
+              },
+              {
+                "id": "cfg-nv",
+                "name": "NETWORK_VOLUME_ID",
+                "value": "1kyj01kp0v",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "44d48211-0264-4260-af08-927b074babf6",
+        "name": "Configuração",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          608,
+          208
+        ],
+        "notes": "Supabase + RunPod config."
+      },
+      {
+        "parameters": {
+          "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/videos?id=eq.{{ $('Normalizar Input').first().json.video_id }}&select=titulo,formato,sinopse,tom,thumbnail_prompt",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "f401a7bb-29f8-4127-8e25-bd5139eb4972",
+        "name": "Ler Vídeo",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          800,
+          112
+        ],
+        "notes": "GET metadados do vídeo (formato, thumbnail_prompt)."
+      },
+      {
+        "parameters": {
+          "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/cenas?video_id=eq.{{ $('Normalizar Input').first().json.video_id }}&opcao_id=is.null&order=ordem.asc&prompt_flux=not.is.null",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "c9d01d08-8674-4fe8-8764-81e7b7ea1686",
+        "name": "Ler Cenas",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          800,
+          304
+        ],
+        "notes": "GET cenas aprovadas com prompt_flux preenchido, ordem ASC."
+      },
+      {
+        "parameters": {
+          "jsCode": "// Preparar criação do pod RunPod\nconst config = $('Configuração').first().json;\nconst nvId = config.NETWORK_VOLUME_ID;\n\nconst createBody = {\n  query: `mutation { podFindAndDeployOnDemand(input: { name: \"clay-comfyui\", cloudType: SECURE, gpuTypeId: \"NVIDIA A40\", gpuCount: 1, containerDiskInGb: 10, networkVolumeId: \"${nvId}\", ports: \"8188/http,8080/http,8888/http\", volumeMountPath: \"/workspace\", imageName: \"runpod/comfyui:latest\" }) { id desiredStatus } }`\n};\n\nreturn [{ json: { createBody } }];"
+        },
+        "id": "53b8bdb9-a597-4f08-ac9e-113d77848919",
+        "name": "Prep Criar Pod",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1008,
+          208
+        ],
+        "notes": "Prepara mutation GraphQL para criar pod."
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.runpod.io/graphql",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": []
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.createBody) }}",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "d3a7fc7c-0eb8-4bf1-9334-e1abf927d9cd",
+        "name": "Criar Pod",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1200,
+          208
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "zQVkS3cYGiH3Ff5m",
+            "name": "RunPod API"
+          }
+        },
+        "notes": "POST RunPod GraphQL: criar pod A40."
+      },
+      {
+        "parameters": {
+          "jsCode": "const response = $input.first().json;\nif (response.errors && response.errors.length > 0) {\n  throw new Error('RunPod API erro: ' + response.errors.map(e => e.message).join('; '));\n}\nconst newPodId = response?.data?.podFindAndDeployOnDemand?.id;\nif (!newPodId) throw new Error('Falha ao criar pod: ' + JSON.stringify(response));\n\nvar staticData = $getWorkflowStaticData('global');\nstaticData.podId = newPodId;\nstaticData.comfyuiUrl = 'https://' + newPodId + '-8188.proxy.runpod.net';\nstaticData.podRetries = 0;\n\nreturn [{ json: { podId: newPodId, comfyuiUrl: staticData.comfyuiUrl } }];"
+        },
+        "id": "ff2e1e36-ee03-4d03-886f-3e0021578d7a",
+        "name": "Processar Novo Pod",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1408,
+          208
+        ],
+        "notes": "Extrai pod ID e monta URL ComfyUI."
+      },
+      {
+        "parameters": {
+          "amount": 15
+        },
+        "id": "b5652d8b-548d-4d9e-b806-334c765cab83",
+        "name": "Wait Pod",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          1600,
+          208
+        ],
+        "webhookId": "e1ca2d99-ed60-45d1-841b-d05c0289564b",
+        "notes": "Espera 15s para pod iniciar."
+      },
+      {
+        "parameters": {
+          "jsCode": "var staticData = $getWorkflowStaticData('global');\nreturn [{ json: {\n  podStatusBody: { query: '{ pod(input: {podId: \"' + staticData.podId + '\"}) { id desiredStatus runtime { uptimeInSeconds } } }' }\n} }];"
+        },
+        "id": "eafb55ad-8523-4209-938a-c3dddf5283ba",
+        "name": "Prep Checar Pod",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1808,
+          208
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.runpod.io/graphql",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.podStatusBody) }}",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "d071ad56-00fc-488f-b9bf-f9b5298d5e74",
+        "name": "Checar Pod",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2000,
+          208
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "zQVkS3cYGiH3Ff5m",
+            "name": "RunPod API"
+          }
+        },
+        "notes": "Query status do pod."
+      },
+      {
+        "parameters": {
+          "jsCode": "var response = $('Checar Pod').first().json;\nvar staticData = $getWorkflowStaticData('global');\nstaticData.podRetries = (staticData.podRetries || 0) + 1;\n\nvar running = false;\ntry {\n  var status = response.data.pod.desiredStatus;\n  var uptime = response.data.pod.runtime.uptimeInSeconds;\n  running = (status === 'RUNNING' && uptime > 0);\n} catch(e) {}\n\nreturn [{ json: {\n  _podReady: running,\n  _podTimeout: (!running && staticData.podRetries >= 20)\n} }];"
+        },
+        "id": "e8902647-531d-402a-8608-29b1f770061c",
+        "name": "Avaliar Pod",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2208,
+          208
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "pod-ready",
+                "leftValue": "={{ $json._podReady }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "947393c4-87b7-4e9d-b4e0-4a32818b1f6b",
+        "name": "IF Pod Pronto",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          2400,
+          208
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "pod-timeout",
+                "leftValue": "={{ $json._podTimeout }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "c7e6cde9-fc84-4455-abc1-bef6a219f552",
+        "name": "IF Pod Timeout",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          2160,
+          432
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.runpod.io/graphql",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.stopBody) }}",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "9383a0c8-f3a2-4a69-97f8-e247d2ac25be",
+        "name": "Desligar Pod Erro",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2704,
+          736
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "zQVkS3cYGiH3Ff5m",
+            "name": "RunPod API"
+          }
+        },
+        "notes": "Termina pod em caso de timeout."
+      },
+      {
+        "parameters": {
+          "jsCode": "var staticData = $getWorkflowStaticData('global');\nstaticData.comfyRetries = 0;\nreturn [{ json: { checkUrl: staticData.comfyuiUrl + '/object_info' } }];"
+        },
+        "id": "66e3e560-945d-47b7-aed7-3adc47bc08d8",
+        "name": "Prep Polling ComfyUI",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2800,
+          208
+        ]
+      },
+      {
+        "parameters": {
+          "amount": 10
+        },
+        "id": "a209db24-2e7f-41eb-846c-44d2345ba822",
+        "name": "Wait ComfyUI",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          3008,
+          208
+        ],
+        "webhookId": "220cd88c-1dea-4a13-8e49-44005b5bef34",
+        "notes": "Espera 10s entre checks do ComfyUI."
+      },
+      {
+        "parameters": {
+          "jsCode": "var staticData = $getWorkflowStaticData('global');\nreturn [{ json: { checkUrl: staticData.comfyuiUrl + '/object_info' } }];"
+        },
+        "id": "a933cee4-5456-4ec8-a463-d08a96be3ff8",
+        "name": "Prep Checar ComfyUI",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3200,
+          208
+        ]
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.checkUrl }}",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            },
+            "timeout": 15000
+          }
+        },
+        "id": "d29931ee-24a9-49e1-894a-08769187151e",
+        "name": "Checar ComfyUI",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          3408,
+          208
+        ],
+        "notes": "GET /object_info — retorna nodes do ComfyUI quando pronto."
+      },
+      {
+        "parameters": {
+          "jsCode": "var response = $('Checar ComfyUI').first().json;\nvar staticData = $getWorkflowStaticData('global');\nstaticData.comfyRetries = (staticData.comfyRetries || 0) + 1;\n\nvar ready = false;\ntry {\n  var keys = Object.keys(response);\n  ready = (keys.length > 50);\n} catch(e) {}\n\nreturn [{ json: {\n  _comfyReady: ready,\n  _comfyTimeout: (!ready && staticData.comfyRetries >= 40)\n} }];"
+        },
+        "id": "6e31674a-df1c-4080-8887-a76b5512d503",
+        "name": "Avaliar ComfyUI",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3600,
+          208
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "comfy-ready",
+                "leftValue": "={{ $json._comfyReady }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "0eecfadc-3ea4-4637-bc19-6abf59a7a735",
+        "name": "IF ComfyUI Pronto",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          3808,
+          208
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "comfy-timeout",
+                "leftValue": "={{ $json._comfyTimeout }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "385fff33-a217-4633-82eb-3f2d6729e93e",
+        "name": "IF ComfyUI Timeout",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          3808,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Preparar array de cenas para geração + thumbnail se longo\nconst cenaItems = $('Ler Cenas').all().map(i => i.json);\nconst cenas = Array.isArray(cenaItems[0]) ? cenaItems[0] : cenaItems;\nconst videoItem = $('Ler Vídeo').first().json;\nconst video = Array.isArray(videoItem) ? videoItem[0] : videoItem;\nconst videoId = $('Normalizar Input').first().json.video_id;\n\nvar staticData = $getWorkflowStaticData('global');\nstaticData.lastPersonagemImage = null;\n\nconst items = cenas.map(c => ({\n  json: {\n    ...c,\n    _videoId: videoId,\n    _formato: video.formato,\n    _isThumbnail: false\n  }\n}));\n\n// Adicionar thumbnail se formato longo\nif (video.formato === 'longo' && video.thumbnail_prompt) {\n  // Montar prompt_flux para thumbnail com setup fixo\n  const thumbPrompt = 'claymation_stoners, stop motion photography, miniature set photography, Canon C500 Mark II, macro lens, Cooke Speed Panchro vintage 50mm, 16:9 horizontal frame, shallow depth of field, creamy bokeh, visible clay textures, plasticine texture, handmade imperfections, Kodak Vision3 500T emulation, medium film grain, subtle halation, organic texture, NO TEXT, NO WATERMARK, NO LOGO, NO PLASTIC HDR, NO OVERSHARPEN, ' + video.thumbnail_prompt;\n  \n  items.push({\n    json: {\n      _videoId: videoId,\n      _formato: 'longo',\n      _isThumbnail: true,\n      prompt_flux: thumbPrompt,\n      personagem_presente: false,\n      redux_strength: null,\n      continuidade: false,\n      numero: 'thumbnail',\n      id: null\n    }\n  });\n}\n\nreturn items;"
+        },
+        "id": "b3e7e1b5-7ee2-4e5c-8eea-fa37db6acddc",
+        "name": "Preparar Geração",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4208,
+          208
+        ],
+        "notes": "Prepara array de cenas + thumbnail (se longo).\nReseta lastPersonagemImage para Regra 29."
+      },
+      {
+        "parameters": {
+          "options": {
+            "reset": false
+          }
+        },
+        "id": "47ebf8d5-179a-4f88-a9b9-54e2c9dbc0dd",
+        "name": "Loop Cenas",
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          4400,
+          208
+        ],
+        "notes": "Itera cenas uma a uma (ordem ASC obrigatória — Regra 29).\n[done] → Desligar Pod\n[loop] → Gerar imagem"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Montar payload ComfyUI — Redux (personagem) ou TXT2IMG (ambiente/ameaca/thumbnail)\nconst item = $('Loop Cenas').first().json;\nvar staticData = $getWorkflowStaticData('global');\nconst comfyuiUrl = staticData.comfyuiUrl;\n\nconst isShorts = item._formato === 'shorts';\nconst width = item._isThumbnail ? 1280 : (isShorts ? 768 : 1344);\nconst height = item._isThumbnail ? 720 : (isShorts ? 1344 : 768);\nconst seed = Math.floor(Math.random() * 999999999999999);\n\nconst useRedux = item.personagem_presente === true && !item._isThumbnail;\nlet referenceImage = 'Imagem Mestre Personagem.png';\n\n// Regra 29: usar imagem da cena anterior se continuidade + anterior tinha personagem\nif (useRedux && item.continuidade === true && staticData.lastPersonagemImage) {\n  referenceImage = staticData.lastPersonagemImage;\n}\n\nconst loraStrength = (item.redux_strength !== null && item.redux_strength !== undefined) ? item.redux_strength : 0.7;\n\nlet payload;\n\nif (useRedux) {\n  payload = {\n    \"6\": {\"inputs\":{\"text\": item.prompt_flux, \"clip\":[\"55\",1]},\"class_type\":\"CLIPTextEncode\",\"_meta\":{\"title\":\"CLIP Text Encode (Positive Prompt)\"}},\n    \"8\": {\"inputs\":{\"samples\":[\"13\",0],\"vae\":[\"10\",0]},\"class_type\":\"VAEDecode\",\"_meta\":{\"title\":\"VAE Decode\"}},\n    \"9\": {\"inputs\":{\"filename_prefix\":\"Flux2\",\"images\":[\"8\",0]},\"class_type\":\"SaveImage\",\"_meta\":{\"title\":\"Save Image\"}},\n    \"10\": {\"inputs\":{\"vae_name\":\"flux2-vae.safetensors\"},\"class_type\":\"VAELoader\",\"_meta\":{\"title\":\"Load VAE\"}},\n    \"13\": {\"inputs\":{\"noise\":[\"25\",0],\"guider\":[\"22\",0],\"sampler\":[\"16\",0],\"sigmas\":[\"48\",0],\"latent_image\":[\"47\",0]},\"class_type\":\"SamplerCustomAdvanced\",\"_meta\":{\"title\":\"SamplerCustomAdvanced\"}},\n    \"16\": {\"inputs\":{\"sampler_name\":\"euler\"},\"class_type\":\"KSamplerSelect\",\"_meta\":{\"title\":\"KSamplerSelect\"}},\n    \"22\": {\"inputs\":{\"model\":[\"55\",0],\"conditioning\":[\"60\",0]},\"class_type\":\"BasicGuider\",\"_meta\":{\"title\":\"BasicGuider\"}},\n    \"25\": {\"inputs\":{\"noise_seed\": seed},\"class_type\":\"RandomNoise\",\"_meta\":{\"title\":\"RandomNoise\"}},\n    \"26\": {\"inputs\":{\"guidance\":4,\"conditioning\":[\"6\",0]},\"class_type\":\"FluxGuidance\",\"_meta\":{\"title\":\"FluxGuidance\"}},\n    \"40\": {\"inputs\":{\"pixels\":[\"41\",0],\"vae\":[\"10\",0]},\"class_type\":\"VAEEncode\",\"_meta\":{\"title\":\"VAE Encode\"}},\n    \"41\": {\"inputs\":{\"upscale_method\":\"area\",\"megapixels\":1,\"resolution_steps\":1,\"image\":[\"42\",0]},\"class_type\":\"ImageScaleToTotalPixels\",\"_meta\":{\"title\":\"ImageScaleToTotalPixels\"}},\n    \"42\": {\"inputs\":{\"image\": referenceImage},\"class_type\":\"LoadImage\",\"_meta\":{\"title\":\"Load Image\"}},\n    \"47\": {\"inputs\":{\"width\":width,\"height\":height,\"batch_size\":1},\"class_type\":\"EmptyFlux2LatentImage\",\"_meta\":{\"title\":\"Empty Flux 2 Latent\"}},\n    \"48\": {\"inputs\":{\"steps\":20,\"width\":width,\"height\":height},\"class_type\":\"Flux2Scheduler\",\"_meta\":{\"title\":\"Flux2Scheduler\"}},\n    \"52\": {\"inputs\":{\"unet_name\":\"flux2-dev-Q4_K_S.gguf\"},\"class_type\":\"UnetLoaderGGUF\",\"_meta\":{\"title\":\"Unet Loader (GGUF)\"}},\n    \"53\": {\"inputs\":{\"clip_name\":\"mistral_3_small_flux2_fp8.safetensors\",\"type\":\"flux2\",\"device\":\"default\"},\"class_type\":\"CLIPLoader\",\"_meta\":{\"title\":\"Load CLIP\"}},\n    \"55\": {\"inputs\":{\"PowerLoraLoaderHeaderWidget\":{\"type\":\"PowerLoraLoaderHeaderWidget\"},\"lora_1\":{\"on\":true,\"lora\":\"claymation_stoners.safetensors\",\"strength\":loraStrength},\"\\u2795 Add Lora\":\"\",\"model\":[\"52\",0],\"clip\":[\"53\",0]},\"class_type\":\"Power Lora Loader (rgthree)\",\"_meta\":{\"title\":\"Power Lora Loader (rgthree)\"}},\n    \"60\": {\"inputs\":{\"conditioning\":[\"26\",0],\"latent\":[\"40\",0]},\"class_type\":\"ReferenceLatent\",\"_meta\":{\"title\":\"ReferenceLatent\"}}\n  };\n} else {\n  payload = {\n    \"6\": {\"inputs\":{\"text\": item.prompt_flux, \"clip\":[\"83\",1]},\"class_type\":\"CLIPTextEncode\",\"_meta\":{\"title\":\"CLIP Text Encode (Positive Prompt)\"}},\n    \"8\": {\"inputs\":{\"samples\":[\"63\",0],\"vae\":[\"10\",0]},\"class_type\":\"VAEDecode\",\"_meta\":{\"title\":\"VAE Decode\"}},\n    \"9\": {\"inputs\":{\"filename_prefix\":\"Flux2\",\"images\":[\"8\",0]},\"class_type\":\"SaveImage\",\"_meta\":{\"title\":\"Save Image\"}},\n    \"10\": {\"inputs\":{\"vae_name\":\"flux2-vae.safetensors\"},\"class_type\":\"VAELoader\",\"_meta\":{\"title\":\"Load VAE\"}},\n    \"26\": {\"inputs\":{\"guidance\":4,\"conditioning\":[\"6\",0]},\"class_type\":\"FluxGuidance\",\"_meta\":{\"title\":\"FluxGuidance\"}},\n    \"47\": {\"inputs\":{\"width\":width,\"height\":height,\"batch_size\":1},\"class_type\":\"EmptyFlux2LatentImage\",\"_meta\":{\"title\":\"Empty Flux 2 Latent\"}},\n    \"63\": {\"inputs\":{\"seed\":seed,\"steps\":20,\"cfg\":1,\"sampler_name\":\"euler\",\"scheduler\":\"simple\",\"denoise\":1,\"model\":[\"83\",0],\"positive\":[\"26\",0],\"negative\":[\"79\",0],\"latent_image\":[\"47\",0]},\"class_type\":\"KSampler\",\"_meta\":{\"title\":\"KSampler\"}},\n    \"79\": {\"inputs\":{\"conditioning\":[\"26\",0]},\"class_type\":\"ConditioningZeroOut\",\"_meta\":{\"title\":\"ConditioningZeroOut\"}},\n    \"83\": {\"inputs\":{\"PowerLoraLoaderHeaderWidget\":{\"type\":\"PowerLoraLoaderHeaderWidget\"},\"lora_1\":{\"on\":true,\"lora\":\"claymation_stoners.safetensors\",\"strength\":0.7},\"\\u2795 Add Lora\":\"\",\"model\":[\"85\",0],\"clip\":[\"88\",0]},\"class_type\":\"Power Lora Loader (rgthree)\",\"_meta\":{\"title\":\"Power Lora Loader (rgthree)\"}},\n    \"85\": {\"inputs\":{\"unet_name\":\"flux2-dev-Q4_K_S.gguf\"},\"class_type\":\"UnetLoaderGGUF\",\"_meta\":{\"title\":\"Unet Loader (GGUF)\"}},\n    \"88\": {\"inputs\":{\"clip_name\":\"mistral_3_small_flux2_fp8.safetensors\",\"type\":\"flux2\",\"device\":\"default\"},\"class_type\":\"CLIPLoader\",\"_meta\":{\"title\":\"Load CLIP\"}}\n  };\n}\n\nreturn [{\n  json: {\n    promptUrl: comfyuiUrl + '/prompt',\n    promptBody: { prompt: payload },\n    cenaId: item.id || null,\n    cenaNumero: item.numero || 'thumbnail',\n    videoId: item._videoId,\n    personagem_presente: item.personagem_presente || false,\n    _isThumbnail: item._isThumbnail || false,\n    seed: seed\n  }\n}];"
+        },
+        "id": "1a2a309f-da3a-468c-b3f7-2df61012054e",
+        "name": "Montar Payload",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4608,
+          400
+        ],
+        "notes": "Monta payload ComfyUI:\n- personagem → CLAY_REDUX_CORRIGIDO (com Regra 29)\n- ambiente/ameaca → FLUX2_TXT2IMG\n- thumbnail → TXT2IMG 1280×720"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $json.promptUrl }}",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.promptBody) }}",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "4fda67a5-ef75-45b5-ae10-fe0d6b35aabe",
+        "name": "Enviar ComfyUI",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          4800,
+          400
+        ],
+        "notes": "POST /prompt — envia prompt para fila do ComfyUI."
+      },
+      {
+        "parameters": {
+          "jsCode": "var response = $input.first().json;\nvar staticData = $getWorkflowStaticData('global');\nvar meta = $('Montar Payload').first().json;\n\nvar promptId = response.prompt_id;\nstaticData.imgPromptId = promptId;\nstaticData.imgHistoryUrl = staticData.comfyuiUrl + '/history/' + promptId;\nstaticData.imgRetries = 0;\n\nreturn [{ json: {\n  promptId: promptId,\n  cenaId: meta.cenaId,\n  cenaNumero: meta.cenaNumero,\n  videoId: meta.videoId,\n  personagem_presente: meta.personagem_presente,\n  _isThumbnail: meta._isThumbnail\n} }];"
+        },
+        "id": "e355cf18-adbd-438b-b6fb-ca4e5c53db77",
+        "name": "Preparar Polling Imagem",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          5008,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "amount": 30
+        },
+        "id": "ab3ba748-9b2e-498e-8627-8b048cf8eea2",
+        "name": "Wait Imagem",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          5200,
+          400
+        ],
+        "webhookId": "f333f9c8-3e98-4160-9366-f0c3f0908b61",
+        "notes": "Espera 30s entre checks de geração."
+      },
+      {
+        "parameters": {
+          "jsCode": "var staticData = $getWorkflowStaticData('global');\nreturn [{ json: { historyUrl: staticData.imgHistoryUrl, promptId: staticData.imgPromptId } }];"
+        },
+        "id": "58d1e2b9-e611-434e-adb1-bb6c88453a54",
+        "name": "Prep Buscar Resultado",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          5408,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.historyUrl }}",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "e772a885-1ffe-43e2-aeb6-a2695d48602e",
+        "name": "Buscar Resultado",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          5600,
+          400
+        ],
+        "notes": "GET /history/{promptId} — verifica se imagem ficou pronta."
+      },
+      {
+        "parameters": {
+          "jsCode": "var input = $('Buscar Resultado').first().json;\nvar staticData = $getWorkflowStaticData('global');\nvar promptId = staticData.imgPromptId;\nstaticData.imgRetries = (staticData.imgRetries || 0) + 1;\n\nvar pronto = false;\nvar filename = null;\n\ntry {\n  var hist = input[promptId];\n  if (hist && hist.outputs) {\n    var keys = Object.keys(hist.outputs);\n    for (var k = 0; k < keys.length; k++) {\n      var nodeOut = hist.outputs[keys[k]];\n      if (nodeOut.images && nodeOut.images.length > 0) {\n        filename = nodeOut.images[0].filename;\n        pronto = true;\n        break;\n      }\n    }\n  }\n} catch(e) {}\n\nvar meta = $('Preparar Polling Imagem').first().json;\n\nreturn [{ json: {\n  _ready: pronto,\n  filename: filename,\n  downloadUrl: pronto ? (staticData.comfyuiUrl + '/view?filename=' + encodeURIComponent(filename) + '&type=output') : null,\n  cenaId: meta.cenaId,\n  cenaNumero: meta.cenaNumero,\n  videoId: meta.videoId,\n  personagem_presente: meta.personagem_presente,\n  _isThumbnail: meta._isThumbnail\n} }];"
+        },
+        "id": "98ee4ac0-3a59-409e-abd8-3815d7faa687",
+        "name": "Avaliar Resultado",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          5808,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "img-ready",
+                "leftValue": "={{ $json._ready }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "ab41626b-b51b-4ac3-9e7a-24d03174ed92",
+        "name": "IF Imagem Pronta",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          6000,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { _consolidado: true } }];"
+        },
+        "id": "d8a0d6a8-4aee-4256-ac8a-dcde9b71f9b3",
+        "name": "Consolidar",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          7168,
+          96
+        ],
+        "notes": "Volta para o Loop Cenas."
+      },
+      {
+        "parameters": {
+          "jsCode": "var staticData = $getWorkflowStaticData('global');\nvar podId = staticData.podId || '';\nreturn [{ json: {\n  stopBody: { query: 'mutation { podTerminate(input: {podId: \"' + podId + '\"}) }' }\n} }];"
+        },
+        "id": "5d90a26d-b440-43c3-9141-539d4eef69f9",
+        "name": "Prep Desligar Pod",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4608,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.runpod.io/graphql",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.stopBody) }}",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "7a9ee613-cc0e-41b3-ab59-3238f83e3974",
+        "name": "Desligar Pod",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          4800,
+          0
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "zQVkS3cYGiH3Ff5m",
+            "name": "RunPod API"
+          }
+        },
+        "notes": "Termina o pod após todas as imagens geradas."
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/videos?id=eq.{{ $('Normalizar Input').first().json.video_id }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=minimal"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ modulo_atual: '05', status: 'processando' }) }}",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "0ff321ac-9185-442b-9b5e-3eb47c91a281",
+        "name": "Avançar Módulo",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          5008,
+          0
+        ],
+        "notes": "PATCH videos: avança modulo_atual para '05'."
+      },
+      {
+        "parameters": {
+          "jsCode": "var staticData = $getWorkflowStaticData('global');\nvar podId = staticData.podId || 'unknown';\nreturn [{ json: {\n  stopBody: { query: 'mutation { podTerminate(input: {podId: \"' + podId + '\"}) }' },\n  erro: 'Pod ou ComfyUI timeout'\n} }];"
+        },
+        "id": "733a3744-5805-4b3c-8946-67d1b8e7f8e5",
+        "name": "Prep Desligar Timeout",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2544,
+          592
+        ],
+        "notes": "Prepara mutation para desligar pod em caso de timeout."
+      },
+      {
+        "parameters": {
+          "jsCode": "const meta = $input.first().json;\nvar staticData = $getWorkflowStaticData('global');\nconst config = $('Configuração').first().json;\n\nconst storagePath = meta._isThumbnail\n  ? meta.videoId + '/thumbnail.png'\n  : meta.videoId + '/cena_' + meta.cenaNumero + '.png';\n\nconst publicUrl = config.SUPABASE_URL + '/storage/v1/object/public/imagens/' + storagePath;\n\n// ==========================================================\n// REGRA 29 — continuidade visual entre cenas\n// Copia a imagem recém-gerada do /output do ComfyUI pro /input\n// com nome fixo 'continuity_{videoId}.png', pra próxima cena\n// com continuidade=true usar como Redux reference.\n// ==========================================================\nif (meta.personagem_presente && !meta._isThumbnail) {\n  try {\n    const comfyuiUrl = staticData.comfyuiUrl;\n    const continuityName = 'continuity_' + meta.videoId + '.png';\n\n    // 1. Baixar a imagem do /output via /view\n    const imageBuffer = await this.helpers.httpRequest({\n      method: 'GET',\n      url: comfyuiUrl + '/view',\n      qs: {\n        filename: meta.filename,\n        type: 'output',\n        subfolder: ''\n      },\n      encoding: 'arraybuffer',\n      returnFullResponse: false\n    });\n\n    // 2. Reupload via /upload/image como multipart\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: comfyuiUrl + '/upload/image',\n      formData: {\n        image: {\n          value: Buffer.from(imageBuffer),\n          options: {\n            filename: continuityName,\n            contentType: 'image/png'\n          }\n        },\n        overwrite: 'true',\n        type: 'input',\n        subfolder: ''\n      }\n    });\n\n    // 3. Guardar referência pra próxima cena usar no LoadImage\n    staticData.lastPersonagemImage = continuityName;\n  } catch (e) {\n    console.log('Regra 29 falhou: ' + e.message);\n  }\n}\n\nreturn [{ json: {\n  downloadUrl: meta.downloadUrl,\n  uploadUrl: config.SUPABASE_URL + '/storage/v1/object/imagens/' + storagePath,\n  publicUrl: publicUrl,\n  cenaId: meta.cenaId,\n  cenaNumero: meta.cenaNumero,\n  videoId: meta.videoId,\n  _isThumbnail: meta._isThumbnail,\n  supabaseKey: config.SUPABASE_SERVICE_KEY\n} }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          6208,
+          384
+        ],
+        "id": "89c09df8-8d78-4770-bae1-490f886be7a7",
+        "name": "Prep Download"
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.downloadUrl }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          6352,
+          384
+        ],
+        "id": "6718c736-c812-4228-9331-9db78ae44eef",
+        "name": "Baixar Imagem"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $('Prep Download').first().json.uploadUrl }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $('Prep Download').first().json.supabaseKey }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('Prep Download').first().json.supabaseKey }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "image/png"
+              },
+              {
+                "name": "x-upsert",
+                "value": "true"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "binaryData",
+          "inputDataFieldName": "data",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          6528,
+          384
+        ],
+        "id": "c991278c-372e-4311-a79a-359650b1897b",
+        "name": "Upload Supabase Storage"
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "={{ $('Prep Download').first().json.uploadUrl.split('/storage/')[0] }}/rest/v1/cenas?id=eq.{{ $('Prep Download').first().json.cenaId }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $('Prep Download').first().json.supabaseKey }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('Prep Download').first().json.supabaseKey }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=minimal"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ imagem_url: $('Prep Download').first().json.publicUrl, imagem_status: 'gerada' }) }}",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          6880,
+          400
+        ],
+        "id": "bde6ee8c-a938-4276-8238-47fec116eb4c",
+        "name": "Atualizar Cena"
+      }
+    ],
+    "connections": {
+      "Início Manual": {
+        "main": [
+          [
+            {
+              "node": "Video ID Teste",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Video ID Teste": {
+        "main": [
+          [
+            {
+              "node": "Normalizar Input",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Chamado pelo 03": {
+        "main": [
+          [
+            {
+              "node": "Normalizar Input",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Normalizar Input": {
+        "main": [
+          [
+            {
+              "node": "Configuração",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Configuração": {
+        "main": [
+          [
+            {
+              "node": "Ler Vídeo",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Ler Vídeo": {
+        "main": [
+          [
+            {
+              "node": "Ler Cenas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Ler Cenas": {
+        "main": [
+          [
+            {
+              "node": "Prep Criar Pod",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Criar Pod": {
+        "main": [
+          [
+            {
+              "node": "Criar Pod",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Criar Pod": {
+        "main": [
+          [
+            {
+              "node": "Processar Novo Pod",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Processar Novo Pod": {
+        "main": [
+          [
+            {
+              "node": "Wait Pod",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait Pod": {
+        "main": [
+          [
+            {
+              "node": "Prep Checar Pod",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Checar Pod": {
+        "main": [
+          [
+            {
+              "node": "Checar Pod",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Checar Pod": {
+        "main": [
+          [
+            {
+              "node": "Avaliar Pod",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Avaliar Pod": {
+        "main": [
+          [
+            {
+              "node": "IF Pod Pronto",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF Pod Pronto": {
+        "main": [
+          [
+            {
+              "node": "Prep Polling ComfyUI",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "IF Pod Timeout",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF Pod Timeout": {
+        "main": [
+          [
+            {
+              "node": "Prep Desligar Timeout",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Wait Pod",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Polling ComfyUI": {
+        "main": [
+          [
+            {
+              "node": "Wait ComfyUI",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait ComfyUI": {
+        "main": [
+          [
+            {
+              "node": "Prep Checar ComfyUI",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Checar ComfyUI": {
+        "main": [
+          [
+            {
+              "node": "Checar ComfyUI",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Checar ComfyUI": {
+        "main": [
+          [
+            {
+              "node": "Avaliar ComfyUI",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Avaliar ComfyUI": {
+        "main": [
+          [
+            {
+              "node": "IF ComfyUI Pronto",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF ComfyUI Pronto": {
+        "main": [
+          [
+            {
+              "node": "Preparar Geração",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "IF ComfyUI Timeout",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF ComfyUI Timeout": {
+        "main": [
+          [
+            {
+              "node": "Prep Desligar Timeout",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Wait ComfyUI",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Preparar Geração": {
+        "main": [
+          [
+            {
+              "node": "Loop Cenas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Cenas": {
+        "main": [
+          [
+            {
+              "node": "Prep Desligar Pod",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Montar Payload",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Montar Payload": {
+        "main": [
+          [
+            {
+              "node": "Enviar ComfyUI",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Enviar ComfyUI": {
+        "main": [
+          [
+            {
+              "node": "Preparar Polling Imagem",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Preparar Polling Imagem": {
+        "main": [
+          [
+            {
+              "node": "Wait Imagem",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait Imagem": {
+        "main": [
+          [
+            {
+              "node": "Prep Buscar Resultado",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Buscar Resultado": {
+        "main": [
+          [
+            {
+              "node": "Buscar Resultado",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Buscar Resultado": {
+        "main": [
+          [
+            {
+              "node": "Avaliar Resultado",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Avaliar Resultado": {
+        "main": [
+          [
+            {
+              "node": "IF Imagem Pronta",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF Imagem Pronta": {
+        "main": [
+          [
+            {
+              "node": "Prep Download",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Wait Imagem",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Consolidar": {
+        "main": [
+          [
+            {
+              "node": "Loop Cenas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Desligar Pod": {
+        "main": [
+          [
+            {
+              "node": "Desligar Pod",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Desligar Pod": {
+        "main": [
+          [
+            {
+              "node": "Avançar Módulo",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Desligar Timeout": {
+        "main": [
+          [
+            {
+              "node": "Desligar Pod Erro",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Download": {
+        "main": [
+          [
+            {
+              "node": "Baixar Imagem",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Baixar Imagem": {
+        "main": [
+          [
+            {
+              "node": "Upload Supabase Storage",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Upload Supabase Storage": {
+        "main": [
+          [
+            {
+              "node": "Atualizar Cena",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualizar Cena": {
+        "main": [
+          [
+            {
+              "node": "Consolidar",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Newton Omune",
+    "name": "Version 738b28a7",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

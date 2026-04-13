@@ -1,0 +1,913 @@
+{
+  "updatedAt": "2026-02-14T00:40:47.529Z",
+  "createdAt": "2025-12-19T12:47:24.479Z",
+  "id": "xvOeHCSFCvncRqdu",
+  "name": "Tool - Selecionar Carta",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "selecionar-carta",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -864,
+        -32
+      ],
+      "id": "af51fbe3-5aba-49ce-8b49-42ecb945a004",
+      "name": "Webhook",
+      "webhookId": "68b8c4b3-4242-425f-bf47-81e7f274455b"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $('Buscar Carta Similar').item.json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        192
+      ],
+      "id": "c8676ef9-ce33-4a32-9a5b-36cb1b96b1f5",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.z-api.io/instances/3EAC63EE98C5F14530FE227360D3178E/token/198DF2D98C4EB52EFD1319EA/send-text",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"phone\": \"{{ $('Webhook').first().json.body.telefone }}\",\n  \"message\": \"A sua carta será agora revelada... 🔮✨\"\n}",
+        "options": {}
+      },
+      "id": "6bd915e5-0085-4384-9451-72b23b740cdc",
+      "name": "(Z-API) Enviar Mensagem",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -608,
+        -32
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "8jRtMgiJTpVow7wP",
+          "name": "Z-API Credential"
+        }
+      },
+      "disabled": true,
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -864,
+        192
+      ],
+      "id": "56e25160-4bf4-4e48-9253-52e218626ecd",
+      "name": "Wait1",
+      "webhookId": "c8998369-9279-45f4-986b-1355c7b54b53"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.z-api.io/instances/3EAC63EE98C5F14530FE227360D3178E/token/198DF2D98C4EB52EFD1319EA/send-image",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"phone\": \"{{ $('Webhook').first().json.body.telefone }}\",\n  \"image\": \"{{ $('Buscar Carta Similar').first().json.url_imagem }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        368,
+        -32
+      ],
+      "id": "0c271c7e-e584-4bbd-8d84-d4dff77704c5",
+      "name": "Enviar Card",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "8jRtMgiJTpVow7wP",
+          "name": "Z-API Credential"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.z-api.io/instances/3EAC63EE98C5F14530FE227360D3178E/token/198DF2D98C4EB52EFD1319EA/send-gif",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"phone\": \"{{ $('Webhook').item.json.body.telefone }}\",\n  \"gif\": \"https://wdufashnimdopnkjgeyp.supabase.co/storage/v1/object/public/Cartas/esperando.mp4\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -416,
+        -32
+      ],
+      "id": "b9594572-b7ce-4214-a163-b863279c9dd6",
+      "name": "esperando",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "8jRtMgiJTpVow7wP",
+          "name": "Z-API Credential"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -208,
+        -32
+      ],
+      "id": "6e768978-a00b-42ab-9a46-8e3898ec5395",
+      "name": "Wait",
+      "webhookId": "db55a17b-33a6-4e3a-ae2e-5d636d1b6d66"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "conversas",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "telefone",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook').first().json.body.telefone }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "fase_atual",
+              "fieldValue": "carta_enviada"
+            },
+            {
+              "fieldId": "updated_at",
+              "fieldValue": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        192
+      ],
+      "id": "e9dfdf2e-5113-472c-9be4-dabb259c13dd",
+      "name": "Atualizar Fase - Carta Enviada",
+      "credentials": {
+        "supabaseApi": {
+          "id": "C87gCgyLKdnG6PSu",
+          "name": "baralho_prosperidade"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "conversas",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "telefone",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook').first().json.body.telefone }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -416,
+        192
+      ],
+      "id": "77e1f374-53c5-4ab2-a172-aa6748359208",
+      "name": "Buscar Conversa Completa",
+      "credentials": {
+        "supabaseApi": {
+          "id": "C87gCgyLKdnG6PSu",
+          "name": "baralho_prosperidade"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "id": {
+          "__rl": true,
+          "value": "={{ $json.trello_card_id }}",
+          "mode": "id"
+        },
+        "updateFields": {
+          "desc": "={{ $json.nome }}\nCPF: {{ $json.cpf || 'Não informado' }}\nTelefone: {{ $json.telefone }}\n\n✨ CARTA REVELADA: {{ $('Buscar Carta Similar').item.json.nome }}\n\n📝 RESUMO DA CONVERSA:\n{{ $('Webhook').item.json.body.tema }}\n\n📊 STATUS:\nStatus: {{ $json.status }}\nFase: carta_enviada\n\n🗓️ Carta enviada em: {{ $now.toFormat('dd/MM/yyyy HH:mm') }}\n💬 Aguardando interesse no baralho completo"
+        }
+      },
+      "type": "n8n-nodes-base.trello",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        192
+      ],
+      "id": "db32c839-6802-4fb6-b6ef-d57f6b8495f4",
+      "name": "Trello - Carta Enviada",
+      "credentials": {
+        "trelloApi": {
+          "id": "Rw0karD0UnTWxue6",
+          "name": "Trello account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"text-embedding-3-small\",\n  \"input\": \"{{ $('Webhook').item.json.body.tema }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -32,
+        -32
+      ],
+      "id": "ba8f0f01-27ac-4d8f-8113-0a2814ec698a",
+      "name": "Gerar Embedding do Tema",
+      "credentials": {
+        "openAiApi": {
+          "id": "47a3ptzhP4wlIUiz",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://wdufashnimdopnkjgeyp.supabase.co/rest/v1/rpc/buscar_carta_similar",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey ",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndkdWZhc2huaW1kb3Bua2pnZXlwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDAyNzc1MywiZXhwIjoyMDc5NjAzNzUzfQ.2rM2aY2BFirtGm4nSuVeM4PhA9-5tZmNtyYzihcaE8Y"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query_embedding\": {{ JSON.stringify($json.data[0].embedding) }},\n  \"limite\": 1\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        160,
+        -32
+      ],
+      "id": "961ee926-81ad-492d-9784-927411cca6a2",
+      "name": "Buscar Carta Similar",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "XTOdI8I2PRn1zMzR",
+          "name": "Supabase Prosperidade"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "(Z-API) Enviar Mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "(Z-API) Enviar Mensagem": {
+      "main": [
+        [
+          {
+            "node": "esperando",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Atualizar Fase - Carta Enviada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar Card": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "esperando": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Gerar Embedding do Tema",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Fase - Carta Enviada": {
+      "main": [
+        [
+          {
+            "node": "Buscar Conversa Completa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Conversa Completa": {
+      "main": [
+        [
+          {
+            "node": "Trello - Carta Enviada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trello - Carta Enviada": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar Embedding do Tema": {
+      "main": [
+        [
+          {
+            "node": "Buscar Carta Similar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Carta Similar": {
+      "main": [
+        [
+          {
+            "node": "Enviar Card",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "body": {
+            "tema": "medo de arriscar, insegurança financeira",
+            "telefone": "5511991872614"
+          },
+          "headers": {
+            "content-type": "application/json"
+          },
+          "query": {}
+        }
+      }
+    ]
+  },
+  "versionId": "f638dcf8-05d9-4004-ad93-933881ba1e8d",
+  "activeVersionId": "f638dcf8-05d9-4004-ad93-933881ba1e8d",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-12-19T12:47:24.484Z",
+      "createdAt": "2025-12-19T12:47:24.484Z",
+      "role": "workflow:owner",
+      "workflowId": "xvOeHCSFCvncRqdu",
+      "projectId": "SoH44tJE4dqRVTiw"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-02-14T00:41:03.000Z",
+    "createdAt": "2026-02-14T00:40:47.530Z",
+    "versionId": "f638dcf8-05d9-4004-ad93-933881ba1e8d",
+    "workflowId": "xvOeHCSFCvncRqdu",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "selecionar-carta",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -864,
+          -32
+        ],
+        "id": "af51fbe3-5aba-49ce-8b49-42ecb945a004",
+        "name": "Webhook",
+        "webhookId": "68b8c4b3-4242-425f-bf47-81e7f274455b"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ $('Buscar Carta Similar').item.json }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.4,
+        "position": [
+          0,
+          192
+        ],
+        "id": "c8676ef9-ce33-4a32-9a5b-36cb1b96b1f5",
+        "name": "Respond to Webhook"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.z-api.io/instances/3EAC63EE98C5F14530FE227360D3178E/token/198DF2D98C4EB52EFD1319EA/send-text",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"phone\": \"{{ $('Webhook').first().json.body.telefone }}\",\n  \"message\": \"A sua carta será agora revelada... 🔮✨\"\n}",
+          "options": {}
+        },
+        "id": "6bd915e5-0085-4384-9451-72b23b740cdc",
+        "name": "(Z-API) Enviar Mensagem",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -608,
+          -32
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "8jRtMgiJTpVow7wP",
+            "name": "Z-API Credential"
+          }
+        },
+        "disabled": true,
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "amount": 10
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -864,
+          192
+        ],
+        "id": "56e25160-4bf4-4e48-9253-52e218626ecd",
+        "name": "Wait1",
+        "webhookId": "c8998369-9279-45f4-986b-1355c7b54b53"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.z-api.io/instances/3EAC63EE98C5F14530FE227360D3178E/token/198DF2D98C4EB52EFD1319EA/send-image",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"phone\": \"{{ $('Webhook').first().json.body.telefone }}\",\n  \"image\": \"{{ $('Buscar Carta Similar').first().json.url_imagem }}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          368,
+          -32
+        ],
+        "id": "0c271c7e-e584-4bbd-8d84-d4dff77704c5",
+        "name": "Enviar Card",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "8jRtMgiJTpVow7wP",
+            "name": "Z-API Credential"
+          }
+        },
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.z-api.io/instances/3EAC63EE98C5F14530FE227360D3178E/token/198DF2D98C4EB52EFD1319EA/send-gif",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"phone\": \"{{ $('Webhook').item.json.body.telefone }}\",\n  \"gif\": \"https://wdufashnimdopnkjgeyp.supabase.co/storage/v1/object/public/Cartas/esperando.mp4\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -416,
+          -32
+        ],
+        "id": "b9594572-b7ce-4214-a163-b863279c9dd6",
+        "name": "esperando",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "8jRtMgiJTpVow7wP",
+            "name": "Z-API Credential"
+          }
+        },
+        "disabled": true
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -208,
+          -32
+        ],
+        "id": "6e768978-a00b-42ab-9a46-8e3898ec5395",
+        "name": "Wait",
+        "webhookId": "db55a17b-33a6-4e3a-ae2e-5d636d1b6d66"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "conversas",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "telefone",
+                "condition": "eq",
+                "keyValue": "={{ $('Webhook').first().json.body.telefone }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "fase_atual",
+                "fieldValue": "carta_enviada"
+              },
+              {
+                "fieldId": "updated_at",
+                "fieldValue": "={{ $now }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -624,
+          192
+        ],
+        "id": "e9dfdf2e-5113-472c-9be4-dabb259c13dd",
+        "name": "Atualizar Fase - Carta Enviada",
+        "credentials": {
+          "supabaseApi": {
+            "id": "C87gCgyLKdnG6PSu",
+            "name": "baralho_prosperidade"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "conversas",
+          "limit": 1,
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "telefone",
+                "condition": "eq",
+                "keyValue": "={{ $('Webhook').first().json.body.telefone }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -416,
+          192
+        ],
+        "id": "77e1f374-53c5-4ab2-a172-aa6748359208",
+        "name": "Buscar Conversa Completa",
+        "credentials": {
+          "supabaseApi": {
+            "id": "C87gCgyLKdnG6PSu",
+            "name": "baralho_prosperidade"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "id": {
+            "__rl": true,
+            "value": "={{ $json.trello_card_id }}",
+            "mode": "id"
+          },
+          "updateFields": {
+            "desc": "={{ $json.nome }}\nCPF: {{ $json.cpf || 'Não informado' }}\nTelefone: {{ $json.telefone }}\n\n✨ CARTA REVELADA: {{ $('Buscar Carta Similar').item.json.nome }}\n\n📝 RESUMO DA CONVERSA:\n{{ $('Webhook').item.json.body.tema }}\n\n📊 STATUS:\nStatus: {{ $json.status }}\nFase: carta_enviada\n\n🗓️ Carta enviada em: {{ $now.toFormat('dd/MM/yyyy HH:mm') }}\n💬 Aguardando interesse no baralho completo"
+          }
+        },
+        "type": "n8n-nodes-base.trello",
+        "typeVersion": 1,
+        "position": [
+          -208,
+          192
+        ],
+        "id": "db32c839-6802-4fb6-b6ef-d57f6b8495f4",
+        "name": "Trello - Carta Enviada",
+        "credentials": {
+          "trelloApi": {
+            "id": "Rw0karD0UnTWxue6",
+            "name": "Trello account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.openai.com/v1/embeddings",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "openAiApi",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"model\": \"text-embedding-3-small\",\n  \"input\": \"{{ $('Webhook').item.json.body.tema }}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -32,
+          -32
+        ],
+        "id": "ba8f0f01-27ac-4d8f-8113-0a2814ec698a",
+        "name": "Gerar Embedding do Tema",
+        "credentials": {
+          "openAiApi": {
+            "id": "47a3ptzhP4wlIUiz",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://wdufashnimdopnkjgeyp.supabase.co/rest/v1/rpc/buscar_carta_similar",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey ",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndkdWZhc2huaW1kb3Bua2pnZXlwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDAyNzc1MywiZXhwIjoyMDc5NjAzNzUzfQ.2rM2aY2BFirtGm4nSuVeM4PhA9-5tZmNtyYzihcaE8Y"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"query_embedding\": {{ JSON.stringify($json.data[0].embedding) }},\n  \"limite\": 1\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          160,
+          -32
+        ],
+        "id": "961ee926-81ad-492d-9784-927411cca6a2",
+        "name": "Buscar Carta Similar",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "XTOdI8I2PRn1zMzR",
+            "name": "Supabase Prosperidade"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "(Z-API) Enviar Mensagem",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "(Z-API) Enviar Mensagem": {
+        "main": [
+          [
+            {
+              "node": "esperando",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait1": {
+        "main": [
+          [
+            {
+              "node": "Atualizar Fase - Carta Enviada",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Enviar Card": {
+        "main": [
+          [
+            {
+              "node": "Wait1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "esperando": {
+        "main": [
+          [
+            {
+              "node": "Wait",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait": {
+        "main": [
+          [
+            {
+              "node": "Gerar Embedding do Tema",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualizar Fase - Carta Enviada": {
+        "main": [
+          [
+            {
+              "node": "Buscar Conversa Completa",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Buscar Conversa Completa": {
+        "main": [
+          [
+            {
+              "node": "Trello - Carta Enviada",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Trello - Carta Enviada": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Gerar Embedding do Tema": {
+        "main": [
+          [
+            {
+              "node": "Buscar Carta Similar",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Buscar Carta Similar": {
+        "main": [
+          [
+            {
+              "node": "Enviar Card",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Newton Omune",
+    "name": "Version f638dcf8",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

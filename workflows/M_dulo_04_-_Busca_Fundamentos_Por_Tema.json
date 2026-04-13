@@ -1,0 +1,461 @@
+{
+  "updatedAt": "2026-02-14T16:15:21.109Z",
+  "createdAt": "2026-01-23T00:58:58.111Z",
+  "id": "kf67uccXmbp5ZImw",
+  "name": "Módulo 04 - Busca_Fundamentos_Por_Tema",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"input\": \"{{ $json.texto_busca }}\",\n  \"model\": \"text-embedding-3-small\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -192,
+        -48
+      ],
+      "id": "2b1fcb01-62f7-4b0c-a5d7-8b92f66482c6",
+      "name": "Gerar_Embedding",
+      "credentials": {
+        "openAiApi": {
+          "id": "47a3ptzhP4wlIUiz",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://fxoubwjzzfzjaywtsbtk.supabase.co/rest/v1/rpc/buscar_chunks_similares",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4b3Vid2p6emZ6amF5d3RzYnRrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODc1NzQ4MCwiZXhwIjoyMDg0MzMzNDgwfQ._dTx15XResZ5UzvT8E-0tKG-l45IGzXNoV6qEKNreHU"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4b3Vid2p6emZ6amF5d3RzYnRrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODc1NzQ4MCwiZXhwIjoyMDg0MzMzNDgwfQ._dTx15XResZ5UzvT8E-0tKG-l45IGzXNoV6qEKNreHU"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"tema_filtro\": \"{{ $('When Executed by Another Workflow').item.json.tema }}\",\n  \"embedding_consulta\": \"{{ JSON.stringify($json.data[0].embedding) }}\",\n  \"limite\": 3\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        16,
+        -48
+      ],
+      "id": "9c9ccb4a-82b8-4a1b-8fb5-3807d78aae54",
+      "name": "Buscar_Chunks_Similares"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b8633921-4864-4206-914a-b3b716bb460f",
+              "name": "resumo",
+              "value": "={{ $json.resumo }}",
+              "type": "string"
+            },
+            {
+              "id": "166668e3-5c76-4f7d-b7d2-2fdfaff1f870",
+              "name": "texto",
+              "value": "={{ $json.texto }}",
+              "type": "string"
+            },
+            {
+              "id": "2bbdffc3-1550-48d6-b866-e0cd8411b4a5",
+              "name": "processo_id",
+              "value": "={{ $json.numero_processo }}",
+              "type": "string"
+            },
+            {
+              "id": "c019a6b9-1958-4ad0-a840-ad1a624627ec",
+              "name": "tema",
+              "value": "={{ $json.tema }}",
+              "type": "string"
+            },
+            {
+              "id": "ae1e5d88-59c2-4c0d-af3c-e3cfe589a74a",
+              "name": "similaridade",
+              "value": "={{ Math.round($json.similaridade * 100) }}%",
+              "type": "string"
+            },
+            {
+              "id": "88fae747-9043-4ef5-9b92-b78319842629",
+              "name": "data_processo",
+              "value": "={{ $json.data_processo }}",
+              "type": "string"
+            },
+            {
+              "id": "2baa402b-f13a-45bf-ba7f-851d515648fe",
+              "name": "arquivo_id",
+              "value": "={{ $json.processo_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f65a569a-535b-4a87-8a3f-9f19f48cbde6",
+              "name": "arquivo_id",
+              "value": "={{ $json.arquivo_id }}",
+              "type": "string"
+            },
+            {
+              "id": "499048f6-d1e2-4953-9a2c-a7ba2ce6e41d",
+              "name": "",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "15008365-b487-4978-99ae-73163cf94c48",
+              "name": "texto_busca",
+              "value": "={{ $('When Executed by Another Workflow').item.json.texto_busca }}",
+              "type": "string"
+            },
+            {
+              "id": "f55d8b3b-36aa-49d8-a30f-c5a48b4bcf15",
+              "name": "contexto",
+              "value": "={{ $json.contexto }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        -48
+      ],
+      "id": "e8bd9c8f-264d-4dce-ab9f-8bbb6bdbfa86",
+      "name": "Formatar_Resposta"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "tema"
+            },
+            {
+              "name": "texto_busca"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -448,
+        -48
+      ],
+      "id": "04b37c3e-18e6-4dc8-85af-b082edaf9009",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "connections": {
+    "Gerar_Embedding": {
+      "main": [
+        [
+          {
+            "node": "Buscar_Chunks_Similares",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar_Chunks_Similares": {
+      "main": [
+        [
+          {
+            "node": "Formatar_Resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Gerar_Embedding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "78b754a6-1934-4a43-a812-301ec2972030",
+  "activeVersionId": "78b754a6-1934-4a43-a812-301ec2972030",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-23T00:58:58.122Z",
+      "createdAt": "2026-01-23T00:58:58.122Z",
+      "role": "workflow:owner",
+      "workflowId": "kf67uccXmbp5ZImw",
+      "projectId": "SoH44tJE4dqRVTiw"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-02-14T16:20:18.000Z",
+    "createdAt": "2026-02-14T16:15:21.110Z",
+    "versionId": "78b754a6-1934-4a43-a812-301ec2972030",
+    "workflowId": "kf67uccXmbp5ZImw",
+    "nodes": [
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.openai.com/v1/embeddings",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "openAiApi",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"input\": \"{{ $json.texto_busca }}\",\n  \"model\": \"text-embedding-3-small\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -192,
+          -48
+        ],
+        "id": "2b1fcb01-62f7-4b0c-a5d7-8b92f66482c6",
+        "name": "Gerar_Embedding",
+        "credentials": {
+          "openAiApi": {
+            "id": "47a3ptzhP4wlIUiz",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://fxoubwjzzfzjaywtsbtk.supabase.co/rest/v1/rpc/buscar_chunks_similares",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4b3Vid2p6emZ6amF5d3RzYnRrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODc1NzQ4MCwiZXhwIjoyMDg0MzMzNDgwfQ._dTx15XResZ5UzvT8E-0tKG-l45IGzXNoV6qEKNreHU"
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4b3Vid2p6emZ6amF5d3RzYnRrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODc1NzQ4MCwiZXhwIjoyMDg0MzMzNDgwfQ._dTx15XResZ5UzvT8E-0tKG-l45IGzXNoV6qEKNreHU"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"tema_filtro\": \"{{ $('When Executed by Another Workflow').item.json.tema }}\",\n  \"embedding_consulta\": \"{{ JSON.stringify($json.data[0].embedding) }}\",\n  \"limite\": 3\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          16,
+          -48
+        ],
+        "id": "9c9ccb4a-82b8-4a1b-8fb5-3807d78aae54",
+        "name": "Buscar_Chunks_Similares"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "b8633921-4864-4206-914a-b3b716bb460f",
+                "name": "resumo",
+                "value": "={{ $json.resumo }}",
+                "type": "string"
+              },
+              {
+                "id": "166668e3-5c76-4f7d-b7d2-2fdfaff1f870",
+                "name": "texto",
+                "value": "={{ $json.texto }}",
+                "type": "string"
+              },
+              {
+                "id": "2bbdffc3-1550-48d6-b866-e0cd8411b4a5",
+                "name": "processo_id",
+                "value": "={{ $json.numero_processo }}",
+                "type": "string"
+              },
+              {
+                "id": "c019a6b9-1958-4ad0-a840-ad1a624627ec",
+                "name": "tema",
+                "value": "={{ $json.tema }}",
+                "type": "string"
+              },
+              {
+                "id": "ae1e5d88-59c2-4c0d-af3c-e3cfe589a74a",
+                "name": "similaridade",
+                "value": "={{ Math.round($json.similaridade * 100) }}%",
+                "type": "string"
+              },
+              {
+                "id": "88fae747-9043-4ef5-9b92-b78319842629",
+                "name": "data_processo",
+                "value": "={{ $json.data_processo }}",
+                "type": "string"
+              },
+              {
+                "id": "2baa402b-f13a-45bf-ba7f-851d515648fe",
+                "name": "arquivo_id",
+                "value": "={{ $json.processo_id }}",
+                "type": "string"
+              },
+              {
+                "id": "f65a569a-535b-4a87-8a3f-9f19f48cbde6",
+                "name": "arquivo_id",
+                "value": "={{ $json.arquivo_id }}",
+                "type": "string"
+              },
+              {
+                "id": "499048f6-d1e2-4953-9a2c-a7ba2ce6e41d",
+                "name": "",
+                "value": "",
+                "type": "string"
+              },
+              {
+                "id": "15008365-b487-4978-99ae-73163cf94c48",
+                "name": "texto_busca",
+                "value": "={{ $('When Executed by Another Workflow').item.json.texto_busca }}",
+                "type": "string"
+              },
+              {
+                "id": "f55d8b3b-36aa-49d8-a30f-c5a48b4bcf15",
+                "name": "contexto",
+                "value": "={{ $json.contexto }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          224,
+          -48
+        ],
+        "id": "e8bd9c8f-264d-4dce-ab9f-8bbb6bdbfa86",
+        "name": "Formatar_Resposta"
+      },
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "tema"
+              },
+              {
+                "name": "texto_busca"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          -448,
+          -48
+        ],
+        "id": "04b37c3e-18e6-4dc8-85af-b082edaf9009",
+        "name": "When Executed by Another Workflow"
+      }
+    ],
+    "connections": {
+      "Gerar_Embedding": {
+        "main": [
+          [
+            {
+              "node": "Buscar_Chunks_Similares",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Buscar_Chunks_Similares": {
+        "main": [
+          [
+            {
+              "node": "Formatar_Resposta",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "Gerar_Embedding",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Newton Omune",
+    "name": "Version 78b754a6",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

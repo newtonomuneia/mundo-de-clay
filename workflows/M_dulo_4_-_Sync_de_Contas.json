@@ -1,0 +1,1485 @@
+{
+  "updatedAt": "2026-01-27T18:33:26.000Z",
+  "createdAt": "2026-01-07T13:34:24.551Z",
+  "id": "x6c8B6M9G4TWd1bL",
+  "name": "Módulo 4 - Sync de Contas",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sync-contas",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -784,
+        -64
+      ],
+      "id": "30f08fe1-05bd-4648-ba30-bb1bf73aee39",
+      "name": "Webhook_Sync_Contas",
+      "webhookId": "9c6afc4d-ff80-4582-96f6-ea8941fb42c2",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "contas_a_pagar",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        16,
+        -64
+      ],
+      "id": "92572823-4e14-42bf-a029-276ef42f2fb0",
+      "name": "Buscar_Todas_Contas",
+      "credentials": {
+        "supabaseApi": {
+          "id": "OP3IGsLO3LJ2h9JA",
+          "name": "Supabase Accounting Payables"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "fornecedores",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        224,
+        -64
+      ],
+      "id": "da61ca87-b123-4b42-9dbd-91021092e974",
+      "name": "Buscar_Fornecedores",
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "OP3IGsLO3LJ2h9JA",
+          "name": "Supabase Accounting Payables"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const contas = $('Buscar_Todas_Contas').all();\nconst fornecedoresAgregados = $('Consolidar_Fornecedores').first().json.fornecedores;\n\n// Criar mapa de fornecedores por ID\nconst fornecedorMap = {};\nfor (const f of fornecedoresAgregados) {\n  fornecedorMap[f.id] = f;\n}\n\n// Formatar dados para planilha\nconst resultado = contas.map(conta => {\n  const c = conta.json;\n  const fornecedor = c.fornecedor_id ? fornecedorMap[c.fornecedor_id] : null;\n  \n  // Determinar nome do fornecedor/beneficiário\n  // Prioridade: fornecedor cadastrado > nome_cedente_original > fallbacks\n  let nomeFornecedor = '';\n  if (fornecedor && fornecedor.nome) {\n    nomeFornecedor = fornecedor.nome;\n  } else if (c.nome_cedente_original) {\n    nomeFornecedor = c.nome_cedente_original;\n  } else if (c.tipo_pagamento === 'boleto') {\n    nomeFornecedor = c.nome_beneficiario_boleto || '';\n  } else if (c.tipo_pagamento === 'concessionaria') {\n    nomeFornecedor = c.descricao || 'Concessionária';\n  }\n  \n  return {\n    json: {\n      ID: c.id,\n      Fornecedor: nomeFornecedor,\n      Tipo: c.tipo_pagamento,\n      Valor: c.valor,\n      Vencimento: c.vencimento,\n      Status: c.status,\n      Descricao: c.descricao || '',\n      Codigo_Barras: c.codigo_barras || ''\n    }\n  };\n});\n\nreturn resultado;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        864,
+        -64
+      ],
+      "id": "46185c43-258d-4321-a80b-a2164a202ccf",
+      "name": "Formatar_Dados_Planilha"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M",
+          "mode": "list",
+          "cachedResultName": "Contas a Pagar - Automação",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1827225322,
+          "mode": "list",
+          "cachedResultName": "Contas a Pagar",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit#gid=1827225322"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        624,
+        -64
+      ],
+      "id": "58b874eb-bcf0-479b-a6a4-941ed72cbfc1",
+      "name": "Buscar_Planilha_Atual",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RruWc6BrI8tF2hiO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const contasSupabase = $('Formatar_Dados_Planilha').all();\nconst planilhaAtual = $('Buscar_Planilha_Atual').all();\n\n// Criar mapa da planilha atual por ID (tratando planilha vazia)\nconst planilhaMap = {};\nconst idsNaPlanilha = new Set();\n\nif (planilhaAtual && planilhaAtual.length > 0) {\n  for (const row of planilhaAtual) {\n    if (row.json.ID) {\n      // Se ID já existe no map, é duplicado na planilha - manter apenas o primeiro\n      if (!planilhaMap[row.json.ID]) {\n        planilhaMap[row.json.ID] = {\n          ...row.json,\n          row_number: row.json.row_number\n        };\n      }\n      idsNaPlanilha.add(row.json.ID);\n    }\n  }\n}\n\n// Criar set de IDs do Supabase para comparação rápida\nconst idsSupabase = new Set();\nfor (const conta of contasSupabase) {\n  if (conta.json.ID) {\n    idsSupabase.add(conta.json.ID);\n  }\n}\n\nconst novos = [];\nconst atualizar = [];\nconst deletar = [];\nconst idsJaProcessados = new Set();\n\n// Identificar novos e atualizações\nfor (const conta of contasSupabase) {\n  const c = conta.json;\n  \n  // Evitar processar mesmo ID duas vezes\n  if (idsJaProcessados.has(c.ID)) continue;\n  idsJaProcessados.add(c.ID);\n  \n  const existente = planilhaMap[c.ID];\n  \n  if (!existente) {\n    // Registro novo - adicionar com campo Pagar vazio\n    novos.push({\n      json: {\n        ID: c.ID,\n        Fornecedor: c.Fornecedor,\n        Tipo: c.Tipo,\n        Valor: c.Valor,\n        Vencimento: c.Vencimento,\n        Status: c.Status,\n        Pagar: '',\n        Descricao: c.Descricao,\n        Codigo_Barras: c.Codigo_Barras || ''\n      }\n    });\n  } else {\n    // Verificar se precisa atualizar (comparar campos do Supabase)\n    const mudou = (\n      existente.Fornecedor !== c.Fornecedor ||\n      existente.Tipo !== c.Tipo ||\n      String(existente.Valor) !== String(c.Valor) ||\n      existente.Vencimento !== c.Vencimento ||\n      existente.Status !== c.Status ||\n      existente.Descricao !== c.Descricao ||\n      existente.Codigo_Barras !== c.Codigo_Barras\n    );\n    \n    if (mudou) {\n      atualizar.push({\n        json: {\n          ID: c.ID,\n          Fornecedor: c.Fornecedor,\n          Tipo: c.Tipo,\n          Valor: c.Valor,\n          Vencimento: c.Vencimento,\n          Status: c.Status,\n          Pagar: existente.Pagar || '',\n          Descricao: c.Descricao,\n          Codigo_Barras: c.Codigo_Barras || ''\n        }\n      });\n    }\n  }\n}\n\n// Identificar registros a deletar (estão na planilha mas não no Supabase)\nconst idsParaDeletar = new Set();\nfor (const id of Object.keys(planilhaMap)) {\n  if (!idsSupabase.has(id)) {\n    idsParaDeletar.add(id);\n    deletar.push({\n      json: {\n        ID: id,\n        row_number: planilhaMap[id].row_number\n      }\n    });\n  }\n}\n\n// Ordenar deletar por row_number decrescente\ndeletar.sort((a, b) => b.json.row_number - a.json.row_number);\n\nreturn [\n  {\n    json: {\n      novos: novos.map(n => n.json),\n      atualizar: atualizar.map(a => a.json),\n      deletar: deletar.map(d => d.json),\n      qtd_novos: novos.length,\n      qtd_atualizar: atualizar.length,\n      qtd_deletar: deletar.length\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        144
+      ],
+      "id": "b5d57dd8-0d49-4cf1-98b9-466405b7739d",
+      "name": "Comparar_Dados"
+    },
+    {
+      "parameters": {
+        "jsCode": "const dados = $('Comparar_Dados').first().json;\n\nif (dados.novos.length === 0) {\n  return [];\n}\n\nreturn dados.novos.map(item => ({ json: item }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        144
+      ],
+      "id": "5a2aeb8c-49c6-42a1-8f34-faff776fc3ae",
+      "name": "Extrair_Novos"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M",
+          "mode": "list",
+          "cachedResultName": "Contas a Pagar - Automação",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1827225322,
+          "mode": "list",
+          "cachedResultName": "Contas a Pagar",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit#gid=1827225322"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $json.ID }}",
+            "Fornecedor": "={{ $json.Fornecedor }}",
+            "Tipo": "={{ $json.Tipo }}",
+            "Valor": "={{ $json.Valor }}",
+            "Vencimento": "={{ $json.Vencimento }}",
+            "Status": "={{ $json.Status }}",
+            "Pagar": "={{ $json.Pagar }}",
+            "Descrição": "={{ $json.Descricao }}",
+            "codigo_barras": "={{ $json.Codigo_Barras }}",
+            "status_sync": "sincronizado",
+            "ultima_sync": "={{ $now.setZone('America/Sao_Paulo').toFormat('yyyy-MM-dd HH:mm:ss') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Fornecedor",
+              "displayName": "Fornecedor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tipo",
+              "displayName": "Tipo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Valor",
+              "displayName": "Valor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Vencimento",
+              "displayName": "Vencimento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Pagar",
+              "displayName": "Pagar",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Descrição",
+              "displayName": "Descrição",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "codigo_barras",
+              "displayName": "codigo_barras",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status_sync",
+              "displayName": "status_sync",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ultima_sync",
+              "displayName": "ultima_sync",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        544,
+        144
+      ],
+      "id": "ba2076e0-c4ca-4734-a585-005ae0100bdc",
+      "name": "Inserir_Novos_Planilha",
+      "alwaysOutputData": true,
+      "executeOnce": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RruWc6BrI8tF2hiO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const dados = $('Comparar_Dados').first().json;\n\nif (dados.atualizar.length === 0) {\n  return [];\n}\n\nreturn dados.atualizar.map(item => ({ json: item }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        320
+      ],
+      "id": "e6dfa228-8b63-48c5-a2f8-1cd5b697778f",
+      "name": "Extrair_Atualizar"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M",
+          "mode": "list",
+          "cachedResultName": "Contas a Pagar - Automação",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1827225322,
+          "mode": "list",
+          "cachedResultName": "Contas a Pagar",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit#gid=1827225322"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $json.ID }}",
+            "Fornecedor": "={{ $json.Fornecedor }}",
+            "Tipo": "={{ $json.Tipo }}",
+            "Valor": "={{ $json.Valor }}",
+            "Vencimento": "={{ $json.Vencimento }}",
+            "Status": "={{ $json.Status }}",
+            "Pagar": "={{ $json.Pagar }}",
+            "Descrição": "={{ $json.Descricao }}",
+            "codigo_barras": "={{ $json.Codigo_Barras }}",
+            "status_sync": " sincronizado",
+            "ultima_sync": "={{ $now.setZone('America/Sao_Paulo').toFormat('yyyy-MM-dd HH:mm:ss') }}"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Fornecedor",
+              "displayName": "Fornecedor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tipo",
+              "displayName": "Tipo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Valor",
+              "displayName": "Valor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Vencimento",
+              "displayName": "Vencimento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Pagar",
+              "displayName": "Pagar",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Descrição",
+              "displayName": "Descrição",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "codigo_barras",
+              "displayName": "codigo_barras",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status_sync",
+              "displayName": "status_sync",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ultima_sync",
+              "displayName": "ultima_sync",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        544,
+        320
+      ],
+      "id": "8a0b27de-8473-474e-952e-993bd5333a06",
+      "name": "Atualizar_Planilha",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RruWc6BrI8tF2hiO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const dados = $input.first().json;\nconst deletar = dados.deletar || [];\n\nif (deletar.length === 0) {\n  return [];\n}\n\nreturn deletar.map(item => ({ json: item }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        496
+      ],
+      "id": "7d62baa0-f061-43b7-ac8b-20cc03957f52",
+      "name": "Extrair_Deletar"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M",
+          "mode": "list",
+          "cachedResultName": "Contas a Pagar - Automação",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1827225322,
+          "mode": "list",
+          "cachedResultName": "Contas a Pagar",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit#gid=1827225322"
+        },
+        "startIndex": "={{ $json.row_number }}"
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        544,
+        496
+      ],
+      "id": "dbba49f2-4336-49e5-8f9a-73be0d2c5a36",
+      "name": "Deletar_Linhas_Planilha",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RruWc6BrI8tF2hiO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "fornecedores",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        416,
+        -64
+      ],
+      "id": "32b13dad-d8ff-4657-8e61-464c76451bd5",
+      "name": "Consolidar_Fornecedores"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -576,
+        -64
+      ],
+      "id": "804dba65-38fe-4d08-9039-0e26c6f85c31",
+      "name": "Wait",
+      "webhookId": "ab2d6bea-7c62-4925-8ae8-c628962cb342"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pega o timestamp atual\nconst agora = Date.now();\n\n// Verifica se há uma variável global com o último processamento\nconst ultimoProcessamento = $execution.customData.get('ultimo_sync') || 0;\n\n// Se processou nos últimos 8 segundos, cancela\nif (agora - ultimoProcessamento < 8000) {\n  return []; // Retorna vazio para não continuar\n}\n\n// Salva o timestamp atual\n$execution.customData.set('ultimo_sync', agora);\n\n// Continua com o item\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        -64
+      ],
+      "id": "aab808ee-56b2-42fe-923e-c315c7c5b9d0",
+      "name": "Verificar_Execucao_Recente"
+    }
+  ],
+  "connections": {
+    "Webhook_Sync_Contas": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar_Todas_Contas": {
+      "main": [
+        [
+          {
+            "node": "Buscar_Fornecedores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar_Fornecedores": {
+      "main": [
+        [
+          {
+            "node": "Consolidar_Fornecedores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatar_Dados_Planilha": {
+      "main": [
+        [
+          {
+            "node": "Comparar_Dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar_Planilha_Atual": {
+      "main": [
+        [
+          {
+            "node": "Formatar_Dados_Planilha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Comparar_Dados": {
+      "main": [
+        [
+          {
+            "node": "Extrair_Novos",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extrair_Atualizar",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extrair_Deletar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrair_Novos": {
+      "main": [
+        [
+          {
+            "node": "Inserir_Novos_Planilha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserir_Novos_Planilha": {
+      "main": [
+        []
+      ]
+    },
+    "Extrair_Atualizar": {
+      "main": [
+        [
+          {
+            "node": "Atualizar_Planilha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrair_Deletar": {
+      "main": [
+        [
+          {
+            "node": "Deletar_Linhas_Planilha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidar_Fornecedores": {
+      "main": [
+        [
+          {
+            "node": "Buscar_Planilha_Atual",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar_Planilha": {
+      "main": [
+        []
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Verificar_Execucao_Recente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar_Execucao_Recente": {
+      "main": [
+        [
+          {
+            "node": "Buscar_Todas_Contas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "854d097e-f231-4631-81d8-65c9ba42f895",
+  "activeVersionId": "854d097e-f231-4631-81d8-65c9ba42f895",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-01-07T13:34:24.578Z",
+      "createdAt": "2026-01-07T13:34:24.578Z",
+      "role": "workflow:owner",
+      "workflowId": "x6c8B6M9G4TWd1bL",
+      "projectId": "SoH44tJE4dqRVTiw"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-01-31T19:17:10.384Z",
+    "createdAt": "2026-01-31T19:17:10.384Z",
+    "versionId": "854d097e-f231-4631-81d8-65c9ba42f895",
+    "workflowId": "x6c8B6M9G4TWd1bL",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "sync-contas",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -784,
+          -64
+        ],
+        "id": "30f08fe1-05bd-4648-ba30-bb1bf73aee39",
+        "name": "Webhook_Sync_Contas",
+        "webhookId": "9c6afc4d-ff80-4582-96f6-ea8941fb42c2",
+        "executeOnce": true
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "contas_a_pagar",
+          "returnAll": true
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          16,
+          -64
+        ],
+        "id": "92572823-4e14-42bf-a029-276ef42f2fb0",
+        "name": "Buscar_Todas_Contas",
+        "credentials": {
+          "supabaseApi": {
+            "id": "OP3IGsLO3LJ2h9JA",
+            "name": "Supabase Accounting Payables"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "fornecedores",
+          "returnAll": true
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          224,
+          -64
+        ],
+        "id": "da61ca87-b123-4b42-9dbd-91021092e974",
+        "name": "Buscar_Fornecedores",
+        "executeOnce": true,
+        "credentials": {
+          "supabaseApi": {
+            "id": "OP3IGsLO3LJ2h9JA",
+            "name": "Supabase Accounting Payables"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const contas = $('Buscar_Todas_Contas').all();\nconst fornecedoresAgregados = $('Consolidar_Fornecedores').first().json.fornecedores;\n\n// Criar mapa de fornecedores por ID\nconst fornecedorMap = {};\nfor (const f of fornecedoresAgregados) {\n  fornecedorMap[f.id] = f;\n}\n\n// Formatar dados para planilha\nconst resultado = contas.map(conta => {\n  const c = conta.json;\n  const fornecedor = c.fornecedor_id ? fornecedorMap[c.fornecedor_id] : null;\n  \n  // Determinar nome do fornecedor/beneficiário\n  // Prioridade: fornecedor cadastrado > nome_cedente_original > fallbacks\n  let nomeFornecedor = '';\n  if (fornecedor && fornecedor.nome) {\n    nomeFornecedor = fornecedor.nome;\n  } else if (c.nome_cedente_original) {\n    nomeFornecedor = c.nome_cedente_original;\n  } else if (c.tipo_pagamento === 'boleto') {\n    nomeFornecedor = c.nome_beneficiario_boleto || '';\n  } else if (c.tipo_pagamento === 'concessionaria') {\n    nomeFornecedor = c.descricao || 'Concessionária';\n  }\n  \n  return {\n    json: {\n      ID: c.id,\n      Fornecedor: nomeFornecedor,\n      Tipo: c.tipo_pagamento,\n      Valor: c.valor,\n      Vencimento: c.vencimento,\n      Status: c.status,\n      Descricao: c.descricao || '',\n      Codigo_Barras: c.codigo_barras || ''\n    }\n  };\n});\n\nreturn resultado;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          864,
+          -64
+        ],
+        "id": "46185c43-258d-4321-a80b-a2164a202ccf",
+        "name": "Formatar_Dados_Planilha"
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M",
+            "mode": "list",
+            "cachedResultName": "Contas a Pagar - Automação",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 1827225322,
+            "mode": "list",
+            "cachedResultName": "Contas a Pagar",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit#gid=1827225322"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          624,
+          -64
+        ],
+        "id": "58b874eb-bcf0-479b-a6a4-941ed72cbfc1",
+        "name": "Buscar_Planilha_Atual",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "RruWc6BrI8tF2hiO",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const contasSupabase = $('Formatar_Dados_Planilha').all();\nconst planilhaAtual = $('Buscar_Planilha_Atual').all();\n\n// Criar mapa da planilha atual por ID (tratando planilha vazia)\nconst planilhaMap = {};\nconst idsNaPlanilha = new Set();\n\nif (planilhaAtual && planilhaAtual.length > 0) {\n  for (const row of planilhaAtual) {\n    if (row.json.ID) {\n      // Se ID já existe no map, é duplicado na planilha - manter apenas o primeiro\n      if (!planilhaMap[row.json.ID]) {\n        planilhaMap[row.json.ID] = {\n          ...row.json,\n          row_number: row.json.row_number\n        };\n      }\n      idsNaPlanilha.add(row.json.ID);\n    }\n  }\n}\n\n// Criar set de IDs do Supabase para comparação rápida\nconst idsSupabase = new Set();\nfor (const conta of contasSupabase) {\n  if (conta.json.ID) {\n    idsSupabase.add(conta.json.ID);\n  }\n}\n\nconst novos = [];\nconst atualizar = [];\nconst deletar = [];\nconst idsJaProcessados = new Set();\n\n// Identificar novos e atualizações\nfor (const conta of contasSupabase) {\n  const c = conta.json;\n  \n  // Evitar processar mesmo ID duas vezes\n  if (idsJaProcessados.has(c.ID)) continue;\n  idsJaProcessados.add(c.ID);\n  \n  const existente = planilhaMap[c.ID];\n  \n  if (!existente) {\n    // Registro novo - adicionar com campo Pagar vazio\n    novos.push({\n      json: {\n        ID: c.ID,\n        Fornecedor: c.Fornecedor,\n        Tipo: c.Tipo,\n        Valor: c.Valor,\n        Vencimento: c.Vencimento,\n        Status: c.Status,\n        Pagar: '',\n        Descricao: c.Descricao,\n        Codigo_Barras: c.Codigo_Barras || ''\n      }\n    });\n  } else {\n    // Verificar se precisa atualizar (comparar campos do Supabase)\n    const mudou = (\n      existente.Fornecedor !== c.Fornecedor ||\n      existente.Tipo !== c.Tipo ||\n      String(existente.Valor) !== String(c.Valor) ||\n      existente.Vencimento !== c.Vencimento ||\n      existente.Status !== c.Status ||\n      existente.Descricao !== c.Descricao ||\n      existente.Codigo_Barras !== c.Codigo_Barras\n    );\n    \n    if (mudou) {\n      atualizar.push({\n        json: {\n          ID: c.ID,\n          Fornecedor: c.Fornecedor,\n          Tipo: c.Tipo,\n          Valor: c.Valor,\n          Vencimento: c.Vencimento,\n          Status: c.Status,\n          Pagar: existente.Pagar || '',\n          Descricao: c.Descricao,\n          Codigo_Barras: c.Codigo_Barras || ''\n        }\n      });\n    }\n  }\n}\n\n// Identificar registros a deletar (estão na planilha mas não no Supabase)\nconst idsParaDeletar = new Set();\nfor (const id of Object.keys(planilhaMap)) {\n  if (!idsSupabase.has(id)) {\n    idsParaDeletar.add(id);\n    deletar.push({\n      json: {\n        ID: id,\n        row_number: planilhaMap[id].row_number\n      }\n    });\n  }\n}\n\n// Ordenar deletar por row_number decrescente\ndeletar.sort((a, b) => b.json.row_number - a.json.row_number);\n\nreturn [\n  {\n    json: {\n      novos: novos.map(n => n.json),\n      atualizar: atualizar.map(a => a.json),\n      deletar: deletar.map(d => d.json),\n      qtd_novos: novos.length,\n      qtd_atualizar: atualizar.length,\n      qtd_deletar: deletar.length\n    }\n  }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -128,
+          144
+        ],
+        "id": "b5d57dd8-0d49-4cf1-98b9-466405b7739d",
+        "name": "Comparar_Dados"
+      },
+      {
+        "parameters": {
+          "jsCode": "const dados = $('Comparar_Dados').first().json;\n\nif (dados.novos.length === 0) {\n  return [];\n}\n\nreturn dados.novos.map(item => ({ json: item }));"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          304,
+          144
+        ],
+        "id": "5a2aeb8c-49c6-42a1-8f34-faff776fc3ae",
+        "name": "Extrair_Novos"
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M",
+            "mode": "list",
+            "cachedResultName": "Contas a Pagar - Automação",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 1827225322,
+            "mode": "list",
+            "cachedResultName": "Contas a Pagar",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit#gid=1827225322"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "ID": "={{ $json.ID }}",
+              "Fornecedor": "={{ $json.Fornecedor }}",
+              "Tipo": "={{ $json.Tipo }}",
+              "Valor": "={{ $json.Valor }}",
+              "Vencimento": "={{ $json.Vencimento }}",
+              "Status": "={{ $json.Status }}",
+              "Pagar": "={{ $json.Pagar }}",
+              "Descrição": "={{ $json.Descricao }}",
+              "codigo_barras": "={{ $json.Codigo_Barras }}",
+              "status_sync": "sincronizado",
+              "ultima_sync": "={{ $now.setZone('America/Sao_Paulo').toFormat('yyyy-MM-dd HH:mm:ss') }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "ID",
+                "displayName": "ID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Fornecedor",
+                "displayName": "Fornecedor",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Tipo",
+                "displayName": "Tipo",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Valor",
+                "displayName": "Valor",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Vencimento",
+                "displayName": "Vencimento",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Status",
+                "displayName": "Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Pagar",
+                "displayName": "Pagar",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Descrição",
+                "displayName": "Descrição",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "codigo_barras",
+                "displayName": "codigo_barras",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "status_sync",
+                "displayName": "status_sync",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "ultima_sync",
+                "displayName": "ultima_sync",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          544,
+          144
+        ],
+        "id": "ba2076e0-c4ca-4734-a585-005ae0100bdc",
+        "name": "Inserir_Novos_Planilha",
+        "alwaysOutputData": true,
+        "executeOnce": false,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "RruWc6BrI8tF2hiO",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const dados = $('Comparar_Dados').first().json;\n\nif (dados.atualizar.length === 0) {\n  return [];\n}\n\nreturn dados.atualizar.map(item => ({ json: item }));"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          304,
+          320
+        ],
+        "id": "e6dfa228-8b63-48c5-a2f8-1cd5b697778f",
+        "name": "Extrair_Atualizar"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentId": {
+            "__rl": true,
+            "value": "1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M",
+            "mode": "list",
+            "cachedResultName": "Contas a Pagar - Automação",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 1827225322,
+            "mode": "list",
+            "cachedResultName": "Contas a Pagar",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit#gid=1827225322"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "ID": "={{ $json.ID }}",
+              "Fornecedor": "={{ $json.Fornecedor }}",
+              "Tipo": "={{ $json.Tipo }}",
+              "Valor": "={{ $json.Valor }}",
+              "Vencimento": "={{ $json.Vencimento }}",
+              "Status": "={{ $json.Status }}",
+              "Pagar": "={{ $json.Pagar }}",
+              "Descrição": "={{ $json.Descricao }}",
+              "codigo_barras": "={{ $json.Codigo_Barras }}",
+              "status_sync": " sincronizado",
+              "ultima_sync": "={{ $now.setZone('America/Sao_Paulo').toFormat('yyyy-MM-dd HH:mm:ss') }}"
+            },
+            "matchingColumns": [
+              "ID"
+            ],
+            "schema": [
+              {
+                "id": "ID",
+                "displayName": "ID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Fornecedor",
+                "displayName": "Fornecedor",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Tipo",
+                "displayName": "Tipo",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Valor",
+                "displayName": "Valor",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Vencimento",
+                "displayName": "Vencimento",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Status",
+                "displayName": "Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Pagar",
+                "displayName": "Pagar",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Descrição",
+                "displayName": "Descrição",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "codigo_barras",
+                "displayName": "codigo_barras",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "status_sync",
+                "displayName": "status_sync",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "ultima_sync",
+                "displayName": "ultima_sync",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "row_number",
+                "displayName": "row_number",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "number",
+                "canBeUsedToMatch": true,
+                "readOnly": true,
+                "removed": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          544,
+          320
+        ],
+        "id": "8a0b27de-8473-474e-952e-993bd5333a06",
+        "name": "Atualizar_Planilha",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "RruWc6BrI8tF2hiO",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const dados = $input.first().json;\nconst deletar = dados.deletar || [];\n\nif (deletar.length === 0) {\n  return [];\n}\n\nreturn deletar.map(item => ({ json: item }));"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          304,
+          496
+        ],
+        "id": "7d62baa0-f061-43b7-ac8b-20cc03957f52",
+        "name": "Extrair_Deletar"
+      },
+      {
+        "parameters": {
+          "operation": "delete",
+          "documentId": {
+            "__rl": true,
+            "value": "1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M",
+            "mode": "list",
+            "cachedResultName": "Contas a Pagar - Automação",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 1827225322,
+            "mode": "list",
+            "cachedResultName": "Contas a Pagar",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit#gid=1827225322"
+          },
+          "startIndex": "={{ $json.row_number }}"
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          544,
+          496
+        ],
+        "id": "dbba49f2-4336-49e5-8f9a-73be0d2c5a36",
+        "name": "Deletar_Linhas_Planilha",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "RruWc6BrI8tF2hiO",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "aggregate": "aggregateAllItemData",
+          "destinationFieldName": "fornecedores",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.aggregate",
+        "typeVersion": 1,
+        "position": [
+          416,
+          -64
+        ],
+        "id": "32b13dad-d8ff-4657-8e61-464c76451bd5",
+        "name": "Consolidar_Fornecedores"
+      },
+      {
+        "parameters": {
+          "amount": 10
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -576,
+          -64
+        ],
+        "id": "804dba65-38fe-4d08-9039-0e26c6f85c31",
+        "name": "Wait",
+        "webhookId": "ab2d6bea-7c62-4925-8ae8-c628962cb342"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Pega o timestamp atual\nconst agora = Date.now();\n\n// Verifica se há uma variável global com o último processamento\nconst ultimoProcessamento = $execution.customData.get('ultimo_sync') || 0;\n\n// Se processou nos últimos 8 segundos, cancela\nif (agora - ultimoProcessamento < 8000) {\n  return []; // Retorna vazio para não continuar\n}\n\n// Salva o timestamp atual\n$execution.customData.set('ultimo_sync', agora);\n\n// Continua com o item\nreturn $input.all();"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -368,
+          -64
+        ],
+        "id": "aab808ee-56b2-42fe-923e-c315c7c5b9d0",
+        "name": "Verificar_Execucao_Recente"
+      }
+    ],
+    "connections": {
+      "Webhook_Sync_Contas": {
+        "main": [
+          [
+            {
+              "node": "Wait",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Buscar_Todas_Contas": {
+        "main": [
+          [
+            {
+              "node": "Buscar_Fornecedores",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Buscar_Fornecedores": {
+        "main": [
+          [
+            {
+              "node": "Consolidar_Fornecedores",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Formatar_Dados_Planilha": {
+        "main": [
+          [
+            {
+              "node": "Comparar_Dados",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Buscar_Planilha_Atual": {
+        "main": [
+          [
+            {
+              "node": "Formatar_Dados_Planilha",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Comparar_Dados": {
+        "main": [
+          [
+            {
+              "node": "Extrair_Novos",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Extrair_Atualizar",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Extrair_Deletar",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extrair_Novos": {
+        "main": [
+          [
+            {
+              "node": "Inserir_Novos_Planilha",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Inserir_Novos_Planilha": {
+        "main": [
+          []
+        ]
+      },
+      "Extrair_Atualizar": {
+        "main": [
+          [
+            {
+              "node": "Atualizar_Planilha",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extrair_Deletar": {
+        "main": [
+          [
+            {
+              "node": "Deletar_Linhas_Planilha",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Consolidar_Fornecedores": {
+        "main": [
+          [
+            {
+              "node": "Buscar_Planilha_Atual",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualizar_Planilha": {
+        "main": [
+          []
+        ]
+      },
+      "Wait": {
+        "main": [
+          [
+            {
+              "node": "Verificar_Execucao_Recente",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Verificar_Execucao_Recente": {
+        "main": [
+          [
+            {
+              "node": "Buscar_Todas_Contas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "system migration",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

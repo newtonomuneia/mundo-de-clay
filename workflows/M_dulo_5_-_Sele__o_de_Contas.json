@@ -1,0 +1,229 @@
+{
+  "updatedAt": "2026-01-07T16:05:10.000Z",
+  "createdAt": "2026-01-07T14:33:02.964Z",
+  "id": "k1Hkvqd64aELXy5c",
+  "name": "Módulo 5 - Seleção de Contas",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "selecao-contas",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -512,
+        -32
+      ],
+      "id": "fb65a049-e348-4753-98fb-d65e4d0da331",
+      "name": "Webhook_Selecao_Contas",
+      "webhookId": "80f1ea00-1488-4ae2-84dd-1296b3270230"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $('Webhook_Selecao_Contas').first().json.body;\n\n// Formato antigo (ids) ou novo (selecionar/desmarcar)\nlet ids = [];\n\nif (body.ids && body.ids.length > 0) {\n  // Formato antigo - assume que é para selecionar\n  ids = body.ids;\n} else if (body.selecionar && body.selecionar.length > 0) {\n  ids = body.selecionar;\n}\n\nconst resultado = ids.map(id => ({\n  json: {\n    id: id,\n    novo_status: 'selecionado'\n  }\n}));\n\n// Adicionar itens para desmarcar\nif (body.desmarcar && body.desmarcar.length > 0) {\n  for (const id of body.desmarcar) {\n    resultado.push({\n      json: {\n        id: id,\n        novo_status: 'aguardando'\n      }\n    });\n  }\n}\n\nreturn resultado;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        -32
+      ],
+      "id": "7ae20909-a7b3-45f3-abdd-873dcaafa703",
+      "name": "Extrair_IDs_Selecionados"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "contas_a_pagar",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ $json.novo_status }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        -32
+      ],
+      "id": "d4c7f656-96c1-45cc-b939-2db0bc4bdf9e",
+      "name": "Atualizar_Status_Selecionado",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "OP3IGsLO3LJ2h9JA",
+          "name": "Supabase Accounting Payables"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook_Selecao_Contas": {
+      "main": [
+        [
+          {
+            "node": "Extrair_IDs_Selecionados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrair_IDs_Selecionados": {
+      "main": [
+        [
+          {
+            "node": "Atualizar_Status_Selecionado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "994bfd07-c1b4-4fa3-9f60-a2966be4b134",
+  "activeVersionId": "994bfd07-c1b4-4fa3-9f60-a2966be4b134",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-01-07T14:33:02.974Z",
+      "createdAt": "2026-01-07T14:33:02.974Z",
+      "role": "workflow:owner",
+      "workflowId": "k1Hkvqd64aELXy5c",
+      "projectId": "SoH44tJE4dqRVTiw"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-01-31T19:17:10.384Z",
+    "createdAt": "2026-01-31T19:17:10.384Z",
+    "versionId": "994bfd07-c1b4-4fa3-9f60-a2966be4b134",
+    "workflowId": "k1Hkvqd64aELXy5c",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "selecao-contas",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -512,
+          -32
+        ],
+        "id": "fb65a049-e348-4753-98fb-d65e4d0da331",
+        "name": "Webhook_Selecao_Contas",
+        "webhookId": "80f1ea00-1488-4ae2-84dd-1296b3270230"
+      },
+      {
+        "parameters": {
+          "jsCode": "const body = $('Webhook_Selecao_Contas').first().json.body;\n\n// Formato antigo (ids) ou novo (selecionar/desmarcar)\nlet ids = [];\n\nif (body.ids && body.ids.length > 0) {\n  // Formato antigo - assume que é para selecionar\n  ids = body.ids;\n} else if (body.selecionar && body.selecionar.length > 0) {\n  ids = body.selecionar;\n}\n\nconst resultado = ids.map(id => ({\n  json: {\n    id: id,\n    novo_status: 'selecionado'\n  }\n}));\n\n// Adicionar itens para desmarcar\nif (body.desmarcar && body.desmarcar.length > 0) {\n  for (const id of body.desmarcar) {\n    resultado.push({\n      json: {\n        id: id,\n        novo_status: 'aguardando'\n      }\n    });\n  }\n}\n\nreturn resultado;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -304,
+          -32
+        ],
+        "id": "7ae20909-a7b3-45f3-abdd-873dcaafa703",
+        "name": "Extrair_IDs_Selecionados"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "contas_a_pagar",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $json.id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "status",
+                "fieldValue": "={{ $json.novo_status }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -64,
+          -32
+        ],
+        "id": "d4c7f656-96c1-45cc-b939-2db0bc4bdf9e",
+        "name": "Atualizar_Status_Selecionado",
+        "alwaysOutputData": true,
+        "retryOnFail": true,
+        "credentials": {
+          "supabaseApi": {
+            "id": "OP3IGsLO3LJ2h9JA",
+            "name": "Supabase Accounting Payables"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook_Selecao_Contas": {
+        "main": [
+          [
+            {
+              "node": "Extrair_IDs_Selecionados",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extrair_IDs_Selecionados": {
+        "main": [
+          [
+            {
+              "node": "Atualizar_Status_Selecionado",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "system migration",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

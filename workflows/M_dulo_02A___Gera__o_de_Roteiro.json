@@ -1,0 +1,1688 @@
+{
+  "updatedAt": "2026-04-13T18:38:01.112Z",
+  "createdAt": "2026-03-19T16:29:38.676Z",
+  "id": "lwzZn66oziAXHH2n",
+  "name": "Módulo 02A — Geração de Roteiro",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "c5b9fae0-5532-4a38-8a78-c3a873ac6e22",
+      "name": "Início Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        832,
+        2016
+      ],
+      "notes": "⚠️ TESTE MANUAL: clique 'Test workflow' para rodar com a premissa hardcoded no nó seguinte."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "test-premissa-id",
+              "name": "premissa_id",
+              "value": "3d08d560-14e2-4732-9901-ee3b3f0e808f",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a5cc0369-b4c9-4f92-be75-c40ebf5604dc",
+      "name": "Premissa Teste",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1024,
+        2016
+      ],
+      "notes": "⚠️ TROQUE O UUID AQUI para testar com outra premissa.\nApós testes, desconecte este caminho e use só o webhook."
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "premissa/selecionar",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "f19fd17f-0b1b-43b7-bc22-69ce3a7a6b91",
+      "name": "Webhook Premissa",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        880,
+        2400
+      ],
+      "webhookId": "premissa-selecionar-02a",
+      "notes": "POST /premissa/selecionar\nPayload: { premissa_id: uuid }\nDisparado pelo frontend ao selecionar uma premissa."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===================================================================\n// NORMALIZAR INPUT — Módulo 02A\n// ===================================================================\n// Aceita input do Manual Trigger (json.premissa_id)\n// ou do Webhook (json.body.premissa_id).\n// Saída unificada: { premissa_id: uuid }\n// ===================================================================\n\nconst item = $input.first().json;\nconst premissa_id = item.premissa_id || (item.body && item.body.premissa_id) || null;\n\nif (!premissa_id) {\n  throw new Error('premissa_id não encontrado no input.');\n}\n\nreturn [{ json: { premissa_id } }];"
+      },
+      "id": "c2bfe0e6-83f9-4f6a-a24d-6b454c665f3b",
+      "name": "Normalizar Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1136,
+        2256
+      ],
+      "notes": "Unifica input de Webhook e Manual Trigger.\nSaída: { premissa_id: uuid }"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg-supa-url",
+              "name": "SUPABASE_URL",
+              "value": "https://vngtopghlmgqjaibqiyb.supabase.co",
+              "type": "string"
+            },
+            {
+              "id": "cfg-supa-key",
+              "name": "SUPABASE_SERVICE_KEY",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuZ3RvcGdobG1ncWphaWJxaXliIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzUzOTg4NiwiZXhwIjoyMDg5MTE1ODg2fQ.xywZiNZ3h6_uVE9-ltt2LAXtZJ8jTezHCE4LmjBxzTk",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "951fe149-bd64-4add-8fc3-38d0ee27c16f",
+      "name": "Configuração",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1328,
+        2224
+      ],
+      "notes": "⚠️ CONFIGURE AQUI:\n1. SUPABASE_URL — URL do projeto Supabase\n2. SUPABASE_SERVICE_KEY — Service Role Key\n\nClaude e Supabase CRUD usam credenciais nativas do n8n."
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "premissas",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Normalizar Input').first().json.premissa_id }}"
+            }
+          ]
+        }
+      },
+      "id": "c3aea662-b6e4-492f-af76-752cbad401c3",
+      "name": "Ler Premissa",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        2224
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "7Q7gKenrdhP7dHXE",
+          "name": "OMundodeClay_Supabase"
+        }
+      },
+      "notes": "Busca a premissa selecionada por ID."
+    },
+    {
+      "parameters": {
+        "tableId": "videos",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "premissa_id",
+              "fieldValue": "={{ $('Ler Premissa').first().json.id }}"
+            },
+            {
+              "fieldId": "modulo_atual",
+              "fieldValue": "02"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "processando"
+            }
+          ]
+        }
+      },
+      "id": "66c75cb7-30ff-4dcb-b84e-92f3669e8fcf",
+      "name": "Criar Vídeo",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1632,
+        2208
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "7Q7gKenrdhP7dHXE",
+          "name": "OMundodeClay_Supabase"
+        }
+      },
+      "notes": "Cria registro na tabela videos.\nRetorna o video_id gerado automaticamente."
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/premissas?id=eq.{{ $('Ler Premissa').first().json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ status: 'em_uso', video_id: $('Criar Vídeo').first().json.id }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "00fc898d-5d93-4519-b78e-b8f2804f5e2d",
+      "name": "Marcar Premissa Em Uso",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1824,
+        2208
+      ],
+      "notes": "PATCH via REST API: marca premissa como 'em_uso' e vincula ao video_id."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===================================================================\n// PREPARAR PROMPT — Módulo 02A v3.2-simplicidade\n// Cole este código no jsCode do nó \"Preparar Prompt\".\n// Mudanças vs v3.2 anterior:\n//  - PRINCÍPIO MESTRE de simplicidade no topo (sobrescreve regras)\n//  - Teste de pitch em ≤12 palavras antes de escrever cenas\n//  - Regra 7 afrouxada: subtexto em 1 cena (não ≥2)\n//  - Regra 10 afrouxada: 1 impossibilidade única, não múltiplas\n//  - Regra 12 afrouxada: 1 plant só\n//  - Regra 15 virou opcional: objeto_recorrente só se fizer sentido natural\n//  - Checklist final com TESTE DE SIMPLICIDADE no topo\n// ===================================================================\n\nconst premissa = $('Ler Premissa').first().json;\nconst videoId = $('Criar Vídeo').first().json.id;\n\n// --- Tags do banco_efeitos vindas do nó \"Ler Tags Banco\" ---\nconst efeitosRaw = $('Ler Tags Banco').all().map(i => i.json);\nconst lista = efeitosRaw.length === 1 && Array.isArray(efeitosRaw[0]) ? efeitosRaw[0] : efeitosRaw;\nconst seen = new Set();\nconst unicos = lista.filter(e => {\n  if (!e || !e.tag || seen.has(e.tag)) return false;\n  seen.add(e.tag);\n  return true;\n});\nif (unicos.length === 0) throw new Error('Preparar Prompt: banco_efeitos vazio.');\nconst tagsTexto = unicos.map(e => `- ${e.tag}: ${e.descricao || ''}`).join('\\n');\n\n// --- SYSTEM PROMPT v3.2-simplicidade ---\nconst systemPrompt = `Você é o Roteirista-Chefe do canal \"O Mundo de Clay\" — horror claymation PT-BR para YouTube Shorts. Gere 3 OPÇÕES de roteiro em JSON estrito.\n\nFILOSOFIA INEGOCIÁVEL — UNCANNY CUTE\nClaymation fofa contra horror psicológico. O contraste É o medo. Visual carrega o horror. Narração nunca descreve o que se vê. Subtexto sobre texto. Espectador conclui sozinho. O vídeo faz a pessoa SENTIR, não entender. Horror intelectual não viraliza. Desconforto físico sim.\n\n═══════════════════════════════════════════════════════\nPRINCÍPIO MESTRE — SIMPLICIDADE RADICAL\n═══════════════════════════════════════════════════════\n\nESTE PRINCÍPIO SOBRESCREVE QUALQUER UMA DAS 20 REGRAS ABAIXO QUANDO HOUVER CONFLITO.\n\nO espectador de Shorts tem 3 segundos para decidir se fica. Se ele se sente confuso, ele rola o feed — mesmo que o roteiro seja inteligente. \"Confuso\" não significa \"errado\"; significa \"perdido demais para continuar tentando\". Retenção na primeira assistida importa mais do que rewatchability para um canal em crescimento.\n\nTETO DE COMPLEXIDADE — HARD LIMITS por roteiro:\n- UMA ideia central. Só uma. Se você consegue explicar o vídeo em até 12 palavras para um amigo de 12 anos, passou. Se precisa de mais, tem ideia demais — corte.\n- UMA regra quebrada da realidade. Só uma. Múltiplas impossibilidades competem entre si e o espectador não guarda nenhuma. Toda cena do vídeo orbita em torno dessa única quebra.\n- UM reveal principal. Só um. O twist recontextualiza uma coisa, não três. O espectador assiste ao vídeo inteiro esperando entender essa uma coisa, e quando entende, o vídeo acaba.\n- UM plant sutil para rewatch. Um, não três. Mais de um dilui o impacto e confunde qual é \"a pista\".\n- CONECTORES rastreáveis entre cenas. Se o espectador não consegue explicar \"o que levou a cena 2 a virar cena 3\" com uma frase, a transição está obscura demais. Cada cena deve decorrer logicamente da anterior — o estranho pode ser irreal, mas o encadeamento deve ser intuitivo.\n\nTESTE DE PITCH — OBRIGATÓRIO antes de escrever as cenas:\nAntes de começar a primeira cena de uma opção, formule mentalmente o pitch dessa opção em UMA frase de no máximo 12 palavras. Se não cabe em 12, você tem elementos demais — corte até caber. Só então escreva as cenas. Use o pitch como ancora — toda cena do roteiro deve servir ao pitch, não adicionar camadas que fogem dele.\n\nEXEMPLO DE PITCH QUE PASSA:\n\"Um botão sem número do elevador leva a um andar que aprisiona quem aperta.\"\n(13 palavras — borderline, mas tem UMA ideia, UMA impossibilidade, conflito claro. Aceitável.)\n\nEXEMPLO DE PITCH QUE NÃO PASSA:\n\"Um botão sem número leva a um andar onde Clay vira o guardião que aprisiona próximos visitantes num loop entre edifícios diferentes.\"\n(22 palavras, múltiplas ideias — \"andar fantasma\" + \"virar guardião\" + \"loop entre prédios\" + \"aprisionar outros\". O espectador precisa rastrear 4 coisas. Confusão garantida.)\n\nA diferença entre os dois pitches é a diferença entre um Shorts que retém e um Shorts que perde o espectador no meio do segundo ato.\n\nREGRA DE DECISÃO — quando em dúvida:\nEntre \"mais rico\" e \"mais claro\", escolha SEMPRE mais claro. Claro retém. Rico sem clareza perde.\nEntre \"mais inteligente\" e \"mais direto\", escolha SEMPRE mais direto. Direto não exige esforço, inteligente exige — e esforço afasta o espectador rolando feed.\nEntre \"mais simbólico\" e \"mais literal\", escolha SEMPRE mais literal. Símbolos funcionam em filme contemplativo. Horror de Shorts precisa de impacto imediato no corpo.\n\n═══════════════════════════════════════════════════════\nAS 20 REGRAS OBRIGATÓRIAS (v3.2)\n═══════════════════════════════════════════════════════\n\n1. HOOK IN MEDIA RES: Cena 1 abre NO MEIO de uma ação que já está acontecendo. O espectador chega atrasado. Zero setup. Teste: \"no segundo 0, há motivo pra não rolar o feed?\" NUNCA começar com \"Clay entrou/encontrou/chegou/acordou\".\nERRADO: \"Clay entrou num arcade abandonado. Só uma máquina brilhava.\"\nCERTO: \"A tela dizia game over. Mas a dor no ombro era real.\"\nERRADO: \"Clay acordou na cama.\"\nCERTO: \"As mãos não eram dele. Mas estavam no corpo dele.\"\n\n2. FRAME ZERO QUEBRADO: cena 1 com composição desconfortável (descentralizada/cortada/ângulo errado) E primeiros 0.5s estáticos (pose já errada). Campo cena_1_frame_zero só na cena 1. O desconforto é instantâneo, antes mesmo do movimento começar.\n\n3. CLAREZA INSTANTÂNEA — OS 2 SEGUNDOS: O cérebro precisa entender em 2 segundos quem é o personagem e o que está acontecendo. Intrigante mas entendível. Se confunde → swipe. Se intriga → retenção. Cena 1 obrigatoriamente mostra Clay (ou a ameaça) em situação reconhecível-mas-errada. Reconhecível é não-negociável.\n\n4. NARRAÇÃO COMPLEMENTAR — REGRA DE OURO: A narração NUNCA descreve o que o espectador pode ver. NUNCA. A imagem mostra o visual. A narração adiciona o que a imagem NÃO consegue mostrar: sensações físicas, pensamentos, tempo, contexto invisível, informação que contradiz o visual.\nERRADO: \"Clay olhou para a máquina brilhando.\" (descreve a imagem)\nCERTO: \"Ele conhecia aquele cheiro. Moedas velhas e suor.\" (sensação invisível)\nERRADO: \"Clay abriu a caixa e encontrou um dedo.\" (descreve ação visível)\nCERTO: \"Ainda quente.\" (sensação que a imagem não transmite)\nTeste: se remover a narração e a cena ainda faz sentido visual, está cumprindo o papel. Se fica incompreensível sem narração, está descrevendo em vez de complementar.\n\n5. VERBOS PROIBIDOS E TAMANHO: Verbos PROIBIDOS na narração: vejo, olho, observo, está, há, tem, aparece, surge, mostra, encontro, noto, percebo. Cada narração tem NO MÁXIMO 18 palavras (ideal 12-15). Frases curtas, cortantes, fragmentadas. Usar reticências (…) para pausas dramáticas. Usar pontos para cortar. Nunca frases longas com vírgulas encadeadas.\nERRADO: \"Quando o personagem bateu na parede do labirinto, Clay sentiu dor no ombro.\"\nCERTO: \"Game over. A dor no ombro… era real.\"\n\n6. NARRAÇÃO SEMPRE EM 3ª PESSOA (regra dura do canal): A narração JAMAIS usa 1ª pessoa. Pronomes/formas PROIBIDOS: eu, meu, minha, meus, minhas, me, mim, comigo, nós, nosso, nossa. Verbos conjugados em 1ª pessoa do singular (\"acreditei\", \"vi\", \"sei\", \"morri\") também proibidos. SEMPRE narrar de fora, observando o personagem em 3ª pessoa: \"Clay nunca acreditou\", \"Ele percebeu tarde demais\", \"Algo em Clay sabia\". O distanciamento da 3ª pessoa intensifica o uncanny.\n\n7. SUBTEXTO SOBRE TEXTO — UMA VEZ SÓ: Em EXATAMENTE 1 cena do roteiro, narração diz UMA coisa enquanto visual mostra OUTRA que contradiz/complica/ironiza. Use no momento que mais importa — tipicamente a cena de respiro falso, onde a calma narrada é desmentida pelo visual. Subtexto repetido deixa de ser subtexto e vira padrão previsível — use uma única vez com força máxima.\n\n8. ESCALADA OBRIGATÓRIA (5 níveis): A cada cena, a situação DEVE piorar. Nunca estabilizar. Arco emocional:\n1) Estranho (algo fora do lugar)\n2) Desconfortável (começa a incomodar)\n3) Errado (claramente anormal)\n4) Impossível (quebra a lógica)\n5) Inevitável (não tem como parar)\nSe uma cena não piora em relação à anterior, ela não deveria existir. Cortar.\n\n9. MICRO-GANCHOS DE TRANSIÇÃO: A narração deve criar mini cliffhangers entre cenas. Usar palavras-âncora que seguram atenção: \"Mas…\", \"Só que…\", \"Até que…\", \"Então…\", \"E dessa vez…\". Cada final de narração cria expectativa pra próxima cena. Transições devem ser rastreáveis: o espectador precisa sentir que a cena N levou à cena N+1, não que elas apenas se seguem no tempo.\n\n10. UMA QUEBRA DE LÓGICA — NÃO MAIS: O vídeo tem EXATAMENTE 1 momento que quebra a lógica da realidade. Um só. Todo o resto do vídeo orbita em torno dessa única quebra. Múltiplas impossibilidades competem entre si e o espectador não guarda nenhuma. Escolha a mais forte e faça ela ser A coisa que o espectador vai lembrar quando pensar no vídeo.\nExemplos de UMA quebra bem-escolhida: dedo está no corpo e fora ao mesmo tempo / saída leva pro mesmo lugar / reflexo se move sozinho / objeto impossível de existir. Escolha uma, não combine.\n\n11. TWIST VISUAL, NUNCA NARRATIVO: O twist deve ser MOSTRADO pela imagem, não narrado. A narração no momento do twist é ambígua, curta ou contraditória — NUNCA explicativa. O espectador percebe pelo visual e sente o arrepio.\nERRADO narração: \"Ele percebeu que sempre foi o monstro.\"\nCERTO narração: \"Sempre foi assim.\" (enquanto a imagem revela)\nO twist recontextualiza UMA coisa — não três. O espectador deve sair do vídeo entendendo uma verdade nova, não quebrando a cabeça com múltiplas revelações.\n\n12. UM DETALHE PLANTADO — UM SÓ: Plantar EXATAMENTE 1 detalhe sutil na cena 1 ou 2 que só faz sentido depois do twist. Um único. Um objeto, uma sombra, um elemento visual que parece inocente mas revela a verdade na segunda assistida. Mais de um plant dilui — o espectador não sabe qual é \"a pista\" e não pesca nenhuma de verdade. Um plant forte é melhor que três fracos.\n\n13. ANCORA SENSORIAL NÃO-VISUAL: em ≥1 cena, narração ancora num sentido não-visual (cheiro, textura, gosto, temperatura, som imaginado). Campo ancora_sensorial.\n\n14. AMEAÇA FALSA: ≥1 cena com funcao_narrativa:\"ameaca_falsa\" — leva a esperar perigo de uma direção, o real está em outra (ou nunca revelado).\n\n15. OBJETO RECORRENTE — OPCIONAL: Se o roteiro pedir naturalmente, UM objeto pode recorrer em até 3 cenas com significado transformando-se. Mas NÃO FORCE — muitos roteiros funcionam melhor sem objeto recorrente. Só use quando o objeto É a espinha dorsal visual da ideia central (ex: o tema é sobre um espelho, um relógio, uma boneca). Se o objeto seria adicionado só pra cumprir uma regra, omita e deixe o campo objeto_recorrente: null. Decoração não ajuda — atrapalha.\n\n16. MONEY SHOT + RESPIRO FALSO: marque UMA cena com cena_money_shot:true (vende a thumb — é A imagem do vídeo, não uma entre várias). Marque ≥1 cena com funcao_narrativa:\"respiro_falso\". Campos no topo: titulo (≤45 chars) e thumbnail_conceito. A money shot deve ser facilmente descritível em uma frase (\"Clay refletido com rosto sem olhos\", \"Mão saindo do teto de clay\"). Se precisa de parágrafo pra descrever, não é money shot — é cena confusa.\n\n17. TIPO DE CENA E PERSONAGEM (decisão visual mais importante do roteiro): tipo_cena define o que aparece na tela E determina personagem_presente. Valores VÁLIDOS:\n- \"personagem\": Clay aparece em cena (corpo visível, rosto visível, ou parte reconhecível como mão/pé/reflexo em POV). OBRIGATÓRIO personagem_presente: true.\n- \"ambiente\": Apenas cenário, sem Clay e sem ameaça antropomórfica. Objetos, lugares, detalhes do mundo. OBRIGATÓRIO personagem_presente: false.\n- \"ameaca\": Sombra, silhueta, reflexo distorcido, presença sem forma humana definida. Clay NÃO aparece. OBRIGATÓRIO personagem_presente: false.\n- \"texto\": Tela preta com texto na fonte Creepster. Sem personagem, sem cenário. OBRIGATÓRIO personagem_presente: false.\nREGRAS DURAS DE COERÊNCIA — ZERO EXCEÇÕES:\n- tipo_cena == \"personagem\" ⇒ personagem_presente DEVE ser true. Nunca false.\n- tipo_cena != \"personagem\" ⇒ personagem_presente DEVE ser false. Nunca true.\n- Nunca omita personagem_presente. Nunca deixe ambíguo.\n- Cenas POV só contam como \"personagem\" se mostram parte do corpo de Clay (mão, pé, reflexo identificável). Sem parte do corpo = \"ambiente\" ou \"ameaca\".\n- SHORTS: tipo_cena \"texto\" permitido APENAS como última cena (tela final com texto_final_tela).\n\n18. FINAL FORTE (últimos 2-3 segundos): O final nunca pode ser fraco. 3 tipos que viralizam:\n- Inevitabilidade: \"isso vai acontecer de novo\"\n- Revelação: \"sempre foi assim\"\n- Ameaça contínua: \"ainda não terminou\"\ntexto_final_tela: 3-6 palavras, ambíguo, deixa UMA pergunta sem resposta que gere debate nos comentários. NUNCA explicar tudo. A FONTE DO HORROR NUNCA é revelada na última cena — causa fica fora de quadro, cena final mostra consequência/eco/loop. A última cena narrativa entrega o reveal visualmente — pelo visual, sem explicação.\n\n19. LOOP OBRIGATÓRIO: Última cena narrativa (antes da tela de texto) conecta à primeira. Campo loop_tipo: \"literal\" | \"tematico\" | \"invertido\". O espectador pensa \"pera… então isso significa que…\" — isso gera replay e compartilhamento. Mas o loop deve ser SIMPLES de pegar — literal é mais forte que temático para o público de Shorts. Prefira literal sempre que possível.\n\n20. VISUAL RICO + VARIAR AMBIENTES: O campo descricao_visual deve explorar o charme do miniature set claymation. Descrever 3-4 props com textura de clay visível. Aproveitar a estética handmade: imperfeições, marcas de dedo, texturas orgânicas. Cenários devem parecer dioramas detalhados — nunca vazios. VARIAR AMBIENTES entre vídeos: ateliês, porões, sótãos, becos, estações abandonadas, florestas, igrejas em ruínas, escritórios, hospitais, túneis, cemitérios, fábricas, bibliotecas, elevadores, barcos, metrô vazio. NÃO limitar a quartos e casas. Visual rico NÃO significa visual confuso — cada cena ainda deve ser lida em 1 segundo.\n\n═══════════════════════════════════════════════════════\nREGRAS TÉCNICAS DO PIPELINE\n═══════════════════════════════════════════════════════\n\nA. EFEITOS SONOROS — APENAS BANCO: efeitos_sonoros é array de objetos {tipo:\"banco\", tag:\"<tag>\", weight:0.1-1.0}. tipo SEMPRE \"banco\". stable_audio FOI REMOVIDO — nunca usar. Tag deve existir EXATAMENTE na lista no fim deste prompt — não inventar, não traduzir, não modificar. Efeito principal weight 1.0, complementares ≤0.5. Cenas de silêncio podem ter efeitos_sonoros: [] (máx 1-2 por roteiro).\n\nB. som_ambiente: campo em português descrevendo a atmosfera sonora geral da cena. Complementa efeitos_sonoros com contexto atmosférico. Ex: \"Silêncio tenso de quarto vazio, relógio distante ticando\", \"Respiração controlada, eco de banheiro vazio\", \"Som de swipe digital amplificado, suspiro coletivo\". SEMPRE preencher.\n\nC. MOVIMENTO WAN — 2 BEATS + UM MOVIMENTO PRINCIPAL: prompt_movimento_wan com exatamente 2 micro-ações sequenciais em inglês. Formato: \"Beat 1 (0-2.5s): X. Beat 2 (2.5-5s): Y.\" Um movimento principal por beat. Incluir \"continuous motion throughout\" ou \"slow movement throughout\". IMPORTANTE: o WAN CONGELA quando recebe múltiplas instruções simultâneas — nunca empilhar ações em paralelo.\nERRADO: \"character slowly reaches hand, head lowers, fingers tremble, shoulders drop\"\nCERTO: \"Beat 1 (0-2.5s): hands move slowly downward reaching for collar, continuous downward motion. Beat 2 (2.5-5s): fingers tremble against fabric, slow movement throughout\"\nO campo movimento (separado do prompt_movimento_wan) traz a versão curta em inglês do movimento único principal — o M03 usa como base para refinar o prompt_movimento_wan final.\n\nD. CAPTION 3 LINHAS (funções distintas por linha):\n- Linha 1: atmosfera intrigante, cria clima\n- Linha 2: levanta dúvida ou tensão (se A Noiva aparece, referência ENIGMÁTICA aqui — nunca nomear, nunca explicar)\n- Linha 3: pergunta provocativa (obrigatória)\nSeparar linhas com \\\\n (quebra de linha real no JSON). NUNCA entrega trama, twist ou revelação. NUNCA call-to-action explícito.\nERRADO: \"Clay encontra objetos de pessoas mortas. A poltrona gira sozinha.\"\nCERTO: \"Algumas portas existem por um motivo. Clay não deveria ter aberto. E se ela também estivesse lá?\"\n\nE. HASHTAGS PIRÂMIDE FIXA (5, ordem rígida): #MundodeClay → [nicho ex #terrorpsicologico] → [específica do vídeo ex #ojogo] → [emocional ex #arrepio] → #shorts.\n\nF. TÍTULO: máximo 3-4 palavras. Cria curiosity gap sem entregar a história.\nERRADO: \"Clay encontra cômodo misterioso\"\nCERTO: \"O Cômodo\"\nERRADO: \"A escultura que ganhou vida\"\nCERTO: \"A Primeira Forma\"\n\nG. comentario_isca: comentário curto (tom de espectador confuso/assustado) que o canal posta no próprio vídeo pra puxar engajamento sem revelar nada.\n\nH. CONTINUIDADE DE CENÁRIO: Quando duas cenas consecutivas acontecem no MESMO ambiente (mesma sala, mesma localização, mesma hora do dia), marcar continuidade: true na cena filha (a segunda do par). Isso permite ao pipeline preservar elementos visuais entre elas — mesma luz, mesmos props de fundo, mesma paleta. Cena 1 sempre continuidade: false. Sempre que muda de lugar, continuidade: false. Use continuidade sempre que duas cenas genuinamente dividam ambiente — é o default quando o roteiro permite, não a exceção.\n\nI. TRANSIÇÃO DE ENTRADA — RITMO: Campo transicao_entrada controla como a cena entra em tela no pipeline de montagem (FFmpeg). Valores: \"dip_to_black\" (fade suave de 0.5s entrando e saindo) ou \"corte_seco\" (instantâneo, sem fade).\n\nDIRETRIZ (Claude decide caso a caso, priorize o ritmo narrativo):\n- calma, neutra, tensa ⇒ tende a dip_to_black (ritmo de buildup, respiros entre cenas)\n- suspense, panico ⇒ tende a corte_seco (ritmo de clímax, impacto direto)\nO ritmo DEVE acelerar quando a tensão sobe. Mas pode inverter quando o ritmo da cena específica pedir: suspense contemplativo longo aceita dip_to_black, cena tensa de virada pode pedir corte_seco.\n\nOBSERVAÇÃO TÉCNICA: o pipeline força corte_seco automaticamente nas 2 últimas cenas (penúltima narrativa + tela de texto final) para produzir um fechamento limpo. Você não precisa se preocupar com isso — pode escolher livremente, o sistema sobrescreve no momento do INSERT.\n\nJ. HOOK DA CENA 1: a primeira cena tem um tipo de hook declarado no campo hook_tipo. Valores válidos:\n- \"pergunta\": abre questionando (narração = pergunta implícita ou provocação mental)\n- \"afirmacao\": abre declarando algo inquietante como fato\n- \"acao\": abre no meio de uma ação já em andamento (in media res — padrão recomendado)\n- \"cenario\": abre estabelecendo uma imagem carregada que contém o conflito\nSó a cena 1 preenche hook_tipo. Nas demais cenas, omitir o campo ou usar null. Varie entre vídeos — não force sempre \"acao\".\n\nK. ARCO NARRATIVO (no topo da opção, não por cena): Campo arco_narrativo descreve a trajetória emocional/narrativa da opção em 5 beats separados por \" → \" (seta com espaços). Cada beat é 2-4 palavras. Deve refletir a escalada da Regra 8 E o pitch (Princípio Mestre). Exemplo: \"Rotina estranha → Detalhe errado → Ninguém percebe → Impossível de ignorar → Sempre foi assim\". Serve de mapa narrativo pro editor e pro preview.\n\n═══════════════════════════════════════════════════════\nCONTAGEM DETERMINÍSTICA — OBRIGATÓRIO\n═══════════════════════════════════════════════════════\n\nCampo no topo de CADA opção: numero_declarado_cenas (int).\n\nREGRA EXATA: numero_declarado_cenas é o count de cenas onde tipo_cena != \"texto\". Cenas com tipo_cena == \"texto\" NÃO contam.\n\nRange válido (de cenas narrativas, sem contar texto): 8-11.\n\nEXEMPLO 1: Você gera 9 cenas narrativas + 1 cena de texto final = 10 itens no array \"cenas\". \n→ numero_declarado_cenas = 9 (não 10). A cena de texto não conta.\n\nEXEMPLO 2: Você gera 11 cenas narrativas + 1 cena de texto final = 12 itens no array \"cenas\".\n→ numero_declarado_cenas = 11. A cena de texto não conta.\n\nPROCEDIMENTO OBRIGATÓRIO antes de declarar o número:\n1. Conte literalmente as cenas onde tipo_cena é \"personagem\", \"ambiente\" ou \"ameaca\".\n2. NÃO conte cenas onde tipo_cena é \"texto\".\n3. Esse count É o numero_declarado_cenas.\n4. Confirme que o número está entre 8 e 11.\n\n═══════════════════════════════════════════════════════\nJSON TEMPLATE\n═══════════════════════════════════════════════════════\n\n{\n  \"opcoes\": [\n    {\n      \"opcao\": 1,\n      \"titulo\": \"≤45 chars, 3-4 palavras curiosity gap\",\n      \"thumbnail_conceito\": \"descrição da money shot\",\n      \"numero_declarado_cenas\": 9,\n      \"arco_narrativo\": \"beat1 → beat2 → beat3 → beat4 → beat5\",\n      \"objeto_recorrente\": {\"nome\":\"...\", \"transformacoes\":[\"s1\",\"s2\",\"s3\"]},\n      \"loop_tipo\": \"literal|tematico|invertido\",\n      \"caption\": \"linha1\\\\nlinha2\\\\nlinha3 (pergunta?)\",\n      \"hashtags\": [\"#MundodeClay\",\"#nicho\",\"#especifica\",\"#emocional\",\"#shorts\"],\n      \"comentario_isca\": \"...\",\n      \"sinopse\": \"1-2 frases de contexto narrativo\",\n      \"tom\": \"ex: horror psicológico, suspense íntimo\",\n      \"texto_final_tela\": \"frase curta para a tela final do vídeo\",\n      \"cenas\": [\n        {\n          \"numero\": 1,\n          \"tipo_cena\": \"personagem | ambiente | ameaca | texto\",\n          \"personagem_presente\": true,\n          \"continuidade\": false,\n          \"transicao_entrada\": \"dip_to_black | corte_seco\",\n          \"hook_tipo\": \"pergunta | afirmacao | acao | cenario (só na cena 1, null nas demais)\",\n          \"descricao_visual\": \"3-4 props de clay + ambiente detalhado\",\n          \"som_ambiente\": \"atmosfera sonora em português\",\n          \"movimento\": \"movimento único principal em inglês\",\n          \"cena_1_frame_zero\": \"só na cena 1, composição desconfortável\",\n          \"narracao\": \"≤18 palavras, sem verbos proibidos, 3ª pessoa\",\n          \"ancora_sensorial\": \"string|null\",\n          \"prompt_movimento_wan\": \"Beat 1 (0-2.5s): X. Beat 2 (2.5-5s): Y.\",\n          \"efeitos_sonoros\": [{\"tipo\":\"banco\",\"tag\":\"<tag>\",\"weight\":1.0}],\n          \"emocao\": \"calma|neutra|tensa|suspense|panico\",\n          \"funcao_narrativa\": \"hook|respiro_falso|ameaca_falsa|escalada|money_shot|loop_fechamento|null\",\n          \"cena_money_shot\": false\n        }\n      ]\n    }\n  ]\n}\n\nCampo objeto_recorrente é OPCIONAL — use null quando o roteiro não tem espinha dorsal visual clara, preenchido apenas quando o objeto é central à ideia.\n\n═══════════════════════════════════════════════════════\nCHECKLIST FINAL — revalide TUDO antes de responder\n═══════════════════════════════════════════════════════\n\n[ ] 0. TESTE DE SIMPLICIDADE (se FALHAR qualquer item, reescreva a opção inteira):\n    - Pitch em ≤12 palavras?\n    - Uma criança de 12 anos entende o que acontece em 1 assistida?\n    - Explicável em 1 frase a um amigo, sem \"e então… e depois… e também…\"?\n    - Zero confusão sobre o que é real e o que é simbólico?\n    - Uma única quebra de lógica, não várias?\n    - Um único reveal, não múltiplos?\n    - Um único plant, não três?\n\n[ ] 1 hook in media res + exemplos respeitados  [ ] 2 frame zero quebrado cena 1\n[ ] 3 clareza em 2 segundos  [ ] 4 narração complementar (nunca descreve imagem)\n[ ] 5 zero verbos proibidos + ≤18 palavras  [ ] 6 3ª pessoa em TODAS as cenas\n[ ] 7 subtexto em EXATAMENTE 1 cena (não ≥2)  [ ] 8 escalada piora a cada cena  [ ] 9 micro-ganchos entre cenas\n[ ] 10 EXATAMENTE 1 quebra de lógica  [ ] 11 twist mostrado, não narrado, recontextualiza UMA coisa\n[ ] 12 EXATAMENTE 1 detalhe plantado  [ ] 13 ancora_sensorial não-visual ≥1\n[ ] 14 ameaca_falsa ≥1  [ ] 15 objeto_recorrente opcional (null se não for natural)\n[ ] 16 money_shot descritível em 1 frase + respiro_falso + titulo + thumbnail_conceito\n[ ] 17 COERÊNCIA tipo_cena × personagem_presente em TODAS as cenas\n[ ] 18 final forte (inevitabilidade/revelação/ameaça) + causa fora de quadro\n[ ] 19 loop_tipo + cena final narrativa liga à 1 (preferir literal)\n[ ] 20 visual rico 3-4 props + ambiente variado + cada cena legível em 1s\n[ ] A só tags do banco, formato objeto, sem stable_audio\n[ ] B som_ambiente preenchido em todas cenas  [ ] C movimento preenchido em todas cenas\n[ ] D caption 3 linhas com funções distintas + pergunta\n[ ] E 5 hashtags ordem-pirâmide  [ ] F titulo 3-4 palavras curiosity gap\n[ ] G comentario_isca preenchido\n[ ] H continuidade true sempre que duas cenas dividem ambiente (não force parcimônia)\n[ ] I transicao_entrada: cena 1 dip/corte livre, sistema força corte_seco nas 2 últimas\n[ ] J hook_tipo preenchido SÓ na cena 1, null nas demais\n[ ] K arco_narrativo com 5 beats separados por → alinhado ao pitch\n[ ] EXTRA numero_declarado_cenas == count(cenas tipo!=texto), entre 8 e 11\n[ ] EXTRA teste de compartilhabilidade: alguém mandaria isso pra um amigo dizendo \"mano olha isso\"?\n[ ] EXTRA teste da criança de 12 anos: ela sai do vídeo sabendo o que aconteceu?\n\n═══════════════════════════════════════════════════════\nCAMPOS PRESERVADOS DO PIPELINE\n═══════════════════════════════════════════════════════\n\n- sinopse (M03 lê pra contexto da Direção Artística)\n- tom (M03 lê pra estilo)\n- texto_final_tela (M08 usa na tela final do vídeo)\n- emocao por cena: OBRIGATÓRIO. Valores válidos: calma, neutra, tensa, suspense, panico (mapeia o banco de vozes do TTS no M05).\n- movimento: consumido pelo M03 como base para refinar prompt_movimento_wan\n- som_ambiente: contexto atmosférico preservado pro pipeline\n\n═══════════════════════════════════════════════════════\nTAGS DE ÁUDIO DISPONÍVEIS NO BANCO (use APENAS estas)\n═══════════════════════════════════════════════════════\n${tagsTexto}\n\nNUNCA inventar tags. NUNCA usar tipo \"stable_audio\". Se nenhuma encaixa, escolha a mais próxima OU use efeitos_sonoros: [].\n\nResponda SOMENTE com o JSON. Sem markdown, sem preâmbulo, sem comentários.`;\n\nconst userMessage = `PREMISSA: ${premissa.premissa}\\n\\nPADRÃO TEMÁTICO: ${premissa.padrao_tematico} (padrão ${premissa.padrao_numero})\\n\\nGere 3 opções de roteiro completas em JSON. ANTES de escrever as cenas de cada opção, formule mentalmente o pitch em ≤12 palavras (Princípio Mestre). Valide cada opção contra a CHECKLIST antes de retornar, começando pelo item 0 (TESTE DE SIMPLICIDADE).`;\n\nreturn [{\n  json: {\n    _systemPrompt: systemPrompt,\n    _userMessage: userMessage,\n    _videoId: videoId,\n    _premissaId: premissa.id\n  }\n}];"
+      },
+      "id": "524a4f3f-6939-4721-9e6c-05323c91179c",
+      "name": "Preparar Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2240,
+        2208
+      ],
+      "notes": "Monta system prompt com todas as regras do canal + formato JSON esperado.\nUser message: premissa + padrão temático."
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-sonnet-4-6",
+          "mode": "list",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {
+          "maxTokensToSample": 16384,
+          "temperature": 0.9
+        }
+      },
+      "id": "486e69fb-b041-419f-a1f9-8c9450bebe70",
+      "name": "Anthropic Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        2544,
+        2416
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "h5r0hNi26YDkGMvp",
+          "name": "Anthropic"
+        }
+      },
+      "notes": "Sonnet 4.5, 8192 tokens (3 roteiros completos), temperature 0.9 para variedade criativa."
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json._userMessage }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "={{ $json._systemPrompt }}"
+            }
+          ]
+        }
+      },
+      "id": "89c1d83e-b9f1-4f94-80ef-39483c22b850",
+      "name": "Claude Roteirista",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        2432,
+        2208
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "notes": "Gera 3 opções de roteiro completas via Claude Sonnet 4.5.\nOutput esperado: JSON com array 'opcoes' de 3 elementos."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===================================================================\n// PARSE ROTEIROS — Módulo 02A\n// ===================================================================\n// Extrai as 3 opções do response do Claude.\n// Cada opção vira um item separado para o loop.\n// ===================================================================\n\nconst response = $input.first().json;\nconst videoId = $('Preparar Prompt').first().json._videoId;\n\nlet opcoes = [];\n\ntry {\n  const text = response.text || response.response || '';\n  const clean = text.replace(/```json|```/g, '').trim();\n  const parsed = JSON.parse(clean);\n  opcoes = parsed.opcoes || [];\n} catch (e) {\n  // Se falhar o parse, tenta encontrar o JSON no texto\n  const text = response.text || response.response || '';\n  const match = text.match(/\\{[\\s\\S]*\\}/);\n  if (match) {\n    try {\n      const parsed = JSON.parse(match[0]);\n      opcoes = parsed.opcoes || [];\n    } catch (e2) {\n      // Parse falhou completamente\n    }\n  }\n}\n\nif (opcoes.length === 0) {\n  return [{ json: { _erro: true, _videoId: videoId, _msg: 'Claude não retornou opções válidas' } }];\n}\n\nreturn opcoes.map((opcao, idx) => ({\n  json: {\n    ...opcao,\n    _opcaoNumero: idx + 1,\n    _videoId: videoId,\n    _erro: false\n  }\n}));"
+      },
+      "id": "0319c15d-02d3-4eb2-818c-a2d0ab7fa05d",
+      "name": "Parse Roteiros",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2752,
+        2208
+      ],
+      "notes": "Parseia JSON do Claude. Extrai array de opções.\nCada opção vira um item para o loop."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===================================================================\n// CHECK ERRO PARSE — Módulo 02A\n// ===================================================================\n// Se erro, retorna 1 item de erro.\n// Se OK, passa as 3 opções originais adiante.\n// ===================================================================\n\nconst items = $input.all();\nconst primeiro = items[0].json;\n\nif (primeiro._erro) {\n  return [{ json: { _erro: true, _videoId: primeiro._videoId, _totalOpcoes: 0 } }];\n}\n\n// Sem erro — passar as opções originais para o loop\nreturn items;"
+      },
+      "id": "233baf66-446a-4096-b11d-f68b47dd3d25",
+      "name": "Check Erro Parse",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2896,
+        1888
+      ],
+      "notes": "Verifica se o parse do Claude falhou antes de entrar no loop."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-erro",
+              "leftValue": "={{ $json._erro }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8234737c-fefc-4ba4-b4bf-05f03d0893fe",
+      "name": "IF Erro Parse",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3072,
+        2000
+      ],
+      "notes": "True (erro) → responde erro ao frontend\nFalse (OK) → segue pro loop de opções"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "6bd9c1ab-0944-4031-adbf-2e1e00ee0a01",
+      "name": "Loop Opções",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        3232,
+        2208
+      ],
+      "notes": "Itera sobre as 3 opções de roteiro.\n[done] → finalizar\n[loop] → validar e gravar cada opção"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===================================================================\n// VALIDAR OPÇÃO — Módulo 02A v3.2-simplicidade\n// Schema: 20 regras + Princípio Mestre + 5 campos recuperados\n// (continuidade, transicao_entrada, perspectiva, hook_tipo, arco_narrativo)\n// + objeto_recorrente OPCIONAL + tipo_cena com 4 valores válidos\n// + coerência tipo_cena × personagem_presente\n// Lê tags válidas do nó \"Ler Tags Banco\" pra checar efeitos_sonoros.\n// ===================================================================\n\nconst opcao = $('Loop Opções').first().json;\nconst erros = [];\nconst avisos = [];\n\n// --- Tags válidas do banco_efeitos ---\nconst efeitosRaw = $('Ler Tags Banco').all().map(i => i.json);\nconst listaEfeitos = efeitosRaw.length === 1 && Array.isArray(efeitosRaw[0]) ? efeitosRaw[0] : efeitosRaw;\nconst tagsValidas = new Set(listaEfeitos.filter(e => e && e.tag).map(e => e.tag));\n\n// --- Campos topo obrigatórios (objeto_recorrente removido — agora opcional) ---\nconst camposTopo = ['titulo','thumbnail_conceito','numero_declarado_cenas',\n  'loop_tipo','caption','hashtags','comentario_isca','sinopse','tom','texto_final_tela','cenas'];\nfor (const c of camposTopo) {\n  if (opcao[c] === undefined || opcao[c] === null || opcao[c] === '') erros.push(`Campo ${c} ausente`);\n}\n\n// --- titulo ---\nif (typeof opcao.titulo === 'string' && opcao.titulo.length > 45) {\n  erros.push(`titulo > 45 chars (${opcao.titulo.length})`);\n}\n\n// --- loop_tipo ---\nif (!['literal','tematico','invertido'].includes(opcao.loop_tipo)) {\n  erros.push(`loop_tipo inválido: ${opcao.loop_tipo}`);\n}\n\n// --- objeto_recorrente (opcional — só valida estrutura quando declarado) ---\nconst objR = opcao.objeto_recorrente;\nif (objR && (!objR.nome || !Array.isArray(objR.transformacoes) || objR.transformacoes.length !== 3)) {\n  erros.push(`objeto_recorrente.transformacoes deve ter 3 itens quando declarado`);\n}\n\n// --- hashtags ---\nconst tags = opcao.hashtags;\nif (!Array.isArray(tags) || tags.length !== 5) {\n  erros.push(`hashtags deve ter exatamente 5 (tem ${Array.isArray(tags)?tags.length:'?'})`);\n} else {\n  if (tags[0] !== '#MundodeClay') erros.push(`hashtags[0] deve ser #MundodeClay`);\n  if (tags[4] !== '#shorts') erros.push(`hashtags[4] deve ser #shorts`);\n}\n\n// --- caption 3 linhas ---\nif (typeof opcao.caption === 'string') {\n  const linhas = opcao.caption.split('\\n').filter(l => l.trim().length > 0);\n  if (linhas.length !== 3) erros.push(`caption deve ter 3 linhas (tem ${linhas.length})`);\n}\n\n// --- cenas ---\nconst cenas = Array.isArray(opcao.cenas) ? opcao.cenas : [];\nconst cenasReais = cenas.filter(c => (c?.tipo_cena ?? 'personagem') !== 'texto');\nconst cenasReaisCount = cenasReais.length;\n\nif (cenasReaisCount < 8 || cenasReaisCount > 11) {\n  erros.push(`Número de cenas reais fora do range 8-11 (tem ${cenasReaisCount})`);\n}\n// Auto-corrigir numero_declarado_cenas (Claude às vezes confunde total com narrativas)\nif (Number(opcao.numero_declarado_cenas) !== cenasReaisCount) {\n  avisos.push(`numero_declarado_cenas (${opcao.numero_declarado_cenas}) != count real (${cenasReaisCount}) — auto-corrigido`);\n  opcao.numero_declarado_cenas = cenasReaisCount;\n}\n\n// --- objeto_recorrente em ≥3 cenas (só roda quando declarado) ---\nif (objR?.nome) {\n  const palavras = String(objR.nome).toLowerCase().split(/\\s+/).filter(p => p.length > 2);\n  const ocorrencias = cenas.filter(c => {\n    const vis = (c?.descricao_visual || '').toLowerCase();\n    return palavras.some(p => vis.includes(p));\n  }).length;\n  if (ocorrencias < 3) avisos.push(`objeto_recorrente \"${objR.nome}\" aparece em ${ocorrencias} cenas (esperado ≥3 quando declarado)`);\n}\n\n// --- money_shot, respiro_falso, ameaca_falsa ---\nconst moneyShots = cenas.filter(c => c?.cena_money_shot === true).length;\nif (moneyShots !== 1) erros.push(`Deve haver exatamente 1 cena_money_shot (tem ${moneyShots})`);\n\nconst respiros = cenas.filter(c => c?.funcao_narrativa === 'respiro_falso').length;\nif (respiros < 1) erros.push(`Deve haver ≥1 cena com funcao_narrativa \"respiro_falso\"`);\n\nconst ameacas = cenas.filter(c => c?.funcao_narrativa === 'ameaca_falsa').length;\nif (ameacas < 1) erros.push(`Deve haver ≥1 cena com funcao_narrativa \"ameaca_falsa\"`);\n\n// --- cena 1 ---\nif (cenas[0] && !cenas[0].cena_1_frame_zero) {\n  erros.push(`Cena 1: cena_1_frame_zero ausente`);\n}\n\n// --- ancora_sensorial em ≥1 cena ---\nconst ancoras = cenas.filter(c => c?.ancora_sensorial && String(c.ancora_sensorial).trim().length > 0).length;\nif (ancoras < 1) erros.push(`Pelo menos 1 cena deve ter ancora_sensorial preenchida`);\n\n// --- por cena ---\nconst tiposCenaValidos = ['personagem','ambiente','ameaca','texto'];\nconst emocoesValidas = ['calma','neutra','tensa','suspense','panico'];\nconst verbosProibidos = /\\b(vejo|olho|observo|aparece|surge|mostra|encontro|noto|percebo)\\b/i;\nconst pronomes1pessoa = /\\b(eu|meu|minha|meus|minhas|me|mim|comigo|n[oó]s|nosso|nossa)\\b/i;\n\n// --- Auto-corrigir typos comuns do Claude nos nomes de campo ---\nfor (const c of cenas) {\n  const typos = ['efeitos_sonores','efeitos_sonors','efeito_sonoro','efeitos_sonoro'];\n  for (const t of typos) {\n    if (c[t] !== undefined && c.efeitos_sonoros === undefined) {\n      c.efeitos_sonoros = c[t];\n      delete c[t];\n    }\n  }\n}\n\nfor (let i = 0; i < cenas.length; i++) {\n  const c = cenas[i];\n  const n = i + 1;\n\n  if (!tiposCenaValidos.includes(c?.tipo_cena)) erros.push(`Cena ${n}: tipo_cena inválido (${c?.tipo_cena})`);\n\n  // Coerência dura: tipo_cena × personagem_presente\n  if (c?.tipo_cena === 'personagem' && c?.personagem_presente !== true) {\n    erros.push(`Cena ${n}: tipo_cena=\"personagem\" exige personagem_presente=true (recebeu ${c?.personagem_presente})`);\n  }\n  if (c?.tipo_cena && c.tipo_cena !== 'personagem' && c?.personagem_presente === true) {\n    erros.push(`Cena ${n}: tipo_cena=\"${c.tipo_cena}\" exige personagem_presente=false (recebeu true)`);\n  }\n\n  // Continuidade: cena 1 nunca pode ter continuidade=true\n  if (n === 1 && c?.continuidade === true) {\n    erros.push(`Cena ${n}: cena 1 não pode ter continuidade=true (não existe cena anterior)`);\n  }\n\n  if (!emocoesValidas.includes(c?.emocao)) erros.push(`Cena ${n}: emocao inválida (${c?.emocao})`);\n\n  if (c?.tipo_cena === 'texto') continue; // texto pula validações de narrativa\n\n  if (c?.descricao_visual === undefined || c?.descricao_visual === null || c.descricao_visual === '') {\n    erros.push(`Cena ${n}: descricao_visual ausente`);\n  }\n  if (c?.narracao === undefined || c?.narracao === null) {\n    erros.push(`Cena ${n}: campo narracao ausente (use \"\" para silêncio)`);\n  } else if (c.narracao && verbosProibidos.test(c.narracao)) {\n    erros.push(`Cena ${n}: narração contém verbo proibido (vejo/olho/aparece/etc)`);\n  } else if (c.narracao && pronomes1pessoa.test(c.narracao)) {\n    erros.push(`Cena ${n}: narração em 1ª pessoa (proibido — usar 3ª pessoa sempre)`);\n  } else if (c.narracao) {\n    const palavras = c.narracao.trim().split(/\\s+/).length;\n    if (palavras > 28) {\n      erros.push(`Cena ${n}: narração muito longa (${palavras} palavras, máx 28)`);\n    } else if (palavras > 18) {\n      avisos.push(`Cena ${n}: narração no limite (${palavras} palavras, ideal ≤18)`);\n    }\n  }\n\n  // prompt_movimento_wan: 2 beats\n  const pmw = c?.prompt_movimento_wan || '';\n  if (!/Beat 1/i.test(pmw) || !/Beat 2/i.test(pmw)) {\n    erros.push(`Cena ${n}: prompt_movimento_wan deve conter \"Beat 1\" e \"Beat 2\"`);\n  }\n\n  // efeitos_sonoros\n  const efx = c?.efeitos_sonoros;\n  if (!Array.isArray(efx)) {\n    erros.push(`Cena ${n}: efeitos_sonoros deve ser array`);\n  } else {\n    for (let j = 0; j < efx.length; j++) {\n      const e = efx[j];\n      if (e?.tipo !== 'banco') erros.push(`Cena ${n} efeito ${j+1}: tipo deve ser \"banco\" (stable_audio proibido)`);\n      if (!e?.tag) erros.push(`Cena ${n} efeito ${j+1}: tag ausente`);\n      else if (!tagsValidas.has(e.tag)) avisos.push(`Cena ${n} efeito ${j+1}: tag \"${e.tag}\" fora do banco — upload manual no preview antes do M06`);\n      if (typeof e?.weight !== 'number' || e.weight < 0.1 || e.weight > 1.0) {\n        erros.push(`Cena ${n} efeito ${j+1}: weight fora do range 0.1-1.0`);\n      }\n    }\n  }\n}\n\nconst _invalida = erros.length > 0;\nreturn [{\n  json: {\n    ...opcao,\n    _invalida,\n    _errosValidacao: erros,\n    _avisosValidacao: avisos,\n    _videoId: opcao._videoId,\n    _opcaoNumero: opcao._opcaoNumero\n  }\n}];"
+      },
+      "id": "86cf86aa-bd57-45be-b3fd-d4b6a7c4f581",
+      "name": "Validar Opção",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3440,
+        2208
+      ],
+      "notes": "Valida: campos obrigatórios, 6-14 cenas, narração ≤20 palavras,\nemoções válidas, efeitos_sonoros válidos, thumbnail null para shorts."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-invalida",
+              "leftValue": "={{ $json._invalida }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b96d2bef-bbe5-45d3-a07a-17e29bbc652f",
+      "name": "IF Inválida",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3616,
+        2320
+      ],
+      "notes": "True (inválida) → descarta, volta pro loop\nFalse (válida) → salva opção + cenas"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Convergência do loop de opções. Volta pro Loop Opções.\nreturn [{ json: { _opcaoDone: true } }];"
+      },
+      "id": "13d2db88-5595-40b3-a7d1-8c289f5c7c78",
+      "name": "Consolidar Opção",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4352,
+        2064
+      ],
+      "notes": "Convergência do loop de opções.\nRecebe de: IF Inválida [true] (descartada) OU Loop Cenas [done] (gravada)."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===================================================================\n// CONTAR VÁLIDAS — Módulo 02A\n// ===================================================================\n// Loop de opções concluído. Conta quantas foram salvas.\n// ===================================================================\n\nconst videoId = $('Preparar Prompt').first().json._videoId;\n\nreturn [{\n  json: {\n    video_id: videoId,\n    mensagem: 'Opções de roteiro geradas e salvas.'\n  }\n}];"
+      },
+      "id": "e6ce22cd-d4d1-4876-9733-b06b34612372",
+      "name": "Contar Válidas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3440,
+        1920
+      ],
+      "notes": "Loop de opções finalizado. Prepara dados para atualizar o vídeo."
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/videos?id=eq.{{ $json.video_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ status: 'aguardando', modulo_atual: '02' }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "0292ce1f-928f-466e-a2dc-17471844dc1d",
+      "name": "Atualizar Vídeo Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3632,
+        1920
+      ],
+      "notes": "PATCH videos: status → 'aguardando' (aguardando aprovação do roteiro)."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, video_id: $('Preparar Prompt').first().json._videoId, mensagem: 'Opções de roteiro geradas. Aguardando aprovação.' }) }}",
+        "options": {}
+      },
+      "id": "e21f424f-16d3-47be-9951-a87a8e2c7860",
+      "name": "Responder Webhook OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        4048,
+        1920
+      ],
+      "notes": "Responde ao frontend com sucesso + video_id."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, video_id: $('Preparar Prompt').first().json._videoId || null, erro: 'Falha ao gerar roteiros. Claude não retornou JSON válido.' }) }}",
+        "options": {}
+      },
+      "id": "e717b62f-6aa9-4ef0-8a70-281726e05c58",
+      "name": "Responder Webhook Erro",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3232,
+        1808
+      ],
+      "notes": "Responde ao frontend com erro se o Claude falhou."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===================================================================\n// GRAVAR OPÇÃO E CENAS — Módulo 02A v3.1\n// Schema novo: aceita campos do prompt v3.1, mapeia descricao_visual→visual,\n// grava campos novos (cena_money_shot, funcao_narrativa, etc), propaga erro\n// via throw em vez de engolir, e atualiza videos.titulo na primeira gravação.\n// ===================================================================\n\nconst opcao = $input.first().json;\nconst config = $('Configuração').first().json;\nconst videoId = opcao._videoId;\nconst baseUrl = config.SUPABASE_URL;\nconst apiKey = config.SUPABASE_SERVICE_KEY;\n\nconst headers = {\n  'apikey': apiKey,\n  'Authorization': `Bearer ${apiKey}`,\n  'Content-Type': 'application/json'\n};\n\n// ============ 1. Gravar opção em roteiro_opcoes ============\nlet opcaoId = null;\ntry {\n  const opcaoRes = await this.helpers.httpRequest({\n    method: 'POST',\n    url: `${baseUrl}/rest/v1/roteiro_opcoes`,\n    headers: { ...headers, 'Prefer': 'return=representation' },\n    body: {\n      video_id: videoId,\n      opcao_numero: opcao._opcaoNumero,\n      roteiro_json: opcao,\n      status: 'pendente',\n      // v3.1 — campos topo\n      titulo: opcao.titulo,\n      caption: opcao.caption,\n      hashtags: opcao.hashtags,\n      thumbnail_conceito: opcao.thumbnail_conceito,\n      numero_declarado_cenas: opcao.numero_declarado_cenas,\n      objeto_recorrente: opcao.objeto_recorrente,\n      loop_tipo: opcao.loop_tipo,\n      arco_narrativo: opcao.arco_narrativo || null,\n      comentario_isca: opcao.comentario_isca,\n      // preservados pro pipeline (M03/M08)\n      sinopse: opcao.sinopse,\n      tom: opcao.tom,\n      texto_final_tela: opcao.texto_final_tela\n    }\n  });\n  opcaoId = Array.isArray(opcaoRes) ? opcaoRes[0]?.id : opcaoRes?.id;\n  if (!opcaoId) throw new Error(`Falha ao gravar opção: resposta sem id. ${JSON.stringify(opcaoRes)}`);\n} catch (e) {\n  throw new Error(`Erro gravando roteiro_opcoes: ${e.message}`);\n}\n\n// ============ 2. Gravar cenas ============\nconst cenas = Array.isArray(opcao.cenas) ? opcao.cenas : [];\nconst totalCenas = cenas.length;\nlet gravadas = 0;\nconst errosCenas = [];\n\nfor (let i = 0; i < cenas.length; i++) {\n  const cena = cenas[i];\n  const ordemNum = Number(cena.numero) || (i + 1);\n\n  // efeitos_sonoros sempre array de objetos {tipo:\"banco\", tag, weight}\n  let efx = cena.efeitos_sonoros || [];\n  if (typeof efx === 'string') {\n    try { efx = JSON.parse(efx); } catch (_) { efx = []; }\n  }\n  if (!Array.isArray(efx)) efx = [];\n\n  try {\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: `${baseUrl}/rest/v1/cenas`,\n      headers: { ...headers, 'Prefer': 'return=minimal' },\n      body: {\n        video_id: videoId,\n        opcao_id: opcaoId,\n        numero: String(ordemNum),\n        ordem: ordemNum,\n        // v3.1 — mapeamentos críticos\n        visual: cena.descricao_visual || '',           // descricao_visual → visual\n        prompt_movimento_wan: cena.prompt_movimento_wan || '',\n        narracao: cena.narracao || '',\n        emocao: cena.emocao || 'neutra',\n        tipo_cena: cena.tipo_cena || 'personagem',     // fallback válido contra CHECK\n        efeitos_sonoros: efx,\n        som_ambiente: cena.som_ambiente || '',\n        movimento: cena.movimento || '',\n        personagem_presente: cena.personagem_presente !== undefined ? cena.personagem_presente : true,\n        continuidade: cena.continuidade === true,\n       transicao_entrada: (function() {\n          // Forçar corte_seco nas 2 últimas cenas (penúltima narrativa + tela de texto final)\n          // para produzir corte limpo no fechamento do vídeo.\n          // ordemNum é 1-based, totalCenas é o count do array.\n          const isPenultima = (ordemNum === totalCenas - 1);\n          const isUltima = (ordemNum === totalCenas);\n          if (isPenultima || isUltima) return 'corte_seco';\n          // Demais cenas: Claude decidiu, fallback dip_to_black\n          return cena.transicao_entrada || 'dip_to_black';\n        })(),\n        perspectiva: 'terceira_pessoa',\n        hook_tipo: ordemNum === 1 ? (cena.hook_tipo || 'acao') : null,\n        // v3.1 — campos novos (colunas adicionadas via migration)\n        cena_money_shot: cena.cena_money_shot === true,\n        cena_1_frame_zero: cena.cena_1_frame_zero || null,\n        funcao_narrativa: cena.funcao_narrativa || null,\n        ancora_sensorial: cena.ancora_sensorial || null,\n        // duracao fixa do canal (5s por cena, regra do pipeline)\n        duracao_estimada: 5.0\n              }\n    });\n    gravadas++;\n  } catch (e) {\n    errosCenas.push(`Cena ${ordemNum}: ${e.message}`);\n  }\n}\n\n// ============ 3. Propaga erro se gravação parcial ============\nif (gravadas !== cenas.length) {\n  throw new Error(\n    `Gravação parcial de cenas: ${gravadas}/${cenas.length}. ` +\n    `Erros: ${errosCenas.join(' | ')}`\n  );\n}\n\n// ============ 4. Atualizar videos.titulo na 1ª opção gravada ============\n// Só na opção 1 pra evitar sobrescrever (todas as 3 podem chegar aqui).\nif (opcao._opcaoNumero === 1 && opcao.titulo) {\n  try {\n    await this.helpers.httpRequest({\n      method: 'PATCH',\n      url: `${baseUrl}/rest/v1/videos?id=eq.${videoId}`,\n      headers: { ...headers, 'Prefer': 'return=minimal' },\n      body: { titulo: opcao.titulo }\n    });\n  } catch (e) {\n    // Não bloqueia: M02B pode atualizar depois quando humano aprovar.\n    console.log(`Aviso: falha ao atualizar videos.titulo: ${e.message}`);\n  }\n}\n\nreturn [{\n  json: {\n    _opcaoId: opcaoId,\n    _opcaoNumero: opcao._opcaoNumero,\n    _cenasGravadas: gravadas,\n    _cenasTotal: cenas.length\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3936,
+        2416
+      ],
+      "id": "83e5a13f-c5c5-47b8-9348-b866636bfd43",
+      "name": "Gravar Opção e Cenas"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/banco_efeitos?select=tag",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2032,
+        2208
+      ],
+      "id": "83af3bdc-a7d9-4592-8fc6-2f4bcfc8bcb2",
+      "name": "Ler Tags Banco"
+    }
+  ],
+  "connections": {
+    "Início Manual": {
+      "main": [
+        [
+          {
+            "node": "Premissa Teste",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Premissa Teste": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Premissa": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar Input": {
+      "main": [
+        [
+          {
+            "node": "Configuração",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configuração": {
+      "main": [
+        [
+          {
+            "node": "Ler Premissa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler Premissa": {
+      "main": [
+        [
+          {
+            "node": "Criar Vídeo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar Vídeo": {
+      "main": [
+        [
+          {
+            "node": "Marcar Premissa Em Uso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar Premissa Em Uso": {
+      "main": [
+        [
+          {
+            "node": "Ler Tags Banco",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Prompt": {
+      "main": [
+        [
+          {
+            "node": "Claude Roteirista",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Claude Roteirista",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude Roteirista": {
+      "main": [
+        [
+          {
+            "node": "Parse Roteiros",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Roteiros": {
+      "main": [
+        [
+          {
+            "node": "Check Erro Parse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Erro Parse": {
+      "main": [
+        [
+          {
+            "node": "IF Erro Parse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Erro Parse": {
+      "main": [
+        [
+          {
+            "node": "Responder Webhook Erro",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Opções",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Opções": {
+      "main": [
+        [
+          {
+            "node": "Contar Válidas",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Validar Opção",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Opção": {
+      "main": [
+        [
+          {
+            "node": "IF Inválida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Inválida": {
+      "main": [
+        [
+          {
+            "node": "Consolidar Opção",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gravar Opção e Cenas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidar Opção": {
+      "main": [
+        [
+          {
+            "node": "Loop Opções",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contar Válidas": {
+      "main": [
+        [
+          {
+            "node": "Atualizar Vídeo Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Vídeo Status": {
+      "main": [
+        [
+          {
+            "node": "Responder Webhook OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gravar Opção e Cenas": {
+      "main": [
+        [
+          {
+            "node": "Consolidar Opção",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler Tags Banco": {
+      "main": [
+        [
+          {
+            "node": "Preparar Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "e316e34d-1f86-4ddc-8e47-922131825cf6",
+  "activeVersionId": "e316e34d-1f86-4ddc-8e47-922131825cf6",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-19T16:29:38.683Z",
+      "createdAt": "2026-03-19T16:29:38.683Z",
+      "role": "workflow:owner",
+      "workflowId": "lwzZn66oziAXHH2n",
+      "projectId": "SoH44tJE4dqRVTiw"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-04-13T18:38:18.000Z",
+    "createdAt": "2026-04-13T18:38:01.115Z",
+    "versionId": "e316e34d-1f86-4ddc-8e47-922131825cf6",
+    "workflowId": "lwzZn66oziAXHH2n",
+    "nodes": [
+      {
+        "parameters": {},
+        "id": "c5b9fae0-5532-4a38-8a78-c3a873ac6e22",
+        "name": "Início Manual",
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          832,
+          2016
+        ],
+        "notes": "⚠️ TESTE MANUAL: clique 'Test workflow' para rodar com a premissa hardcoded no nó seguinte."
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "test-premissa-id",
+                "name": "premissa_id",
+                "value": "3d08d560-14e2-4732-9901-ee3b3f0e808f",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "a5cc0369-b4c9-4f92-be75-c40ebf5604dc",
+        "name": "Premissa Teste",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1024,
+          2016
+        ],
+        "notes": "⚠️ TROQUE O UUID AQUI para testar com outra premissa.\nApós testes, desconecte este caminho e use só o webhook."
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "premissa/selecionar",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "f19fd17f-0b1b-43b7-bc22-69ce3a7a6b91",
+        "name": "Webhook Premissa",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          880,
+          2400
+        ],
+        "webhookId": "premissa-selecionar-02a",
+        "notes": "POST /premissa/selecionar\nPayload: { premissa_id: uuid }\nDisparado pelo frontend ao selecionar uma premissa."
+      },
+      {
+        "parameters": {
+          "jsCode": "// ===================================================================\n// NORMALIZAR INPUT — Módulo 02A\n// ===================================================================\n// Aceita input do Manual Trigger (json.premissa_id)\n// ou do Webhook (json.body.premissa_id).\n// Saída unificada: { premissa_id: uuid }\n// ===================================================================\n\nconst item = $input.first().json;\nconst premissa_id = item.premissa_id || (item.body && item.body.premissa_id) || null;\n\nif (!premissa_id) {\n  throw new Error('premissa_id não encontrado no input.');\n}\n\nreturn [{ json: { premissa_id } }];"
+        },
+        "id": "c2bfe0e6-83f9-4f6a-a24d-6b454c665f3b",
+        "name": "Normalizar Input",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1136,
+          2256
+        ],
+        "notes": "Unifica input de Webhook e Manual Trigger.\nSaída: { premissa_id: uuid }"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "cfg-supa-url",
+                "name": "SUPABASE_URL",
+                "value": "https://vngtopghlmgqjaibqiyb.supabase.co",
+                "type": "string"
+              },
+              {
+                "id": "cfg-supa-key",
+                "name": "SUPABASE_SERVICE_KEY",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuZ3RvcGdobG1ncWphaWJxaXliIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzUzOTg4NiwiZXhwIjoyMDg5MTE1ODg2fQ.xywZiNZ3h6_uVE9-ltt2LAXtZJ8jTezHCE4LmjBxzTk",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "951fe149-bd64-4add-8fc3-38d0ee27c16f",
+        "name": "Configuração",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1328,
+          2224
+        ],
+        "notes": "⚠️ CONFIGURE AQUI:\n1. SUPABASE_URL — URL do projeto Supabase\n2. SUPABASE_SERVICE_KEY — Service Role Key\n\nClaude e Supabase CRUD usam credenciais nativas do n8n."
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "premissas",
+          "limit": 1,
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('Normalizar Input').first().json.premissa_id }}"
+              }
+            ]
+          }
+        },
+        "id": "c3aea662-b6e4-492f-af76-752cbad401c3",
+        "name": "Ler Premissa",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1504,
+          2224
+        ],
+        "alwaysOutputData": true,
+        "credentials": {
+          "supabaseApi": {
+            "id": "7Q7gKenrdhP7dHXE",
+            "name": "OMundodeClay_Supabase"
+          }
+        },
+        "notes": "Busca a premissa selecionada por ID."
+      },
+      {
+        "parameters": {
+          "tableId": "videos",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "premissa_id",
+                "fieldValue": "={{ $('Ler Premissa').first().json.id }}"
+              },
+              {
+                "fieldId": "modulo_atual",
+                "fieldValue": "02"
+              },
+              {
+                "fieldId": "status",
+                "fieldValue": "processando"
+              }
+            ]
+          }
+        },
+        "id": "66c75cb7-30ff-4dcb-b84e-92f3669e8fcf",
+        "name": "Criar Vídeo",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1632,
+          2208
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "7Q7gKenrdhP7dHXE",
+            "name": "OMundodeClay_Supabase"
+          }
+        },
+        "notes": "Cria registro na tabela videos.\nRetorna o video_id gerado automaticamente."
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/premissas?id=eq.{{ $('Ler Premissa').first().json.id }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=minimal"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ status: 'em_uso', video_id: $('Criar Vídeo').first().json.id }) }}",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "00fc898d-5d93-4519-b78e-b8f2804f5e2d",
+        "name": "Marcar Premissa Em Uso",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1824,
+          2208
+        ],
+        "notes": "PATCH via REST API: marca premissa como 'em_uso' e vincula ao video_id."
+      },
+      {
+        "parameters": {
+          "jsCode": "// ===================================================================\n// PREPARAR PROMPT — Módulo 02A v3.2-simplicidade\n// Cole este código no jsCode do nó \"Preparar Prompt\".\n// Mudanças vs v3.2 anterior:\n//  - PRINCÍPIO MESTRE de simplicidade no topo (sobrescreve regras)\n//  - Teste de pitch em ≤12 palavras antes de escrever cenas\n//  - Regra 7 afrouxada: subtexto em 1 cena (não ≥2)\n//  - Regra 10 afrouxada: 1 impossibilidade única, não múltiplas\n//  - Regra 12 afrouxada: 1 plant só\n//  - Regra 15 virou opcional: objeto_recorrente só se fizer sentido natural\n//  - Checklist final com TESTE DE SIMPLICIDADE no topo\n// ===================================================================\n\nconst premissa = $('Ler Premissa').first().json;\nconst videoId = $('Criar Vídeo').first().json.id;\n\n// --- Tags do banco_efeitos vindas do nó \"Ler Tags Banco\" ---\nconst efeitosRaw = $('Ler Tags Banco').all().map(i => i.json);\nconst lista = efeitosRaw.length === 1 && Array.isArray(efeitosRaw[0]) ? efeitosRaw[0] : efeitosRaw;\nconst seen = new Set();\nconst unicos = lista.filter(e => {\n  if (!e || !e.tag || seen.has(e.tag)) return false;\n  seen.add(e.tag);\n  return true;\n});\nif (unicos.length === 0) throw new Error('Preparar Prompt: banco_efeitos vazio.');\nconst tagsTexto = unicos.map(e => `- ${e.tag}: ${e.descricao || ''}`).join('\\n');\n\n// --- SYSTEM PROMPT v3.2-simplicidade ---\nconst systemPrompt = `Você é o Roteirista-Chefe do canal \"O Mundo de Clay\" — horror claymation PT-BR para YouTube Shorts. Gere 3 OPÇÕES de roteiro em JSON estrito.\n\nFILOSOFIA INEGOCIÁVEL — UNCANNY CUTE\nClaymation fofa contra horror psicológico. O contraste É o medo. Visual carrega o horror. Narração nunca descreve o que se vê. Subtexto sobre texto. Espectador conclui sozinho. O vídeo faz a pessoa SENTIR, não entender. Horror intelectual não viraliza. Desconforto físico sim.\n\n═══════════════════════════════════════════════════════\nPRINCÍPIO MESTRE — SIMPLICIDADE RADICAL\n═══════════════════════════════════════════════════════\n\nESTE PRINCÍPIO SOBRESCREVE QUALQUER UMA DAS 20 REGRAS ABAIXO QUANDO HOUVER CONFLITO.\n\nO espectador de Shorts tem 3 segundos para decidir se fica. Se ele se sente confuso, ele rola o feed — mesmo que o roteiro seja inteligente. \"Confuso\" não significa \"errado\"; significa \"perdido demais para continuar tentando\". Retenção na primeira assistida importa mais do que rewatchability para um canal em crescimento.\n\nTETO DE COMPLEXIDADE — HARD LIMITS por roteiro:\n- UMA ideia central. Só uma. Se você consegue explicar o vídeo em até 12 palavras para um amigo de 12 anos, passou. Se precisa de mais, tem ideia demais — corte.\n- UMA regra quebrada da realidade. Só uma. Múltiplas impossibilidades competem entre si e o espectador não guarda nenhuma. Toda cena do vídeo orbita em torno dessa única quebra.\n- UM reveal principal. Só um. O twist recontextualiza uma coisa, não três. O espectador assiste ao vídeo inteiro esperando entender essa uma coisa, e quando entende, o vídeo acaba.\n- UM plant sutil para rewatch. Um, não três. Mais de um dilui o impacto e confunde qual é \"a pista\".\n- CONECTORES rastreáveis entre cenas. Se o espectador não consegue explicar \"o que levou a cena 2 a virar cena 3\" com uma frase, a transição está obscura demais. Cada cena deve decorrer logicamente da anterior — o estranho pode ser irreal, mas o encadeamento deve ser intuitivo.\n\nTESTE DE PITCH — OBRIGATÓRIO antes de escrever as cenas:\nAntes de começar a primeira cena de uma opção, formule mentalmente o pitch dessa opção em UMA frase de no máximo 12 palavras. Se não cabe em 12, você tem elementos demais — corte até caber. Só então escreva as cenas. Use o pitch como ancora — toda cena do roteiro deve servir ao pitch, não adicionar camadas que fogem dele.\n\nEXEMPLO DE PITCH QUE PASSA:\n\"Um botão sem número do elevador leva a um andar que aprisiona quem aperta.\"\n(13 palavras — borderline, mas tem UMA ideia, UMA impossibilidade, conflito claro. Aceitável.)\n\nEXEMPLO DE PITCH QUE NÃO PASSA:\n\"Um botão sem número leva a um andar onde Clay vira o guardião que aprisiona próximos visitantes num loop entre edifícios diferentes.\"\n(22 palavras, múltiplas ideias — \"andar fantasma\" + \"virar guardião\" + \"loop entre prédios\" + \"aprisionar outros\". O espectador precisa rastrear 4 coisas. Confusão garantida.)\n\nA diferença entre os dois pitches é a diferença entre um Shorts que retém e um Shorts que perde o espectador no meio do segundo ato.\n\nREGRA DE DECISÃO — quando em dúvida:\nEntre \"mais rico\" e \"mais claro\", escolha SEMPRE mais claro. Claro retém. Rico sem clareza perde.\nEntre \"mais inteligente\" e \"mais direto\", escolha SEMPRE mais direto. Direto não exige esforço, inteligente exige — e esforço afasta o espectador rolando feed.\nEntre \"mais simbólico\" e \"mais literal\", escolha SEMPRE mais literal. Símbolos funcionam em filme contemplativo. Horror de Shorts precisa de impacto imediato no corpo.\n\n═══════════════════════════════════════════════════════\nAS 20 REGRAS OBRIGATÓRIAS (v3.2)\n═══════════════════════════════════════════════════════\n\n1. HOOK IN MEDIA RES: Cena 1 abre NO MEIO de uma ação que já está acontecendo. O espectador chega atrasado. Zero setup. Teste: \"no segundo 0, há motivo pra não rolar o feed?\" NUNCA começar com \"Clay entrou/encontrou/chegou/acordou\".\nERRADO: \"Clay entrou num arcade abandonado. Só uma máquina brilhava.\"\nCERTO: \"A tela dizia game over. Mas a dor no ombro era real.\"\nERRADO: \"Clay acordou na cama.\"\nCERTO: \"As mãos não eram dele. Mas estavam no corpo dele.\"\n\n2. FRAME ZERO QUEBRADO: cena 1 com composição desconfortável (descentralizada/cortada/ângulo errado) E primeiros 0.5s estáticos (pose já errada). Campo cena_1_frame_zero só na cena 1. O desconforto é instantâneo, antes mesmo do movimento começar.\n\n3. CLAREZA INSTANTÂNEA — OS 2 SEGUNDOS: O cérebro precisa entender em 2 segundos quem é o personagem e o que está acontecendo. Intrigante mas entendível. Se confunde → swipe. Se intriga → retenção. Cena 1 obrigatoriamente mostra Clay (ou a ameaça) em situação reconhecível-mas-errada. Reconhecível é não-negociável.\n\n4. NARRAÇÃO COMPLEMENTAR — REGRA DE OURO: A narração NUNCA descreve o que o espectador pode ver. NUNCA. A imagem mostra o visual. A narração adiciona o que a imagem NÃO consegue mostrar: sensações físicas, pensamentos, tempo, contexto invisível, informação que contradiz o visual.\nERRADO: \"Clay olhou para a máquina brilhando.\" (descreve a imagem)\nCERTO: \"Ele conhecia aquele cheiro. Moedas velhas e suor.\" (sensação invisível)\nERRADO: \"Clay abriu a caixa e encontrou um dedo.\" (descreve ação visível)\nCERTO: \"Ainda quente.\" (sensação que a imagem não transmite)\nTeste: se remover a narração e a cena ainda faz sentido visual, está cumprindo o papel. Se fica incompreensível sem narração, está descrevendo em vez de complementar.\n\n5. VERBOS PROIBIDOS E TAMANHO: Verbos PROIBIDOS na narração: vejo, olho, observo, está, há, tem, aparece, surge, mostra, encontro, noto, percebo. Cada narração tem NO MÁXIMO 18 palavras (ideal 12-15). Frases curtas, cortantes, fragmentadas. Usar reticências (…) para pausas dramáticas. Usar pontos para cortar. Nunca frases longas com vírgulas encadeadas.\nERRADO: \"Quando o personagem bateu na parede do labirinto, Clay sentiu dor no ombro.\"\nCERTO: \"Game over. A dor no ombro… era real.\"\n\n6. NARRAÇÃO SEMPRE EM 3ª PESSOA (regra dura do canal): A narração JAMAIS usa 1ª pessoa. Pronomes/formas PROIBIDOS: eu, meu, minha, meus, minhas, me, mim, comigo, nós, nosso, nossa. Verbos conjugados em 1ª pessoa do singular (\"acreditei\", \"vi\", \"sei\", \"morri\") também proibidos. SEMPRE narrar de fora, observando o personagem em 3ª pessoa: \"Clay nunca acreditou\", \"Ele percebeu tarde demais\", \"Algo em Clay sabia\". O distanciamento da 3ª pessoa intensifica o uncanny.\n\n7. SUBTEXTO SOBRE TEXTO — UMA VEZ SÓ: Em EXATAMENTE 1 cena do roteiro, narração diz UMA coisa enquanto visual mostra OUTRA que contradiz/complica/ironiza. Use no momento que mais importa — tipicamente a cena de respiro falso, onde a calma narrada é desmentida pelo visual. Subtexto repetido deixa de ser subtexto e vira padrão previsível — use uma única vez com força máxima.\n\n8. ESCALADA OBRIGATÓRIA (5 níveis): A cada cena, a situação DEVE piorar. Nunca estabilizar. Arco emocional:\n1) Estranho (algo fora do lugar)\n2) Desconfortável (começa a incomodar)\n3) Errado (claramente anormal)\n4) Impossível (quebra a lógica)\n5) Inevitável (não tem como parar)\nSe uma cena não piora em relação à anterior, ela não deveria existir. Cortar.\n\n9. MICRO-GANCHOS DE TRANSIÇÃO: A narração deve criar mini cliffhangers entre cenas. Usar palavras-âncora que seguram atenção: \"Mas…\", \"Só que…\", \"Até que…\", \"Então…\", \"E dessa vez…\". Cada final de narração cria expectativa pra próxima cena. Transições devem ser rastreáveis: o espectador precisa sentir que a cena N levou à cena N+1, não que elas apenas se seguem no tempo.\n\n10. UMA QUEBRA DE LÓGICA — NÃO MAIS: O vídeo tem EXATAMENTE 1 momento que quebra a lógica da realidade. Um só. Todo o resto do vídeo orbita em torno dessa única quebra. Múltiplas impossibilidades competem entre si e o espectador não guarda nenhuma. Escolha a mais forte e faça ela ser A coisa que o espectador vai lembrar quando pensar no vídeo.\nExemplos de UMA quebra bem-escolhida: dedo está no corpo e fora ao mesmo tempo / saída leva pro mesmo lugar / reflexo se move sozinho / objeto impossível de existir. Escolha uma, não combine.\n\n11. TWIST VISUAL, NUNCA NARRATIVO: O twist deve ser MOSTRADO pela imagem, não narrado. A narração no momento do twist é ambígua, curta ou contraditória — NUNCA explicativa. O espectador percebe pelo visual e sente o arrepio.\nERRADO narração: \"Ele percebeu que sempre foi o monstro.\"\nCERTO narração: \"Sempre foi assim.\" (enquanto a imagem revela)\nO twist recontextualiza UMA coisa — não três. O espectador deve sair do vídeo entendendo uma verdade nova, não quebrando a cabeça com múltiplas revelações.\n\n12. UM DETALHE PLANTADO — UM SÓ: Plantar EXATAMENTE 1 detalhe sutil na cena 1 ou 2 que só faz sentido depois do twist. Um único. Um objeto, uma sombra, um elemento visual que parece inocente mas revela a verdade na segunda assistida. Mais de um plant dilui — o espectador não sabe qual é \"a pista\" e não pesca nenhuma de verdade. Um plant forte é melhor que três fracos.\n\n13. ANCORA SENSORIAL NÃO-VISUAL: em ≥1 cena, narração ancora num sentido não-visual (cheiro, textura, gosto, temperatura, som imaginado). Campo ancora_sensorial.\n\n14. AMEAÇA FALSA: ≥1 cena com funcao_narrativa:\"ameaca_falsa\" — leva a esperar perigo de uma direção, o real está em outra (ou nunca revelado).\n\n15. OBJETO RECORRENTE — OPCIONAL: Se o roteiro pedir naturalmente, UM objeto pode recorrer em até 3 cenas com significado transformando-se. Mas NÃO FORCE — muitos roteiros funcionam melhor sem objeto recorrente. Só use quando o objeto É a espinha dorsal visual da ideia central (ex: o tema é sobre um espelho, um relógio, uma boneca). Se o objeto seria adicionado só pra cumprir uma regra, omita e deixe o campo objeto_recorrente: null. Decoração não ajuda — atrapalha.\n\n16. MONEY SHOT + RESPIRO FALSO: marque UMA cena com cena_money_shot:true (vende a thumb — é A imagem do vídeo, não uma entre várias). Marque ≥1 cena com funcao_narrativa:\"respiro_falso\". Campos no topo: titulo (≤45 chars) e thumbnail_conceito. A money shot deve ser facilmente descritível em uma frase (\"Clay refletido com rosto sem olhos\", \"Mão saindo do teto de clay\"). Se precisa de parágrafo pra descrever, não é money shot — é cena confusa.\n\n17. TIPO DE CENA E PERSONAGEM (decisão visual mais importante do roteiro): tipo_cena define o que aparece na tela E determina personagem_presente. Valores VÁLIDOS:\n- \"personagem\": Clay aparece em cena (corpo visível, rosto visível, ou parte reconhecível como mão/pé/reflexo em POV). OBRIGATÓRIO personagem_presente: true.\n- \"ambiente\": Apenas cenário, sem Clay e sem ameaça antropomórfica. Objetos, lugares, detalhes do mundo. OBRIGATÓRIO personagem_presente: false.\n- \"ameaca\": Sombra, silhueta, reflexo distorcido, presença sem forma humana definida. Clay NÃO aparece. OBRIGATÓRIO personagem_presente: false.\n- \"texto\": Tela preta com texto na fonte Creepster. Sem personagem, sem cenário. OBRIGATÓRIO personagem_presente: false.\nREGRAS DURAS DE COERÊNCIA — ZERO EXCEÇÕES:\n- tipo_cena == \"personagem\" ⇒ personagem_presente DEVE ser true. Nunca false.\n- tipo_cena != \"personagem\" ⇒ personagem_presente DEVE ser false. Nunca true.\n- Nunca omita personagem_presente. Nunca deixe ambíguo.\n- Cenas POV só contam como \"personagem\" se mostram parte do corpo de Clay (mão, pé, reflexo identificável). Sem parte do corpo = \"ambiente\" ou \"ameaca\".\n- SHORTS: tipo_cena \"texto\" permitido APENAS como última cena (tela final com texto_final_tela).\n\n18. FINAL FORTE (últimos 2-3 segundos): O final nunca pode ser fraco. 3 tipos que viralizam:\n- Inevitabilidade: \"isso vai acontecer de novo\"\n- Revelação: \"sempre foi assim\"\n- Ameaça contínua: \"ainda não terminou\"\ntexto_final_tela: 3-6 palavras, ambíguo, deixa UMA pergunta sem resposta que gere debate nos comentários. NUNCA explicar tudo. A FONTE DO HORROR NUNCA é revelada na última cena — causa fica fora de quadro, cena final mostra consequência/eco/loop. A última cena narrativa entrega o reveal visualmente — pelo visual, sem explicação.\n\n19. LOOP OBRIGATÓRIO: Última cena narrativa (antes da tela de texto) conecta à primeira. Campo loop_tipo: \"literal\" | \"tematico\" | \"invertido\". O espectador pensa \"pera… então isso significa que…\" — isso gera replay e compartilhamento. Mas o loop deve ser SIMPLES de pegar — literal é mais forte que temático para o público de Shorts. Prefira literal sempre que possível.\n\n20. VISUAL RICO + VARIAR AMBIENTES: O campo descricao_visual deve explorar o charme do miniature set claymation. Descrever 3-4 props com textura de clay visível. Aproveitar a estética handmade: imperfeições, marcas de dedo, texturas orgânicas. Cenários devem parecer dioramas detalhados — nunca vazios. VARIAR AMBIENTES entre vídeos: ateliês, porões, sótãos, becos, estações abandonadas, florestas, igrejas em ruínas, escritórios, hospitais, túneis, cemitérios, fábricas, bibliotecas, elevadores, barcos, metrô vazio. NÃO limitar a quartos e casas. Visual rico NÃO significa visual confuso — cada cena ainda deve ser lida em 1 segundo.\n\n═══════════════════════════════════════════════════════\nREGRAS TÉCNICAS DO PIPELINE\n═══════════════════════════════════════════════════════\n\nA. EFEITOS SONOROS — APENAS BANCO: efeitos_sonoros é array de objetos {tipo:\"banco\", tag:\"<tag>\", weight:0.1-1.0}. tipo SEMPRE \"banco\". stable_audio FOI REMOVIDO — nunca usar. Tag deve existir EXATAMENTE na lista no fim deste prompt — não inventar, não traduzir, não modificar. Efeito principal weight 1.0, complementares ≤0.5. Cenas de silêncio podem ter efeitos_sonoros: [] (máx 1-2 por roteiro).\n\nB. som_ambiente: campo em português descrevendo a atmosfera sonora geral da cena. Complementa efeitos_sonoros com contexto atmosférico. Ex: \"Silêncio tenso de quarto vazio, relógio distante ticando\", \"Respiração controlada, eco de banheiro vazio\", \"Som de swipe digital amplificado, suspiro coletivo\". SEMPRE preencher.\n\nC. MOVIMENTO WAN — 2 BEATS + UM MOVIMENTO PRINCIPAL: prompt_movimento_wan com exatamente 2 micro-ações sequenciais em inglês. Formato: \"Beat 1 (0-2.5s): X. Beat 2 (2.5-5s): Y.\" Um movimento principal por beat. Incluir \"continuous motion throughout\" ou \"slow movement throughout\". IMPORTANTE: o WAN CONGELA quando recebe múltiplas instruções simultâneas — nunca empilhar ações em paralelo.\nERRADO: \"character slowly reaches hand, head lowers, fingers tremble, shoulders drop\"\nCERTO: \"Beat 1 (0-2.5s): hands move slowly downward reaching for collar, continuous downward motion. Beat 2 (2.5-5s): fingers tremble against fabric, slow movement throughout\"\nO campo movimento (separado do prompt_movimento_wan) traz a versão curta em inglês do movimento único principal — o M03 usa como base para refinar o prompt_movimento_wan final.\n\nD. CAPTION 3 LINHAS (funções distintas por linha):\n- Linha 1: atmosfera intrigante, cria clima\n- Linha 2: levanta dúvida ou tensão (se A Noiva aparece, referência ENIGMÁTICA aqui — nunca nomear, nunca explicar)\n- Linha 3: pergunta provocativa (obrigatória)\nSeparar linhas com \\\\n (quebra de linha real no JSON). NUNCA entrega trama, twist ou revelação. NUNCA call-to-action explícito.\nERRADO: \"Clay encontra objetos de pessoas mortas. A poltrona gira sozinha.\"\nCERTO: \"Algumas portas existem por um motivo. Clay não deveria ter aberto. E se ela também estivesse lá?\"\n\nE. HASHTAGS PIRÂMIDE FIXA (5, ordem rígida): #MundodeClay → [nicho ex #terrorpsicologico] → [específica do vídeo ex #ojogo] → [emocional ex #arrepio] → #shorts.\n\nF. TÍTULO: máximo 3-4 palavras. Cria curiosity gap sem entregar a história.\nERRADO: \"Clay encontra cômodo misterioso\"\nCERTO: \"O Cômodo\"\nERRADO: \"A escultura que ganhou vida\"\nCERTO: \"A Primeira Forma\"\n\nG. comentario_isca: comentário curto (tom de espectador confuso/assustado) que o canal posta no próprio vídeo pra puxar engajamento sem revelar nada.\n\nH. CONTINUIDADE DE CENÁRIO: Quando duas cenas consecutivas acontecem no MESMO ambiente (mesma sala, mesma localização, mesma hora do dia), marcar continuidade: true na cena filha (a segunda do par). Isso permite ao pipeline preservar elementos visuais entre elas — mesma luz, mesmos props de fundo, mesma paleta. Cena 1 sempre continuidade: false. Sempre que muda de lugar, continuidade: false. Use continuidade sempre que duas cenas genuinamente dividam ambiente — é o default quando o roteiro permite, não a exceção.\n\nI. TRANSIÇÃO DE ENTRADA — RITMO: Campo transicao_entrada controla como a cena entra em tela no pipeline de montagem (FFmpeg). Valores: \"dip_to_black\" (fade suave de 0.5s entrando e saindo) ou \"corte_seco\" (instantâneo, sem fade).\n\nDIRETRIZ (Claude decide caso a caso, priorize o ritmo narrativo):\n- calma, neutra, tensa ⇒ tende a dip_to_black (ritmo de buildup, respiros entre cenas)\n- suspense, panico ⇒ tende a corte_seco (ritmo de clímax, impacto direto)\nO ritmo DEVE acelerar quando a tensão sobe. Mas pode inverter quando o ritmo da cena específica pedir: suspense contemplativo longo aceita dip_to_black, cena tensa de virada pode pedir corte_seco.\n\nOBSERVAÇÃO TÉCNICA: o pipeline força corte_seco automaticamente nas 2 últimas cenas (penúltima narrativa + tela de texto final) para produzir um fechamento limpo. Você não precisa se preocupar com isso — pode escolher livremente, o sistema sobrescreve no momento do INSERT.\n\nJ. HOOK DA CENA 1: a primeira cena tem um tipo de hook declarado no campo hook_tipo. Valores válidos:\n- \"pergunta\": abre questionando (narração = pergunta implícita ou provocação mental)\n- \"afirmacao\": abre declarando algo inquietante como fato\n- \"acao\": abre no meio de uma ação já em andamento (in media res — padrão recomendado)\n- \"cenario\": abre estabelecendo uma imagem carregada que contém o conflito\nSó a cena 1 preenche hook_tipo. Nas demais cenas, omitir o campo ou usar null. Varie entre vídeos — não force sempre \"acao\".\n\nK. ARCO NARRATIVO (no topo da opção, não por cena): Campo arco_narrativo descreve a trajetória emocional/narrativa da opção em 5 beats separados por \" → \" (seta com espaços). Cada beat é 2-4 palavras. Deve refletir a escalada da Regra 8 E o pitch (Princípio Mestre). Exemplo: \"Rotina estranha → Detalhe errado → Ninguém percebe → Impossível de ignorar → Sempre foi assim\". Serve de mapa narrativo pro editor e pro preview.\n\n═══════════════════════════════════════════════════════\nCONTAGEM DETERMINÍSTICA — OBRIGATÓRIO\n═══════════════════════════════════════════════════════\n\nCampo no topo de CADA opção: numero_declarado_cenas (int).\n\nREGRA EXATA: numero_declarado_cenas é o count de cenas onde tipo_cena != \"texto\". Cenas com tipo_cena == \"texto\" NÃO contam.\n\nRange válido (de cenas narrativas, sem contar texto): 8-11.\n\nEXEMPLO 1: Você gera 9 cenas narrativas + 1 cena de texto final = 10 itens no array \"cenas\". \n→ numero_declarado_cenas = 9 (não 10). A cena de texto não conta.\n\nEXEMPLO 2: Você gera 11 cenas narrativas + 1 cena de texto final = 12 itens no array \"cenas\".\n→ numero_declarado_cenas = 11. A cena de texto não conta.\n\nPROCEDIMENTO OBRIGATÓRIO antes de declarar o número:\n1. Conte literalmente as cenas onde tipo_cena é \"personagem\", \"ambiente\" ou \"ameaca\".\n2. NÃO conte cenas onde tipo_cena é \"texto\".\n3. Esse count É o numero_declarado_cenas.\n4. Confirme que o número está entre 8 e 11.\n\n═══════════════════════════════════════════════════════\nJSON TEMPLATE\n═══════════════════════════════════════════════════════\n\n{\n  \"opcoes\": [\n    {\n      \"opcao\": 1,\n      \"titulo\": \"≤45 chars, 3-4 palavras curiosity gap\",\n      \"thumbnail_conceito\": \"descrição da money shot\",\n      \"numero_declarado_cenas\": 9,\n      \"arco_narrativo\": \"beat1 → beat2 → beat3 → beat4 → beat5\",\n      \"objeto_recorrente\": {\"nome\":\"...\", \"transformacoes\":[\"s1\",\"s2\",\"s3\"]},\n      \"loop_tipo\": \"literal|tematico|invertido\",\n      \"caption\": \"linha1\\\\nlinha2\\\\nlinha3 (pergunta?)\",\n      \"hashtags\": [\"#MundodeClay\",\"#nicho\",\"#especifica\",\"#emocional\",\"#shorts\"],\n      \"comentario_isca\": \"...\",\n      \"sinopse\": \"1-2 frases de contexto narrativo\",\n      \"tom\": \"ex: horror psicológico, suspense íntimo\",\n      \"texto_final_tela\": \"frase curta para a tela final do vídeo\",\n      \"cenas\": [\n        {\n          \"numero\": 1,\n          \"tipo_cena\": \"personagem | ambiente | ameaca | texto\",\n          \"personagem_presente\": true,\n          \"continuidade\": false,\n          \"transicao_entrada\": \"dip_to_black | corte_seco\",\n          \"hook_tipo\": \"pergunta | afirmacao | acao | cenario (só na cena 1, null nas demais)\",\n          \"descricao_visual\": \"3-4 props de clay + ambiente detalhado\",\n          \"som_ambiente\": \"atmosfera sonora em português\",\n          \"movimento\": \"movimento único principal em inglês\",\n          \"cena_1_frame_zero\": \"só na cena 1, composição desconfortável\",\n          \"narracao\": \"≤18 palavras, sem verbos proibidos, 3ª pessoa\",\n          \"ancora_sensorial\": \"string|null\",\n          \"prompt_movimento_wan\": \"Beat 1 (0-2.5s): X. Beat 2 (2.5-5s): Y.\",\n          \"efeitos_sonoros\": [{\"tipo\":\"banco\",\"tag\":\"<tag>\",\"weight\":1.0}],\n          \"emocao\": \"calma|neutra|tensa|suspense|panico\",\n          \"funcao_narrativa\": \"hook|respiro_falso|ameaca_falsa|escalada|money_shot|loop_fechamento|null\",\n          \"cena_money_shot\": false\n        }\n      ]\n    }\n  ]\n}\n\nCampo objeto_recorrente é OPCIONAL — use null quando o roteiro não tem espinha dorsal visual clara, preenchido apenas quando o objeto é central à ideia.\n\n═══════════════════════════════════════════════════════\nCHECKLIST FINAL — revalide TUDO antes de responder\n═══════════════════════════════════════════════════════\n\n[ ] 0. TESTE DE SIMPLICIDADE (se FALHAR qualquer item, reescreva a opção inteira):\n    - Pitch em ≤12 palavras?\n    - Uma criança de 12 anos entende o que acontece em 1 assistida?\n    - Explicável em 1 frase a um amigo, sem \"e então… e depois… e também…\"?\n    - Zero confusão sobre o que é real e o que é simbólico?\n    - Uma única quebra de lógica, não várias?\n    - Um único reveal, não múltiplos?\n    - Um único plant, não três?\n\n[ ] 1 hook in media res + exemplos respeitados  [ ] 2 frame zero quebrado cena 1\n[ ] 3 clareza em 2 segundos  [ ] 4 narração complementar (nunca descreve imagem)\n[ ] 5 zero verbos proibidos + ≤18 palavras  [ ] 6 3ª pessoa em TODAS as cenas\n[ ] 7 subtexto em EXATAMENTE 1 cena (não ≥2)  [ ] 8 escalada piora a cada cena  [ ] 9 micro-ganchos entre cenas\n[ ] 10 EXATAMENTE 1 quebra de lógica  [ ] 11 twist mostrado, não narrado, recontextualiza UMA coisa\n[ ] 12 EXATAMENTE 1 detalhe plantado  [ ] 13 ancora_sensorial não-visual ≥1\n[ ] 14 ameaca_falsa ≥1  [ ] 15 objeto_recorrente opcional (null se não for natural)\n[ ] 16 money_shot descritível em 1 frase + respiro_falso + titulo + thumbnail_conceito\n[ ] 17 COERÊNCIA tipo_cena × personagem_presente em TODAS as cenas\n[ ] 18 final forte (inevitabilidade/revelação/ameaça) + causa fora de quadro\n[ ] 19 loop_tipo + cena final narrativa liga à 1 (preferir literal)\n[ ] 20 visual rico 3-4 props + ambiente variado + cada cena legível em 1s\n[ ] A só tags do banco, formato objeto, sem stable_audio\n[ ] B som_ambiente preenchido em todas cenas  [ ] C movimento preenchido em todas cenas\n[ ] D caption 3 linhas com funções distintas + pergunta\n[ ] E 5 hashtags ordem-pirâmide  [ ] F titulo 3-4 palavras curiosity gap\n[ ] G comentario_isca preenchido\n[ ] H continuidade true sempre que duas cenas dividem ambiente (não force parcimônia)\n[ ] I transicao_entrada: cena 1 dip/corte livre, sistema força corte_seco nas 2 últimas\n[ ] J hook_tipo preenchido SÓ na cena 1, null nas demais\n[ ] K arco_narrativo com 5 beats separados por → alinhado ao pitch\n[ ] EXTRA numero_declarado_cenas == count(cenas tipo!=texto), entre 8 e 11\n[ ] EXTRA teste de compartilhabilidade: alguém mandaria isso pra um amigo dizendo \"mano olha isso\"?\n[ ] EXTRA teste da criança de 12 anos: ela sai do vídeo sabendo o que aconteceu?\n\n═══════════════════════════════════════════════════════\nCAMPOS PRESERVADOS DO PIPELINE\n═══════════════════════════════════════════════════════\n\n- sinopse (M03 lê pra contexto da Direção Artística)\n- tom (M03 lê pra estilo)\n- texto_final_tela (M08 usa na tela final do vídeo)\n- emocao por cena: OBRIGATÓRIO. Valores válidos: calma, neutra, tensa, suspense, panico (mapeia o banco de vozes do TTS no M05).\n- movimento: consumido pelo M03 como base para refinar prompt_movimento_wan\n- som_ambiente: contexto atmosférico preservado pro pipeline\n\n═══════════════════════════════════════════════════════\nTAGS DE ÁUDIO DISPONÍVEIS NO BANCO (use APENAS estas)\n═══════════════════════════════════════════════════════\n${tagsTexto}\n\nNUNCA inventar tags. NUNCA usar tipo \"stable_audio\". Se nenhuma encaixa, escolha a mais próxima OU use efeitos_sonoros: [].\n\nResponda SOMENTE com o JSON. Sem markdown, sem preâmbulo, sem comentários.`;\n\nconst userMessage = `PREMISSA: ${premissa.premissa}\\n\\nPADRÃO TEMÁTICO: ${premissa.padrao_tematico} (padrão ${premissa.padrao_numero})\\n\\nGere 3 opções de roteiro completas em JSON. ANTES de escrever as cenas de cada opção, formule mentalmente o pitch em ≤12 palavras (Princípio Mestre). Valide cada opção contra a CHECKLIST antes de retornar, começando pelo item 0 (TESTE DE SIMPLICIDADE).`;\n\nreturn [{\n  json: {\n    _systemPrompt: systemPrompt,\n    _userMessage: userMessage,\n    _videoId: videoId,\n    _premissaId: premissa.id\n  }\n}];"
+        },
+        "id": "524a4f3f-6939-4721-9e6c-05323c91179c",
+        "name": "Preparar Prompt",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2240,
+          2208
+        ],
+        "notes": "Monta system prompt com todas as regras do canal + formato JSON esperado.\nUser message: premissa + padrão temático."
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "claude-sonnet-4-6",
+            "mode": "list",
+            "cachedResultName": "Claude Sonnet 4.6"
+          },
+          "options": {
+            "maxTokensToSample": 16384,
+            "temperature": 0.9
+          }
+        },
+        "id": "486e69fb-b041-419f-a1f9-8c9450bebe70",
+        "name": "Anthropic Chat Model",
+        "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+        "typeVersion": 1.3,
+        "position": [
+          2544,
+          2416
+        ],
+        "credentials": {
+          "anthropicApi": {
+            "id": "h5r0hNi26YDkGMvp",
+            "name": "Anthropic"
+          }
+        },
+        "notes": "Sonnet 4.5, 8192 tokens (3 roteiros completos), temperature 0.9 para variedade criativa."
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "={{ $json._userMessage }}",
+          "messages": {
+            "messageValues": [
+              {
+                "message": "={{ $json._systemPrompt }}"
+              }
+            ]
+          }
+        },
+        "id": "89c1d83e-b9f1-4f94-80ef-39483c22b850",
+        "name": "Claude Roteirista",
+        "type": "@n8n/n8n-nodes-langchain.chainLlm",
+        "typeVersion": 1.4,
+        "position": [
+          2432,
+          2208
+        ],
+        "retryOnFail": true,
+        "waitBetweenTries": 5000,
+        "notes": "Gera 3 opções de roteiro completas via Claude Sonnet 4.5.\nOutput esperado: JSON com array 'opcoes' de 3 elementos."
+      },
+      {
+        "parameters": {
+          "jsCode": "// ===================================================================\n// PARSE ROTEIROS — Módulo 02A\n// ===================================================================\n// Extrai as 3 opções do response do Claude.\n// Cada opção vira um item separado para o loop.\n// ===================================================================\n\nconst response = $input.first().json;\nconst videoId = $('Preparar Prompt').first().json._videoId;\n\nlet opcoes = [];\n\ntry {\n  const text = response.text || response.response || '';\n  const clean = text.replace(/```json|```/g, '').trim();\n  const parsed = JSON.parse(clean);\n  opcoes = parsed.opcoes || [];\n} catch (e) {\n  // Se falhar o parse, tenta encontrar o JSON no texto\n  const text = response.text || response.response || '';\n  const match = text.match(/\\{[\\s\\S]*\\}/);\n  if (match) {\n    try {\n      const parsed = JSON.parse(match[0]);\n      opcoes = parsed.opcoes || [];\n    } catch (e2) {\n      // Parse falhou completamente\n    }\n  }\n}\n\nif (opcoes.length === 0) {\n  return [{ json: { _erro: true, _videoId: videoId, _msg: 'Claude não retornou opções válidas' } }];\n}\n\nreturn opcoes.map((opcao, idx) => ({\n  json: {\n    ...opcao,\n    _opcaoNumero: idx + 1,\n    _videoId: videoId,\n    _erro: false\n  }\n}));"
+        },
+        "id": "0319c15d-02d3-4eb2-818c-a2d0ab7fa05d",
+        "name": "Parse Roteiros",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2752,
+          2208
+        ],
+        "notes": "Parseia JSON do Claude. Extrai array de opções.\nCada opção vira um item para o loop."
+      },
+      {
+        "parameters": {
+          "jsCode": "// ===================================================================\n// CHECK ERRO PARSE — Módulo 02A\n// ===================================================================\n// Se erro, retorna 1 item de erro.\n// Se OK, passa as 3 opções originais adiante.\n// ===================================================================\n\nconst items = $input.all();\nconst primeiro = items[0].json;\n\nif (primeiro._erro) {\n  return [{ json: { _erro: true, _videoId: primeiro._videoId, _totalOpcoes: 0 } }];\n}\n\n// Sem erro — passar as opções originais para o loop\nreturn items;"
+        },
+        "id": "233baf66-446a-4096-b11d-f68b47dd3d25",
+        "name": "Check Erro Parse",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2896,
+          1888
+        ],
+        "notes": "Verifica se o parse do Claude falhou antes de entrar no loop."
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "cond-erro",
+                "leftValue": "={{ $json._erro }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "8234737c-fefc-4ba4-b4bf-05f03d0893fe",
+        "name": "IF Erro Parse",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          3072,
+          2000
+        ],
+        "notes": "True (erro) → responde erro ao frontend\nFalse (OK) → segue pro loop de opções"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "6bd9c1ab-0944-4031-adbf-2e1e00ee0a01",
+        "name": "Loop Opções",
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          3232,
+          2208
+        ],
+        "notes": "Itera sobre as 3 opções de roteiro.\n[done] → finalizar\n[loop] → validar e gravar cada opção"
+      },
+      {
+        "parameters": {
+          "jsCode": "// ===================================================================\n// VALIDAR OPÇÃO — Módulo 02A v3.2-simplicidade\n// Schema: 20 regras + Princípio Mestre + 5 campos recuperados\n// (continuidade, transicao_entrada, perspectiva, hook_tipo, arco_narrativo)\n// + objeto_recorrente OPCIONAL + tipo_cena com 4 valores válidos\n// + coerência tipo_cena × personagem_presente\n// Lê tags válidas do nó \"Ler Tags Banco\" pra checar efeitos_sonoros.\n// ===================================================================\n\nconst opcao = $('Loop Opções').first().json;\nconst erros = [];\nconst avisos = [];\n\n// --- Tags válidas do banco_efeitos ---\nconst efeitosRaw = $('Ler Tags Banco').all().map(i => i.json);\nconst listaEfeitos = efeitosRaw.length === 1 && Array.isArray(efeitosRaw[0]) ? efeitosRaw[0] : efeitosRaw;\nconst tagsValidas = new Set(listaEfeitos.filter(e => e && e.tag).map(e => e.tag));\n\n// --- Campos topo obrigatórios (objeto_recorrente removido — agora opcional) ---\nconst camposTopo = ['titulo','thumbnail_conceito','numero_declarado_cenas',\n  'loop_tipo','caption','hashtags','comentario_isca','sinopse','tom','texto_final_tela','cenas'];\nfor (const c of camposTopo) {\n  if (opcao[c] === undefined || opcao[c] === null || opcao[c] === '') erros.push(`Campo ${c} ausente`);\n}\n\n// --- titulo ---\nif (typeof opcao.titulo === 'string' && opcao.titulo.length > 45) {\n  erros.push(`titulo > 45 chars (${opcao.titulo.length})`);\n}\n\n// --- loop_tipo ---\nif (!['literal','tematico','invertido'].includes(opcao.loop_tipo)) {\n  erros.push(`loop_tipo inválido: ${opcao.loop_tipo}`);\n}\n\n// --- objeto_recorrente (opcional — só valida estrutura quando declarado) ---\nconst objR = opcao.objeto_recorrente;\nif (objR && (!objR.nome || !Array.isArray(objR.transformacoes) || objR.transformacoes.length !== 3)) {\n  erros.push(`objeto_recorrente.transformacoes deve ter 3 itens quando declarado`);\n}\n\n// --- hashtags ---\nconst tags = opcao.hashtags;\nif (!Array.isArray(tags) || tags.length !== 5) {\n  erros.push(`hashtags deve ter exatamente 5 (tem ${Array.isArray(tags)?tags.length:'?'})`);\n} else {\n  if (tags[0] !== '#MundodeClay') erros.push(`hashtags[0] deve ser #MundodeClay`);\n  if (tags[4] !== '#shorts') erros.push(`hashtags[4] deve ser #shorts`);\n}\n\n// --- caption 3 linhas ---\nif (typeof opcao.caption === 'string') {\n  const linhas = opcao.caption.split('\\n').filter(l => l.trim().length > 0);\n  if (linhas.length !== 3) erros.push(`caption deve ter 3 linhas (tem ${linhas.length})`);\n}\n\n// --- cenas ---\nconst cenas = Array.isArray(opcao.cenas) ? opcao.cenas : [];\nconst cenasReais = cenas.filter(c => (c?.tipo_cena ?? 'personagem') !== 'texto');\nconst cenasReaisCount = cenasReais.length;\n\nif (cenasReaisCount < 8 || cenasReaisCount > 11) {\n  erros.push(`Número de cenas reais fora do range 8-11 (tem ${cenasReaisCount})`);\n}\n// Auto-corrigir numero_declarado_cenas (Claude às vezes confunde total com narrativas)\nif (Number(opcao.numero_declarado_cenas) !== cenasReaisCount) {\n  avisos.push(`numero_declarado_cenas (${opcao.numero_declarado_cenas}) != count real (${cenasReaisCount}) — auto-corrigido`);\n  opcao.numero_declarado_cenas = cenasReaisCount;\n}\n\n// --- objeto_recorrente em ≥3 cenas (só roda quando declarado) ---\nif (objR?.nome) {\n  const palavras = String(objR.nome).toLowerCase().split(/\\s+/).filter(p => p.length > 2);\n  const ocorrencias = cenas.filter(c => {\n    const vis = (c?.descricao_visual || '').toLowerCase();\n    return palavras.some(p => vis.includes(p));\n  }).length;\n  if (ocorrencias < 3) avisos.push(`objeto_recorrente \"${objR.nome}\" aparece em ${ocorrencias} cenas (esperado ≥3 quando declarado)`);\n}\n\n// --- money_shot, respiro_falso, ameaca_falsa ---\nconst moneyShots = cenas.filter(c => c?.cena_money_shot === true).length;\nif (moneyShots !== 1) erros.push(`Deve haver exatamente 1 cena_money_shot (tem ${moneyShots})`);\n\nconst respiros = cenas.filter(c => c?.funcao_narrativa === 'respiro_falso').length;\nif (respiros < 1) erros.push(`Deve haver ≥1 cena com funcao_narrativa \"respiro_falso\"`);\n\nconst ameacas = cenas.filter(c => c?.funcao_narrativa === 'ameaca_falsa').length;\nif (ameacas < 1) erros.push(`Deve haver ≥1 cena com funcao_narrativa \"ameaca_falsa\"`);\n\n// --- cena 1 ---\nif (cenas[0] && !cenas[0].cena_1_frame_zero) {\n  erros.push(`Cena 1: cena_1_frame_zero ausente`);\n}\n\n// --- ancora_sensorial em ≥1 cena ---\nconst ancoras = cenas.filter(c => c?.ancora_sensorial && String(c.ancora_sensorial).trim().length > 0).length;\nif (ancoras < 1) erros.push(`Pelo menos 1 cena deve ter ancora_sensorial preenchida`);\n\n// --- por cena ---\nconst tiposCenaValidos = ['personagem','ambiente','ameaca','texto'];\nconst emocoesValidas = ['calma','neutra','tensa','suspense','panico'];\nconst verbosProibidos = /\\b(vejo|olho|observo|aparece|surge|mostra|encontro|noto|percebo)\\b/i;\nconst pronomes1pessoa = /\\b(eu|meu|minha|meus|minhas|me|mim|comigo|n[oó]s|nosso|nossa)\\b/i;\n\n// --- Auto-corrigir typos comuns do Claude nos nomes de campo ---\nfor (const c of cenas) {\n  const typos = ['efeitos_sonores','efeitos_sonors','efeito_sonoro','efeitos_sonoro'];\n  for (const t of typos) {\n    if (c[t] !== undefined && c.efeitos_sonoros === undefined) {\n      c.efeitos_sonoros = c[t];\n      delete c[t];\n    }\n  }\n}\n\nfor (let i = 0; i < cenas.length; i++) {\n  const c = cenas[i];\n  const n = i + 1;\n\n  if (!tiposCenaValidos.includes(c?.tipo_cena)) erros.push(`Cena ${n}: tipo_cena inválido (${c?.tipo_cena})`);\n\n  // Coerência dura: tipo_cena × personagem_presente\n  if (c?.tipo_cena === 'personagem' && c?.personagem_presente !== true) {\n    erros.push(`Cena ${n}: tipo_cena=\"personagem\" exige personagem_presente=true (recebeu ${c?.personagem_presente})`);\n  }\n  if (c?.tipo_cena && c.tipo_cena !== 'personagem' && c?.personagem_presente === true) {\n    erros.push(`Cena ${n}: tipo_cena=\"${c.tipo_cena}\" exige personagem_presente=false (recebeu true)`);\n  }\n\n  // Continuidade: cena 1 nunca pode ter continuidade=true\n  if (n === 1 && c?.continuidade === true) {\n    erros.push(`Cena ${n}: cena 1 não pode ter continuidade=true (não existe cena anterior)`);\n  }\n\n  if (!emocoesValidas.includes(c?.emocao)) erros.push(`Cena ${n}: emocao inválida (${c?.emocao})`);\n\n  if (c?.tipo_cena === 'texto') continue; // texto pula validações de narrativa\n\n  if (c?.descricao_visual === undefined || c?.descricao_visual === null || c.descricao_visual === '') {\n    erros.push(`Cena ${n}: descricao_visual ausente`);\n  }\n  if (c?.narracao === undefined || c?.narracao === null) {\n    erros.push(`Cena ${n}: campo narracao ausente (use \"\" para silêncio)`);\n  } else if (c.narracao && verbosProibidos.test(c.narracao)) {\n    erros.push(`Cena ${n}: narração contém verbo proibido (vejo/olho/aparece/etc)`);\n  } else if (c.narracao && pronomes1pessoa.test(c.narracao)) {\n    erros.push(`Cena ${n}: narração em 1ª pessoa (proibido — usar 3ª pessoa sempre)`);\n  } else if (c.narracao) {\n    const palavras = c.narracao.trim().split(/\\s+/).length;\n    if (palavras > 28) {\n      erros.push(`Cena ${n}: narração muito longa (${palavras} palavras, máx 28)`);\n    } else if (palavras > 18) {\n      avisos.push(`Cena ${n}: narração no limite (${palavras} palavras, ideal ≤18)`);\n    }\n  }\n\n  // prompt_movimento_wan: 2 beats\n  const pmw = c?.prompt_movimento_wan || '';\n  if (!/Beat 1/i.test(pmw) || !/Beat 2/i.test(pmw)) {\n    erros.push(`Cena ${n}: prompt_movimento_wan deve conter \"Beat 1\" e \"Beat 2\"`);\n  }\n\n  // efeitos_sonoros\n  const efx = c?.efeitos_sonoros;\n  if (!Array.isArray(efx)) {\n    erros.push(`Cena ${n}: efeitos_sonoros deve ser array`);\n  } else {\n    for (let j = 0; j < efx.length; j++) {\n      const e = efx[j];\n      if (e?.tipo !== 'banco') erros.push(`Cena ${n} efeito ${j+1}: tipo deve ser \"banco\" (stable_audio proibido)`);\n      if (!e?.tag) erros.push(`Cena ${n} efeito ${j+1}: tag ausente`);\n      else if (!tagsValidas.has(e.tag)) avisos.push(`Cena ${n} efeito ${j+1}: tag \"${e.tag}\" fora do banco — upload manual no preview antes do M06`);\n      if (typeof e?.weight !== 'number' || e.weight < 0.1 || e.weight > 1.0) {\n        erros.push(`Cena ${n} efeito ${j+1}: weight fora do range 0.1-1.0`);\n      }\n    }\n  }\n}\n\nconst _invalida = erros.length > 0;\nreturn [{\n  json: {\n    ...opcao,\n    _invalida,\n    _errosValidacao: erros,\n    _avisosValidacao: avisos,\n    _videoId: opcao._videoId,\n    _opcaoNumero: opcao._opcaoNumero\n  }\n}];"
+        },
+        "id": "86cf86aa-bd57-45be-b3fd-d4b6a7c4f581",
+        "name": "Validar Opção",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3440,
+          2208
+        ],
+        "notes": "Valida: campos obrigatórios, 6-14 cenas, narração ≤20 palavras,\nemoções válidas, efeitos_sonoros válidos, thumbnail null para shorts."
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "cond-invalida",
+                "leftValue": "={{ $json._invalida }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "b96d2bef-bbe5-45d3-a07a-17e29bbc652f",
+        "name": "IF Inválida",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          3616,
+          2320
+        ],
+        "notes": "True (inválida) → descarta, volta pro loop\nFalse (válida) → salva opção + cenas"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Convergência do loop de opções. Volta pro Loop Opções.\nreturn [{ json: { _opcaoDone: true } }];"
+        },
+        "id": "13d2db88-5595-40b3-a7d1-8c289f5c7c78",
+        "name": "Consolidar Opção",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4352,
+          2064
+        ],
+        "notes": "Convergência do loop de opções.\nRecebe de: IF Inválida [true] (descartada) OU Loop Cenas [done] (gravada)."
+      },
+      {
+        "parameters": {
+          "jsCode": "// ===================================================================\n// CONTAR VÁLIDAS — Módulo 02A\n// ===================================================================\n// Loop de opções concluído. Conta quantas foram salvas.\n// ===================================================================\n\nconst videoId = $('Preparar Prompt').first().json._videoId;\n\nreturn [{\n  json: {\n    video_id: videoId,\n    mensagem: 'Opções de roteiro geradas e salvas.'\n  }\n}];"
+        },
+        "id": "e6ce22cd-d4d1-4876-9733-b06b34612372",
+        "name": "Contar Válidas",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3440,
+          1920
+        ],
+        "notes": "Loop de opções finalizado. Prepara dados para atualizar o vídeo."
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/videos?id=eq.{{ $json.video_id }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=minimal"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ status: 'aguardando', modulo_atual: '02' }) }}",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "0292ce1f-928f-466e-a2dc-17471844dc1d",
+        "name": "Atualizar Vídeo Status",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          3632,
+          1920
+        ],
+        "notes": "PATCH videos: status → 'aguardando' (aguardando aprovação do roteiro)."
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ success: true, video_id: $('Preparar Prompt').first().json._videoId, mensagem: 'Opções de roteiro geradas. Aguardando aprovação.' }) }}",
+          "options": {}
+        },
+        "id": "e21f424f-16d3-47be-9951-a87a8e2c7860",
+        "name": "Responder Webhook OK",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          4048,
+          1920
+        ],
+        "notes": "Responde ao frontend com sucesso + video_id."
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ success: false, video_id: $('Preparar Prompt').first().json._videoId || null, erro: 'Falha ao gerar roteiros. Claude não retornou JSON válido.' }) }}",
+          "options": {}
+        },
+        "id": "e717b62f-6aa9-4ef0-8a70-281726e05c58",
+        "name": "Responder Webhook Erro",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          3232,
+          1808
+        ],
+        "notes": "Responde ao frontend com erro se o Claude falhou."
+      },
+      {
+        "parameters": {
+          "jsCode": "// ===================================================================\n// GRAVAR OPÇÃO E CENAS — Módulo 02A v3.1\n// Schema novo: aceita campos do prompt v3.1, mapeia descricao_visual→visual,\n// grava campos novos (cena_money_shot, funcao_narrativa, etc), propaga erro\n// via throw em vez de engolir, e atualiza videos.titulo na primeira gravação.\n// ===================================================================\n\nconst opcao = $input.first().json;\nconst config = $('Configuração').first().json;\nconst videoId = opcao._videoId;\nconst baseUrl = config.SUPABASE_URL;\nconst apiKey = config.SUPABASE_SERVICE_KEY;\n\nconst headers = {\n  'apikey': apiKey,\n  'Authorization': `Bearer ${apiKey}`,\n  'Content-Type': 'application/json'\n};\n\n// ============ 1. Gravar opção em roteiro_opcoes ============\nlet opcaoId = null;\ntry {\n  const opcaoRes = await this.helpers.httpRequest({\n    method: 'POST',\n    url: `${baseUrl}/rest/v1/roteiro_opcoes`,\n    headers: { ...headers, 'Prefer': 'return=representation' },\n    body: {\n      video_id: videoId,\n      opcao_numero: opcao._opcaoNumero,\n      roteiro_json: opcao,\n      status: 'pendente',\n      // v3.1 — campos topo\n      titulo: opcao.titulo,\n      caption: opcao.caption,\n      hashtags: opcao.hashtags,\n      thumbnail_conceito: opcao.thumbnail_conceito,\n      numero_declarado_cenas: opcao.numero_declarado_cenas,\n      objeto_recorrente: opcao.objeto_recorrente,\n      loop_tipo: opcao.loop_tipo,\n      arco_narrativo: opcao.arco_narrativo || null,\n      comentario_isca: opcao.comentario_isca,\n      // preservados pro pipeline (M03/M08)\n      sinopse: opcao.sinopse,\n      tom: opcao.tom,\n      texto_final_tela: opcao.texto_final_tela\n    }\n  });\n  opcaoId = Array.isArray(opcaoRes) ? opcaoRes[0]?.id : opcaoRes?.id;\n  if (!opcaoId) throw new Error(`Falha ao gravar opção: resposta sem id. ${JSON.stringify(opcaoRes)}`);\n} catch (e) {\n  throw new Error(`Erro gravando roteiro_opcoes: ${e.message}`);\n}\n\n// ============ 2. Gravar cenas ============\nconst cenas = Array.isArray(opcao.cenas) ? opcao.cenas : [];\nconst totalCenas = cenas.length;\nlet gravadas = 0;\nconst errosCenas = [];\n\nfor (let i = 0; i < cenas.length; i++) {\n  const cena = cenas[i];\n  const ordemNum = Number(cena.numero) || (i + 1);\n\n  // efeitos_sonoros sempre array de objetos {tipo:\"banco\", tag, weight}\n  let efx = cena.efeitos_sonoros || [];\n  if (typeof efx === 'string') {\n    try { efx = JSON.parse(efx); } catch (_) { efx = []; }\n  }\n  if (!Array.isArray(efx)) efx = [];\n\n  try {\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: `${baseUrl}/rest/v1/cenas`,\n      headers: { ...headers, 'Prefer': 'return=minimal' },\n      body: {\n        video_id: videoId,\n        opcao_id: opcaoId,\n        numero: String(ordemNum),\n        ordem: ordemNum,\n        // v3.1 — mapeamentos críticos\n        visual: cena.descricao_visual || '',           // descricao_visual → visual\n        prompt_movimento_wan: cena.prompt_movimento_wan || '',\n        narracao: cena.narracao || '',\n        emocao: cena.emocao || 'neutra',\n        tipo_cena: cena.tipo_cena || 'personagem',     // fallback válido contra CHECK\n        efeitos_sonoros: efx,\n        som_ambiente: cena.som_ambiente || '',\n        movimento: cena.movimento || '',\n        personagem_presente: cena.personagem_presente !== undefined ? cena.personagem_presente : true,\n        continuidade: cena.continuidade === true,\n       transicao_entrada: (function() {\n          // Forçar corte_seco nas 2 últimas cenas (penúltima narrativa + tela de texto final)\n          // para produzir corte limpo no fechamento do vídeo.\n          // ordemNum é 1-based, totalCenas é o count do array.\n          const isPenultima = (ordemNum === totalCenas - 1);\n          const isUltima = (ordemNum === totalCenas);\n          if (isPenultima || isUltima) return 'corte_seco';\n          // Demais cenas: Claude decidiu, fallback dip_to_black\n          return cena.transicao_entrada || 'dip_to_black';\n        })(),\n        perspectiva: 'terceira_pessoa',\n        hook_tipo: ordemNum === 1 ? (cena.hook_tipo || 'acao') : null,\n        // v3.1 — campos novos (colunas adicionadas via migration)\n        cena_money_shot: cena.cena_money_shot === true,\n        cena_1_frame_zero: cena.cena_1_frame_zero || null,\n        funcao_narrativa: cena.funcao_narrativa || null,\n        ancora_sensorial: cena.ancora_sensorial || null,\n        // duracao fixa do canal (5s por cena, regra do pipeline)\n        duracao_estimada: 5.0\n              }\n    });\n    gravadas++;\n  } catch (e) {\n    errosCenas.push(`Cena ${ordemNum}: ${e.message}`);\n  }\n}\n\n// ============ 3. Propaga erro se gravação parcial ============\nif (gravadas !== cenas.length) {\n  throw new Error(\n    `Gravação parcial de cenas: ${gravadas}/${cenas.length}. ` +\n    `Erros: ${errosCenas.join(' | ')}`\n  );\n}\n\n// ============ 4. Atualizar videos.titulo na 1ª opção gravada ============\n// Só na opção 1 pra evitar sobrescrever (todas as 3 podem chegar aqui).\nif (opcao._opcaoNumero === 1 && opcao.titulo) {\n  try {\n    await this.helpers.httpRequest({\n      method: 'PATCH',\n      url: `${baseUrl}/rest/v1/videos?id=eq.${videoId}`,\n      headers: { ...headers, 'Prefer': 'return=minimal' },\n      body: { titulo: opcao.titulo }\n    });\n  } catch (e) {\n    // Não bloqueia: M02B pode atualizar depois quando humano aprovar.\n    console.log(`Aviso: falha ao atualizar videos.titulo: ${e.message}`);\n  }\n}\n\nreturn [{\n  json: {\n    _opcaoId: opcaoId,\n    _opcaoNumero: opcao._opcaoNumero,\n    _cenasGravadas: gravadas,\n    _cenasTotal: cenas.length\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3936,
+          2416
+        ],
+        "id": "83e5a13f-c5c5-47b8-9348-b866636bfd43",
+        "name": "Gravar Opção e Cenas"
+      },
+      {
+        "parameters": {
+          "url": "={{ $('Configuração').first().json.SUPABASE_URL }}/rest/v1/banco_efeitos?select=tag",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('Configuração').first().json.SUPABASE_SERVICE_KEY }}"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          2032,
+          2208
+        ],
+        "id": "83af3bdc-a7d9-4592-8fc6-2f4bcfc8bcb2",
+        "name": "Ler Tags Banco"
+      }
+    ],
+    "connections": {
+      "Início Manual": {
+        "main": [
+          [
+            {
+              "node": "Premissa Teste",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Premissa Teste": {
+        "main": [
+          [
+            {
+              "node": "Normalizar Input",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook Premissa": {
+        "main": [
+          [
+            {
+              "node": "Normalizar Input",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Normalizar Input": {
+        "main": [
+          [
+            {
+              "node": "Configuração",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Configuração": {
+        "main": [
+          [
+            {
+              "node": "Ler Premissa",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Ler Premissa": {
+        "main": [
+          [
+            {
+              "node": "Criar Vídeo",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Criar Vídeo": {
+        "main": [
+          [
+            {
+              "node": "Marcar Premissa Em Uso",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Marcar Premissa Em Uso": {
+        "main": [
+          [
+            {
+              "node": "Ler Tags Banco",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Preparar Prompt": {
+        "main": [
+          [
+            {
+              "node": "Claude Roteirista",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Anthropic Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Claude Roteirista",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Claude Roteirista": {
+        "main": [
+          [
+            {
+              "node": "Parse Roteiros",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Roteiros": {
+        "main": [
+          [
+            {
+              "node": "Check Erro Parse",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Erro Parse": {
+        "main": [
+          [
+            {
+              "node": "IF Erro Parse",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF Erro Parse": {
+        "main": [
+          [
+            {
+              "node": "Responder Webhook Erro",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Loop Opções",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Opções": {
+        "main": [
+          [
+            {
+              "node": "Contar Válidas",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Validar Opção",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validar Opção": {
+        "main": [
+          [
+            {
+              "node": "IF Inválida",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF Inválida": {
+        "main": [
+          [
+            {
+              "node": "Consolidar Opção",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Gravar Opção e Cenas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Consolidar Opção": {
+        "main": [
+          [
+            {
+              "node": "Loop Opções",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Contar Válidas": {
+        "main": [
+          [
+            {
+              "node": "Atualizar Vídeo Status",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualizar Vídeo Status": {
+        "main": [
+          [
+            {
+              "node": "Responder Webhook OK",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Gravar Opção e Cenas": {
+        "main": [
+          [
+            {
+              "node": "Consolidar Opção",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Ler Tags Banco": {
+        "main": [
+          [
+            {
+              "node": "Preparar Prompt",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Newton Omune",
+    "name": "Version e316e34d",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

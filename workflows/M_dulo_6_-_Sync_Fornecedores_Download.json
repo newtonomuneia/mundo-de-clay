@@ -1,0 +1,518 @@
+{
+  "updatedAt": "2026-01-29T19:41:42.000Z",
+  "createdAt": "2026-01-19T19:20:03.668Z",
+  "id": "5PQmSSvz0bFI6fqI",
+  "name": "Módulo 6 - Sync_Fornecedores_Download",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "fornecedores",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        16
+      ],
+      "id": "9961990e-da47-4e62-ba62-d6f5b5de277c",
+      "name": "Buscar_Todos_Fornecedores",
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "OP3IGsLO3LJ2h9JA",
+          "name": "Supabase Accounting Payables"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fornecedores-sync",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -624,
+        16
+      ],
+      "id": "46acd115-60c9-43b8-9b29-e0f0efad211d",
+      "name": "Webhook_Sync_Contas",
+      "webhookId": "9c6afc4d-ff80-4582-96f6-ea8941fb42c2",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M",
+          "mode": "list",
+          "cachedResultName": "Contas a Pagar - Automação",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 486328343,
+          "mode": "list",
+          "cachedResultName": "Fornecedores",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit#gid=486328343"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "cnpj": "={{ $json.cnpj }}",
+            "cpf": "={{ $json.cpf }}",
+            "nome": "={{ $json.nome }}",
+            "tipo": "={{ $json.tipo }}",
+            "banco": "={{ $json.banco }}",
+            "agencia": "={{ $json.agencia }}",
+            "conta": "={{ $json.conta }}",
+            "tipo_conta": "={{ $json.tipo_conta }}",
+            "pendente_revisao": "={{ $json.pendente_revisao }}",
+            "status_sync": "sincronizado",
+            "ultima_sync": "={{ $now.setZone('America/Sao_Paulo').toFormat('yyyy-MM-dd HH:mm:ss') }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cnpj",
+              "displayName": "cnpj",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cpf",
+              "displayName": "cpf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "nome",
+              "displayName": "nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tipo",
+              "displayName": "tipo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "banco",
+              "displayName": "banco",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "agencia",
+              "displayName": "agencia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "conta",
+              "displayName": "conta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tipo_conta",
+              "displayName": "tipo_conta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "pendente_revisao",
+              "displayName": "pendente_revisao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status_sync",
+              "displayName": "status_sync",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ultima_sync",
+              "displayName": "ultima_sync",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -160,
+        16
+      ],
+      "id": "d7c11d57-fe37-4776-a478-079d61caaea7",
+      "name": "Sync_Fornecedores",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RruWc6BrI8tF2hiO",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Buscar_Todos_Fornecedores": {
+      "main": [
+        [
+          {
+            "node": "Sync_Fornecedores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook_Sync_Contas": {
+      "main": [
+        [
+          {
+            "node": "Buscar_Todos_Fornecedores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sync_Fornecedores": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "8889009b-bde2-4723-8980-da7fe7b1c9c8",
+  "activeVersionId": "8889009b-bde2-4723-8980-da7fe7b1c9c8",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-01-19T19:20:04.044Z",
+      "createdAt": "2026-01-19T19:20:04.044Z",
+      "role": "workflow:owner",
+      "workflowId": "5PQmSSvz0bFI6fqI",
+      "projectId": "SoH44tJE4dqRVTiw"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-01-31T19:17:10.384Z",
+    "createdAt": "2026-01-31T19:17:10.384Z",
+    "versionId": "8889009b-bde2-4723-8980-da7fe7b1c9c8",
+    "workflowId": "5PQmSSvz0bFI6fqI",
+    "nodes": [
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "fornecedores",
+          "returnAll": true
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -368,
+          16
+        ],
+        "id": "9961990e-da47-4e62-ba62-d6f5b5de277c",
+        "name": "Buscar_Todos_Fornecedores",
+        "executeOnce": true,
+        "credentials": {
+          "supabaseApi": {
+            "id": "OP3IGsLO3LJ2h9JA",
+            "name": "Supabase Accounting Payables"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "fornecedores-sync",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -624,
+          16
+        ],
+        "id": "46acd115-60c9-43b8-9b29-e0f0efad211d",
+        "name": "Webhook_Sync_Contas",
+        "webhookId": "9c6afc4d-ff80-4582-96f6-ea8941fb42c2",
+        "executeOnce": true
+      },
+      {
+        "parameters": {
+          "operation": "appendOrUpdate",
+          "documentId": {
+            "__rl": true,
+            "value": "1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M",
+            "mode": "list",
+            "cachedResultName": "Contas a Pagar - Automação",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 486328343,
+            "mode": "list",
+            "cachedResultName": "Fornecedores",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QP6jz8eMoNdNOw2WzhMJMeJeAfCuIY6ZBit3p4CpJ2M/edit#gid=486328343"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "id": "={{ $json.id }}",
+              "cnpj": "={{ $json.cnpj }}",
+              "cpf": "={{ $json.cpf }}",
+              "nome": "={{ $json.nome }}",
+              "tipo": "={{ $json.tipo }}",
+              "banco": "={{ $json.banco }}",
+              "agencia": "={{ $json.agencia }}",
+              "conta": "={{ $json.conta }}",
+              "tipo_conta": "={{ $json.tipo_conta }}",
+              "pendente_revisao": "={{ $json.pendente_revisao }}",
+              "status_sync": "sincronizado",
+              "ultima_sync": "={{ $now.setZone('America/Sao_Paulo').toFormat('yyyy-MM-dd HH:mm:ss') }}"
+            },
+            "matchingColumns": [
+              "id"
+            ],
+            "schema": [
+              {
+                "id": "id",
+                "displayName": "id",
+                "required": false,
+                "defaultMatch": true,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "cnpj",
+                "displayName": "cnpj",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "cpf",
+                "displayName": "cpf",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "nome",
+                "displayName": "nome",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "tipo",
+                "displayName": "tipo",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "banco",
+                "displayName": "banco",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "agencia",
+                "displayName": "agencia",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "conta",
+                "displayName": "conta",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "tipo_conta",
+                "displayName": "tipo_conta",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "pendente_revisao",
+                "displayName": "pendente_revisao",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "status_sync",
+                "displayName": "status_sync",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "ultima_sync",
+                "displayName": "ultima_sync",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          -160,
+          16
+        ],
+        "id": "d7c11d57-fe37-4776-a478-079d61caaea7",
+        "name": "Sync_Fornecedores",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "RruWc6BrI8tF2hiO",
+            "name": "Google Sheets account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Buscar_Todos_Fornecedores": {
+        "main": [
+          [
+            {
+              "node": "Sync_Fornecedores",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook_Sync_Contas": {
+        "main": [
+          [
+            {
+              "node": "Buscar_Todos_Fornecedores",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Sync_Fornecedores": {
+        "main": [
+          []
+        ]
+      }
+    },
+    "authors": "system migration",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

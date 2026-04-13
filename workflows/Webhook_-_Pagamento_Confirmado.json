@@ -1,0 +1,964 @@
+{
+  "updatedAt": "2026-01-12T12:53:38.000Z",
+  "createdAt": "2025-12-26T11:59:39.156Z",
+  "id": "3Ydew2TgQ4rgUSYC",
+  "name": "Webhook - Pagamento Confirmado",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "asaas-pagamento-confirmado",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -528,
+        0
+      ],
+      "id": "6d76bad0-73b3-41b0-aab3-3e8c57de7fb5",
+      "name": "Webhook - Asaas",
+      "webhookId": "010aac54-4285-417b-bbdc-31f377a5998e"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "vendas",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "asaas_payment_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.body.payment.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -352,
+        -16
+      ],
+      "id": "58674289-9af6-4cb5-ae62-a2657e544428",
+      "name": "Buscar Venda",
+      "credentials": {
+        "supabaseApi": {
+          "id": "C87gCgyLKdnG6PSu",
+          "name": "baralho_prosperidade"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bda53b0a-a72d-4513-9770-1989bc4d5464",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -208,
+        0
+      ],
+      "id": "05680073-9a12-4917-9bb3-7978f9b83c31",
+      "name": "Venda Existe?"
+    },
+    {
+      "parameters": {
+        "errorMessage": "Não foi possível finalizar a sua venda."
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        96
+      ],
+      "id": "375d17d9-dfd8-4c10-8923-bc8a97ebe4d0",
+      "name": "Stop and Error"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "conversas",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.conversa_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        -80
+      ],
+      "id": "cb89f9e0-7270-4781-9a6d-d5c9c0023694",
+      "name": "Buscar Conversa",
+      "credentials": {
+        "supabaseApi": {
+          "id": "C87gCgyLKdnG6PSu",
+          "name": "baralho_prosperidade"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "conversas",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Buscar Conversa').first().json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "pago"
+            },
+            {
+              "fieldId": "fase_atual",
+              "fieldValue": "coletando_endereco"
+            },
+            {
+              "fieldId": "ultima_interacao",
+              "fieldValue": "={{ $now }}"
+            },
+            {
+              "fieldId": "updated_at",
+              "fieldValue": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        256,
+        -80
+      ],
+      "id": "e0d07d6f-8730-4b82-b030-748f731c6376",
+      "name": "Atualizar Conversa",
+      "credentials": {
+        "supabaseApi": {
+          "id": "C87gCgyLKdnG6PSu",
+          "name": "baralho_prosperidade"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "id": {
+          "__rl": true,
+          "value": "={{ $('Buscar Conversa').first().json.trello_card_id }}",
+          "mode": "id"
+        },
+        "updateFields": {
+          "desc": "={{ $('Buscar Conversa').first().json.nome }}\nCPF: {{ $('Buscar Conversa').first().json.cpf }}\nTelefone: {{ $('Buscar Conversa').first().json.telefone }}\n\n✅ PAGAMENTO CONFIRMADO\n\n💰 Detalhes do pagamento:\nValor: R$ {{ $('Webhook - Asaas').first().json.body.payment.value }}\nForma: {{ $('Webhook - Asaas').first().json.body.payment.billingType }}\nData: {{ $('Webhook - Asaas').first().json.body.payment.paymentDate }}\n\n📊 STATUS:\nStatus: pago\nFase: coletando_endereco\n\n✅ Pago em: {{ $now.toFormat('dd/MM/yyyy HH:mm') }}\n\n📍 PRÓXIMO PASSO: Coletar endereço de entrega\n💬 Aguardando cliente informar CEP",
+          "idList": "6944420c8dba61dd1fdb2027"
+        }
+      },
+      "type": "n8n-nodes-base.trello",
+      "typeVersion": 1,
+      "position": [
+        432,
+        -80
+      ],
+      "id": "f434d25b-9a6b-41f6-95b2-4d9f21074348",
+      "name": "Update a card",
+      "credentials": {
+        "trelloApi": {
+          "id": "Rw0karD0UnTWxue6",
+          "name": "Trello account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.z-api.io/instances/3EAC63EE98C5F14530FE227360D3178E/token/198DF2D98C4EB52EFD1319EA/send-text",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "phone",
+              "value": "={{ $('Buscar Conversa').first().json.telefone }}"
+            },
+            {
+              "name": "message",
+              "value": "=🎉 Ótima notícia, {{ $('Buscar Conversa').first().json.nome }}!\n\nSeu pagamento foi confirmado com sucesso!\n\n💰 Valor: R$ {{ $('Webhook - Asaas').first().json.body.payment.value }}\n💳 Forma: {{ $('Webhook - Asaas').first().json.body.payment.billingType }}\n📅 Data: {{ $('Webhook - Asaas').first().json.body.payment.paymentDate }}\n\nAgora preciso do seu endereço completo para envio do Baralho da Prosperidade.\n\nQual seu CEP?\nAssim que eu receber, vou buscar seu endereço automaticamente! 📦\n\n\n\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3bbe3991-9c9c-470f-bc65-9bea5a3bb348",
+      "name": "Enviar Whatsapp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        592,
+        -80
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "8jRtMgiJTpVow7wP",
+          "name": "Z-API Credential"
+        }
+      },
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "vendas",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "asaas_payment_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook - Asaas').first().json.body.payment.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "pago"
+            },
+            {
+              "fieldId": "updated_at",
+              "fieldValue": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        112,
+        -80
+      ],
+      "id": "225b5218-a08f-40ad-84fb-6710985ad88a",
+      "name": "Atualizar Status",
+      "credentials": {
+        "supabaseApi": {
+          "id": "C87gCgyLKdnG6PSu",
+          "name": "baralho_prosperidade"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.z-api.io/instances/3EAC63EE98C5F14530FE227360D3178E/token/198DF2D98C4EB52EFD1319EA/send-text",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "phone",
+              "value": "=5511999773186"
+            },
+            {
+              "name": "message",
+              "value": "=Venda confirmada!\n\n💰 Valor: R$ {{ $('Webhook - Asaas').first().json.body.payment.value }}\n💳 Forma: {{ $('Webhook - Asaas').first().json.body.payment.billingType }}\n📅 Data: {{ $('Webhook - Asaas').first().json.body.payment.paymentDate }}\n\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "87c243dd-9b0e-43a5-9336-909dc918f284",
+      "name": "Enviar Whatsapp parabens",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        736,
+        -80
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "8jRtMgiJTpVow7wP",
+          "name": "Z-API Credential"
+        }
+      },
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.z-api.io/instances/3EAC63EE98C5F14530FE227360D3178E/token/198DF2D98C4EB52EFD1319EA/send-text",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "phone",
+              "value": "=5511991872614"
+            },
+            {
+              "name": "message",
+              "value": "=Venda confirmada!\n\n💰 Valor: R$ {{ $('Webhook - Asaas').first().json.body.payment.value }}\n💳 Forma: {{ $('Webhook - Asaas').first().json.body.payment.billingType }}\n📅 Data: {{ $('Webhook - Asaas').first().json.body.payment.paymentDate }}\n\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d2d390f9-e2ec-4dc3-8d0f-8a6bac47ee76",
+      "name": "Enviar Whatsapp parabens2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        896,
+        -80
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "8jRtMgiJTpVow7wP",
+          "name": "Z-API Credential"
+        }
+      },
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    }
+  ],
+  "connections": {
+    "Webhook - Asaas": {
+      "main": [
+        [
+          {
+            "node": "Buscar Venda",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Venda": {
+      "main": [
+        [
+          {
+            "node": "Venda Existe?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Venda Existe?": {
+      "main": [
+        [
+          {
+            "node": "Buscar Conversa",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Conversa": {
+      "main": [
+        [
+          {
+            "node": "Atualizar Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Conversa": {
+      "main": [
+        [
+          {
+            "node": "Update a card",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a card": {
+      "main": [
+        [
+          {
+            "node": "Enviar Whatsapp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar Whatsapp": {
+      "main": [
+        [
+          {
+            "node": "Enviar Whatsapp parabens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Status": {
+      "main": [
+        [
+          {
+            "node": "Atualizar Conversa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar Whatsapp parabens": {
+      "main": [
+        [
+          {
+            "node": "Enviar Whatsapp parabens2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "43ba8caa-3ccc-43aa-a040-d0b84db0a12b",
+  "activeVersionId": "43ba8caa-3ccc-43aa-a040-d0b84db0a12b",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-12-26T11:59:39.166Z",
+      "createdAt": "2025-12-26T11:59:39.166Z",
+      "role": "workflow:owner",
+      "workflowId": "3Ydew2TgQ4rgUSYC",
+      "projectId": "SoH44tJE4dqRVTiw"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-01-31T19:17:10.384Z",
+    "createdAt": "2026-01-31T19:17:10.384Z",
+    "versionId": "43ba8caa-3ccc-43aa-a040-d0b84db0a12b",
+    "workflowId": "3Ydew2TgQ4rgUSYC",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "asaas-pagamento-confirmado",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -528,
+          0
+        ],
+        "id": "6d76bad0-73b3-41b0-aab3-3e8c57de7fb5",
+        "name": "Webhook - Asaas",
+        "webhookId": "010aac54-4285-417b-bbdc-31f377a5998e"
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "vendas",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "asaas_payment_id",
+                "condition": "eq",
+                "keyValue": "={{ $json.body.payment.id }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -352,
+          -16
+        ],
+        "id": "58674289-9af6-4cb5-ae62-a2657e544428",
+        "name": "Buscar Venda",
+        "credentials": {
+          "supabaseApi": {
+            "id": "C87gCgyLKdnG6PSu",
+            "name": "baralho_prosperidade"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "bda53b0a-a72d-4513-9770-1989bc4d5464",
+                "leftValue": "={{ $json.id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -208,
+          0
+        ],
+        "id": "05680073-9a12-4917-9bb3-7978f9b83c31",
+        "name": "Venda Existe?"
+      },
+      {
+        "parameters": {
+          "errorMessage": "Não foi possível finalizar a sua venda."
+        },
+        "type": "n8n-nodes-base.stopAndError",
+        "typeVersion": 1,
+        "position": [
+          -16,
+          96
+        ],
+        "id": "375d17d9-dfd8-4c10-8923-bc8a97ebe4d0",
+        "name": "Stop and Error"
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "conversas",
+          "limit": 1,
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $json.conversa_id }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -16,
+          -80
+        ],
+        "id": "cb89f9e0-7270-4781-9a6d-d5c9c0023694",
+        "name": "Buscar Conversa",
+        "credentials": {
+          "supabaseApi": {
+            "id": "C87gCgyLKdnG6PSu",
+            "name": "baralho_prosperidade"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "conversas",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('Buscar Conversa').first().json.id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "status",
+                "fieldValue": "pago"
+              },
+              {
+                "fieldId": "fase_atual",
+                "fieldValue": "coletando_endereco"
+              },
+              {
+                "fieldId": "ultima_interacao",
+                "fieldValue": "={{ $now }}"
+              },
+              {
+                "fieldId": "updated_at",
+                "fieldValue": "={{ $now }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          256,
+          -80
+        ],
+        "id": "e0d07d6f-8730-4b82-b030-748f731c6376",
+        "name": "Atualizar Conversa",
+        "credentials": {
+          "supabaseApi": {
+            "id": "C87gCgyLKdnG6PSu",
+            "name": "baralho_prosperidade"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "id": {
+            "__rl": true,
+            "value": "={{ $('Buscar Conversa').first().json.trello_card_id }}",
+            "mode": "id"
+          },
+          "updateFields": {
+            "desc": "={{ $('Buscar Conversa').first().json.nome }}\nCPF: {{ $('Buscar Conversa').first().json.cpf }}\nTelefone: {{ $('Buscar Conversa').first().json.telefone }}\n\n✅ PAGAMENTO CONFIRMADO\n\n💰 Detalhes do pagamento:\nValor: R$ {{ $('Webhook - Asaas').first().json.body.payment.value }}\nForma: {{ $('Webhook - Asaas').first().json.body.payment.billingType }}\nData: {{ $('Webhook - Asaas').first().json.body.payment.paymentDate }}\n\n📊 STATUS:\nStatus: pago\nFase: coletando_endereco\n\n✅ Pago em: {{ $now.toFormat('dd/MM/yyyy HH:mm') }}\n\n📍 PRÓXIMO PASSO: Coletar endereço de entrega\n💬 Aguardando cliente informar CEP",
+            "idList": "6944420c8dba61dd1fdb2027"
+          }
+        },
+        "type": "n8n-nodes-base.trello",
+        "typeVersion": 1,
+        "position": [
+          432,
+          -80
+        ],
+        "id": "f434d25b-9a6b-41f6-95b2-4d9f21074348",
+        "name": "Update a card",
+        "credentials": {
+          "trelloApi": {
+            "id": "Rw0karD0UnTWxue6",
+            "name": "Trello account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.z-api.io/instances/3EAC63EE98C5F14530FE227360D3178E/token/198DF2D98C4EB52EFD1319EA/send-text",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "phone",
+                "value": "={{ $('Buscar Conversa').first().json.telefone }}"
+              },
+              {
+                "name": "message",
+                "value": "=🎉 Ótima notícia, {{ $('Buscar Conversa').first().json.nome }}!\n\nSeu pagamento foi confirmado com sucesso!\n\n💰 Valor: R$ {{ $('Webhook - Asaas').first().json.body.payment.value }}\n💳 Forma: {{ $('Webhook - Asaas').first().json.body.payment.billingType }}\n📅 Data: {{ $('Webhook - Asaas').first().json.body.payment.paymentDate }}\n\nAgora preciso do seu endereço completo para envio do Baralho da Prosperidade.\n\nQual seu CEP?\nAssim que eu receber, vou buscar seu endereço automaticamente! 📦\n\n\n\n"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "3bbe3991-9c9c-470f-bc65-9bea5a3bb348",
+        "name": "Enviar Whatsapp",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          592,
+          -80
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "8jRtMgiJTpVow7wP",
+            "name": "Z-API Credential"
+          }
+        },
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "vendas",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "asaas_payment_id",
+                "condition": "eq",
+                "keyValue": "={{ $('Webhook - Asaas').first().json.body.payment.id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "status",
+                "fieldValue": "pago"
+              },
+              {
+                "fieldId": "updated_at",
+                "fieldValue": "={{ $now }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          112,
+          -80
+        ],
+        "id": "225b5218-a08f-40ad-84fb-6710985ad88a",
+        "name": "Atualizar Status",
+        "credentials": {
+          "supabaseApi": {
+            "id": "C87gCgyLKdnG6PSu",
+            "name": "baralho_prosperidade"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.z-api.io/instances/3EAC63EE98C5F14530FE227360D3178E/token/198DF2D98C4EB52EFD1319EA/send-text",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "phone",
+                "value": "=5511999773186"
+              },
+              {
+                "name": "message",
+                "value": "=Venda confirmada!\n\n💰 Valor: R$ {{ $('Webhook - Asaas').first().json.body.payment.value }}\n💳 Forma: {{ $('Webhook - Asaas').first().json.body.payment.billingType }}\n📅 Data: {{ $('Webhook - Asaas').first().json.body.payment.paymentDate }}\n\n"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "87c243dd-9b0e-43a5-9336-909dc918f284",
+        "name": "Enviar Whatsapp parabens",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          736,
+          -80
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "8jRtMgiJTpVow7wP",
+            "name": "Z-API Credential"
+          }
+        },
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.z-api.io/instances/3EAC63EE98C5F14530FE227360D3178E/token/198DF2D98C4EB52EFD1319EA/send-text",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "phone",
+                "value": "=5511991872614"
+              },
+              {
+                "name": "message",
+                "value": "=Venda confirmada!\n\n💰 Valor: R$ {{ $('Webhook - Asaas').first().json.body.payment.value }}\n💳 Forma: {{ $('Webhook - Asaas').first().json.body.payment.billingType }}\n📅 Data: {{ $('Webhook - Asaas').first().json.body.payment.paymentDate }}\n\n"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "d2d390f9-e2ec-4dc3-8d0f-8a6bac47ee76",
+        "name": "Enviar Whatsapp parabens2",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          896,
+          -80
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "8jRtMgiJTpVow7wP",
+            "name": "Z-API Credential"
+          }
+        },
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      }
+    ],
+    "connections": {
+      "Webhook - Asaas": {
+        "main": [
+          [
+            {
+              "node": "Buscar Venda",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Buscar Venda": {
+        "main": [
+          [
+            {
+              "node": "Venda Existe?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Venda Existe?": {
+        "main": [
+          [
+            {
+              "node": "Buscar Conversa",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Stop and Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Buscar Conversa": {
+        "main": [
+          [
+            {
+              "node": "Atualizar Status",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualizar Conversa": {
+        "main": [
+          [
+            {
+              "node": "Update a card",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update a card": {
+        "main": [
+          [
+            {
+              "node": "Enviar Whatsapp",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Enviar Whatsapp": {
+        "main": [
+          [
+            {
+              "node": "Enviar Whatsapp parabens",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualizar Status": {
+        "main": [
+          [
+            {
+              "node": "Atualizar Conversa",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Enviar Whatsapp parabens": {
+        "main": [
+          [
+            {
+              "node": "Enviar Whatsapp parabens2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "system migration",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

@@ -1,0 +1,3900 @@
+{
+  "updatedAt": "2026-02-13T14:41:47.918Z",
+  "createdAt": "2025-12-18T18:06:48.394Z",
+  "id": "mguFfg86yLCjgAHa",
+  "name": "Agente Vendas Baralho",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "conversas",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "telefone",
+              "keyValue": "={{ $json.IdConversa }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        -16
+      ],
+      "id": "959c8190-17ac-4dc2-ab9e-27b5441def37",
+      "name": "Buscar conversa",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "C87gCgyLKdnG6PSu",
+          "name": "baralho_prosperidade"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "webhook-baralho",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1248,
+        -16
+      ],
+      "id": "d8087ae2-d597-4954-9a00-fb63f3e2b23d",
+      "name": "Receber mensagem",
+      "webhookId": "9c8a306b-5fcb-4759-8eaf-786c573f7c93"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9f3775cb-6e9b-46be-953d-f07fea466f7a",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -384,
+        -16
+      ],
+      "id": "26eb04db-241f-488a-a9dc-aa21f8c5e642",
+      "name": "Cliente existe?",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "tableId": "conversas",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "telefone",
+              "fieldValue": "={{ $('Receber mensagem').item.json.body.phone }}"
+            },
+            {
+              "fieldId": "nome",
+              "fieldValue": "={{ $('Receber mensagem').item.json.body.senderName }}"
+            },
+            {
+              "fieldId": "fase_atual",
+              "fieldValue": "descoberta"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "novo_lead"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -736,
+        240
+      ],
+      "id": "d666ef76-1017-4ae6-9742-78905c96becd",
+      "name": "Criar conversa",
+      "credentials": {
+        "supabaseApi": {
+          "id": "C87gCgyLKdnG6PSu",
+          "name": "baralho_prosperidade"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "listId": "694441fa4cef80f1c0e4ecbc",
+        "name": "={{ $json.nome }}",
+        "description": "=Telefone: {{ $json.telefone }}\n\nData e hora: {{ $now }}\n\n📊 STATUS:\nStatus: novo_lead\nFase: descoberta",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.trello",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        240
+      ],
+      "id": "27879f2b-8e8a-418e-aee6-ac936d8d6740",
+      "name": "Criar Card Trello",
+      "credentials": {
+        "trelloApi": {
+          "id": "Rw0karD0UnTWxue6",
+          "name": "Trello account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "conversas",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Criar conversa').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "trello_card_id",
+              "fieldValue": "={{ $json.id }}"
+            },
+            {
+              "fieldId": "trello_list_id",
+              "fieldValue": "={{ $json.idList }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        240
+      ],
+      "id": "13236e7c-a519-4bf3-9f4a-052351482c62",
+      "name": "Salvar Card ID",
+      "credentials": {
+        "supabaseApi": {
+          "id": "C87gCgyLKdnG6PSu",
+          "name": "baralho_prosperidade"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -128,
+        96
+      ],
+      "id": "bdd84ebe-db2e-4649-93af-aa55ceb9509e",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        3152,
+        272
+      ],
+      "id": "37a3a70c-cb38-4c23-8b11-af19b83ce023",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "VqrbOmkmcbSCq58f",
+          "name": "Formacao n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Receber mensagem').item.json.body.text.message }}",
+        "options": {
+          "systemMessage": "=Você é a Silvia, assistente virtual de Fernando Botto, autor do livro \"O Algoritmo da Prosperidade\".\n\nSOBRE VOCÊ:\n- Você é calorosa, empática e inspiradora\n- Faz perguntas abertas sobre os anseios, desafios e questões delicadas que envolvam desenvolvimento espiritual, financeiro e pessoal do cliente\n- Escuta ativamente antes de apresentar soluções\n- Sua missão é ajudar pessoas a desbloquearem sua prosperidade e conduzí-las até a revelação da carta que melhor condiz com as experiências do cliente.\n\nSOBRE O BARALHO:\n- São 52 cartas com ensinamentos sobre prosperidade\n- Cada carta oferece uma mensagem e reflexão única\n- Preço: R$ 50,00\n- Frete GRÁTIS para todo Brasil\n\nDADOS DO CLIENTE:\nNome: {{ $json.nome || \"amigo(a)\" }}\nTelefone: {{ $('Receber mensagem').item.json.body.phone }}\nFase atual:{{ $('Buscar conversa').item.json.fase_atual }}\nStatus: {{ $('Buscar conversa').item.json.status }}\n\n---\n\nPROCESSO DE ATENDIMENTO:\n\nFASE 1 - DESCOBERTA (3-4 mensagens NO MÁXIMO):\n- Cumprimente o cliente com empatia\n- Apresente-se e diga que será a responsável por conduzí-lo(a) para a escolha e revelação da carta que melhor o(a) oriente em seu momento atual\n- Pergunte sobre seu momento de vida atual\n- Faça NO MÁXIMO 3-4 perguntas para entender:\n  • Desafios com dinheiro/carreira\n  • O que busca (abundância, coragem, início, etc)\n  • Bloqueios ou medos\n\nIMPORTANTE: Após 3-4 mensagens, PARE de perguntar e PASSE para FASE 2!\n\n---\n\nFASE 2 - REVELAÇÃO DA CARTA E PRIMEIRA APRESENTAÇÃO:\n\nQuando identificar pelo menos 2-3 temas do cliente, chame:\nselecionar_carta(tema=\"resumo de 2-3 frases descrevendo o momento do cliente: seus desafios, sentimentos, bloqueios e o que busca, baseado no que compartilhou na conversa\", telefone=\"...\")\nExemplo: tema=\"Pessoa que sente medo de investir e arriscar financeiramente. Carrega culpa por desejar mais dinheiro e repete padrões negativos herdados da família. Busca coragem para dar o próximo passo.\"\n\nA ferramenta irá:\n1. Selecionar uma carta apropriada baseada nos temas\n2. Retornar o nome, mensagem e reflexão da carta\n\nQuando receber a resposta:\n1. Revele a carta de forma especial e significativa\n2. Explique por que essa carta é perfeita para o momento do cliente\n3. Compartilhe a mensagem da carta\n4. Faça uma conexão entre a carta e o que o cliente compartilhou \n\nExemplo de revelação:\n\"✨ A carta que surgiu para você é: [NOME DA CARTA]\n\n[Mensagem da carta]\n\nEssa carta apareceu porque [conecte com o que o cliente disse]. \n\n[Reflexão da carta]\"\n\n5. Faça uma transição natural: \"Essa carta faz parte do Baralho da Prosperidade, uma ferramenta de autoconhecimento com 52 cartas baseadas no livro 'O Algoritmo da Prosperidade'. Se tiver interesse, posso te contar mais sobre ele!\"\n\nNÃO apresente detalhes do baralho ainda. Aguarde o cliente demonstrar interesse.\n\n---\n\nFASE 2.5 - APRESENTAÇÃO DETALHADA DO BARALHO:\n\nEsta fase SÓ acontece se o cliente demonstrar interesse! Exemplos:\n- \"Como funciona?\"\n- \"Me conta mais\"\n- \"Quanto custa?\"\n- \"Gostaria de saber mais\"\n\nQuando o cliente pedir mais informações:\n\n1. Explique o baralho com detalhes:\n   - São 52 cartas com ensinamentos completos do livro \"O Algoritmo da Prosperidade\"\n   - Cada carta oferece orientações para diferentes momentos da vida\n   - Ferramenta de autoconhecimento e transformação\n   - Pode ser usado para consulta diária\n   - Ajuda a superar bloqueios, encontrar coragem e atrair abundância\n\n2. Formas de uso do baralho:\n\n   USO INDIVIDUAL:\n   - Reflexão pessoal diária\n   - Orientação para momentos de decisão\n   - Consulta quando sentir necessidade de clareza\n\n   USO ENTRE DUAS PESSOAS (destaque este diferencial):\n   O baralho também pode ser usado entre duas pessoas de forma simples e poderosa:\n\n   • Diálogo guiado: uma pessoa tira a carta e lê a reflexão; a outra escuta e faz uma pergunta aberta para aprofundar o tema\n\n   • Espelhamento: cada um compartilha como a mensagem se manifesta na própria vida, sem aconselhar, apenas refletindo\n\n   • Alinhamento de intenções: ambos tiram uma carta e buscam pontos de conexão entre as reflexões, criando uma intenção comum\n\n   • Prática de escuta consciente: um fala por 2–3 minutos sobre a carta enquanto o outro apenas escuta, depois invertem\n\n   • Tomada de decisão conjunta: usam a carta como lente simbólica para refletir sobre uma escolha financeira ou de vida\n\n   Essas práticas transformam o baralho em uma ferramenta de conexão, clareza e crescimento compartilhado.\n\n3. Informações práticas:\n   - Valor: R$ 50,00\n   - Frete GRÁTIS para todo Brasil\n   - Formas de pagamento: Pix (instantâneo), Cartão ou Boleto\n   - Entrega pelos Correios\n\n4. Faça uma pergunta consultiva, não agressiva:\n   \"O baralho pode ser um grande aliado na sua jornada de prosperidade. Gostaria de adquirir o seu?\"\n\nNÃO peça CPF ainda! Aguarde confirmação CLARA de interesse em COMPRAR.\n\n---\n\nFASE 3 - FECHAMENTO DA VENDA:\n\nEsta fase SÓ acontece quando o cliente CONFIRMAR que quer COMPRAR! Exemplos:\n- \"Sim, quero comprar\"\n- \"Como faço para comprar?\"\n- \"Quero o baralho\"\n- \"Pode gerar o link\"\n\nQuando o cliente demonstrar INTENÇÃO CLARA DE COMPRA:\n\nPRIMEIRO, colete os dados para pagamento:\n\n1. NOME COMPLETO:\n\"Perfeito! Para gerar seu link de pagamento, preciso de alguns dados.\n\nPrimeiro, qual seu nome completo? (como aparece no CPF)\"\n\nAguarde o cliente enviar o nome completo.\n\nVALIDE o NOME:\n- Deve ter pelo menos 2 palavras (nome e sobrenome)\n- Se vier só primeiro nome, peça: \"Preciso do nome completo,como aparece no seu CPF. Pode me enviar?\"\n\n2. CPF:\n\"Ótimo! Agora preciso do seu CPF.\nPode me enviar apenas os números?\"\n\nAguarde o cliente enviar o CPF.\n\nVALIDE o CPF:\n- Deve ter 11 dígitos\n- Se inválido, peça novamente de forma gentil\n\nDEPOIS de receber NOME COMPLETO e CPF válido, chame:\n\ncriar_link_pagamento(\n  telefone=\"número do telefone do cliente\",\n  nome=\"nome COMPLETO do cliente (como informado agora)\",\n  cpf=\"CPF do cliente (só números)\",\n  valor=50.00\n)\n\n---\n\nTRATAMENTO DE RESPOSTA DA TOOL:\n\nA tool criar_link_pagamento pode retornar SUCESSO ou ERRO.\n\n═══════════════════════════════════════════════\nCENÁRIO 1: SUCESSO (success = true)\n═══════════════════════════════════════════════\n\nA tool retornou o link com sucesso.\n\nResponda:\n\"Perfeito! Seu link de pagamento está pronto! 🎉\n\nValor: R$ 50,00\n\n[cole aqui o invoiceUrl]\n\nVocê pode pagar por:\n- PIX (aprovação instantânea)\n- Cartão de crédito\n- Boleto\n\nApós o pagamento, vou te pedir o endereço para envio! 📦\"\n\n═══════════════════════════════════════════════\nCENÁRIO 2: ERRO (success = false)\n═══════════════════════════════════════════════\n\nA tool retornou erro de validação.\n\nVOCÊ DEVE TENTAR NOVAMENTE!\n\nSiga EXATAMENTE este fluxo:\n\nPASSO 1: Informe o erro ao cliente\n\"Desculpe, houve um problema: [error da resposta]\n\nPode me enviar seu CPF novamente? São 11 números, sem traços.\"\n\nPASSO 2: Aguarde o cliente enviar novo CPF\n\nPASSO 3: Quando receber o novo CPF, chame a tool IMEDIATAMENTE:\ncriar_link_pagamento(\n  telefone=\"...\",\n  nome=\"...\",\n  cpf=\"[NOVO CPF QUE O CLIENTE ENVIOU]\",\n  valor=50.00\n)\n\nPASSO 4: Se retornar success=true, envie o link\n         Se retornar success=false, volte ao PASSO 1\n\n═══════════════════════════════════════════════\nEXEMPLO DE CONVERSA COM ERRO E CORREÇÃO:\n═══════════════════════════════════════════════\n\nCliente: \"Quero comprar\"\nVocê: \"Qual seu nome completo?\"\nCliente: \"João Silva\"\nVocê: \"Qual seu CPF?\"\nCliente: \"11111111111\"\n\n[Você chama: criar_link_pagamento(cpf=\"11111111111\")]\n[Tool retorna: {success: false, error: \"CPF não pode ser sequência\"}]\n\nVocê: \"Desculpe, houve um problema: CPF não pode ser sequência de números repetidos\n\nPode me enviar seu CPF novamente? São 11 números, sem traços.\"\n\nCliente: \"12345678900\"\n\n[Você DEVE chamar novamente: criar_link_pagamento(cpf=\"12345678900\")]\n[Tool retorna: {success: false, error: \"CPF inválido\"}]\n\nVocê: \"Desculpe, houve um problema: CPF inválido (dígito verificador incorreto)\n\nPode verificar e me enviar novamente?\"\n\nCliente: \"26622732833\"\n\n[Você DEVE chamar novamente: criar_link_pagamento(cpf=\"26622732833\")]\n[Tool retorna: {success: true, invoiceUrl: \"https://...\"}]\n\nVocê: \"Perfeito! Seu link está pronto! 🎉\n[envia o link]\"\n\n═══════════════════════════════════════════════\n\nREGRAS CRÍTICAS:\n- SEMPRE chame a tool quando receber um novo CPF após erro\n- NÃO desista após o primeiro erro\n- NÃO peça confirmação antes de tentar de novo\n- TENTE quantas vezes for necessário até success=true\n- Cada CPF novo = nova chamada da tool\n\n---\n\nFASE 4 - FOLLOW-UP:\n\n- Se o cliente não pagar em 10 minutos, envie lembrete gentil\n- Se não pagar em 24h, envie segundo lembrete\n- Seja sempre respeitosa e não insistente\n- Se após 48h não houver interação, despedida gentil\n\n---\n\nFASE 5 - COLETA DE ENDEREÇO:\n\nSe fase_atual = \"coletando_endereco\":\n  O pagamento já foi confirmado! \n  Seu único objetivo agora é coletar o endereço completo para envio.\n\nCOLETA DE ENDEREÇO (em ordem):\n\n1. CEP:\n\"Para que eu possa enviar seu baralho, qual seu CEP?\n(Apenas os 8 números, sem hífen)\"\n\nAguarde o cliente enviar o CEP.\n\nVALIDE o CEP:\n- Deve ter 8 dígitos\n- Apenas números\n- Se vier com hífen, remova antes de enviar à tool\n\n2. NÚMERO:\n\"Qual o número da residência?\"\n\nAguarde o cliente enviar o número.\n\n3. COMPLEMENTO (opcional):\n\"Tem algum complemento? (apartamento, bloco, casa, etc)\nSe não tiver, pode enviar 'não' ou 'sem complemento'\"\n\nAguarde o cliente enviar o complemento.\n\nDEPOIS de coletar CEP + NÚMERO + COMPLEMENTO (ou confirmação de que não tem), chame:\n\nsalvar_endereco(\n  telefone=\"número do telefone do cliente\",\n  cep=\"CEP com 8 dígitos sem hífen\",\n  numero=\"número da residência\",\n  complemento=\"complemento ou vazio se não tiver\"\n)\n\nA ferramenta irá:\n- Validar o CEP automaticamente\n- Buscar endereço completo (rua, bairro, cidade, estado)\n- Salvar tudo no sistema\n- Adicionar no card do Trello\n- Retornar endereço completo formatado\n\nCRÍTICO - LEIA COM ATENÇÃO:\n- A tool vai validar o CEP e retornar o endereço completo\n- AGUARDE a resposta da tool antes de confirmar ao cliente!\n- NUNCA recrie o endereço manualmente\n- NUNCA use o que o cliente disse\n- USE APENAS o campo \"endereco_completo\" que a tool retornar\n\n---\n\nTRATAMENTO DE RESPOSTA DA TOOL salvar_endereco:\n\nA tool pode retornar SUCESSO ou ERRO.\n\n═══════════════════════════════════════════════\nCENÁRIO 1: SUCESSO (success = true)\n═══════════════════════════════════════════════\n\nA tool retornou o endereço completo validado.\n\nCOPIE EXATAMENTE o campo \"endereco_completo\" da resposta!\n\nResponda:\n\"Perfeito! Seu baralho será enviado para:\n\n📍 [COPIE AQUI o endereco_completo DA RESPOSTA DA TOOL]\n\nO código de rastreio será enviado em até 5 dias úteis.\n\nMuito obrigada pela compra! Foi um prazer te atender! 🎉\"\n\n═══════════════════════════════════════════════\nCENÁRIO 2: ERRO (success = false)\n═══════════════════════════════════════════════\n\nA tool retornou erro (CEP inválido ou não encontrado).\n\nVOCÊ DEVE TENTAR NOVAMENTE!\n\nSiga EXATAMENTE este fluxo:\n\nPASSO 1: Informe o erro\n\"Desculpe, não consegui validar esse CEP: [error da resposta]\n\nPode verificar e me enviar o CEP correto? São 8 números, sem hífen.\"\n\nPASSO 2: Aguarde o cliente enviar novo CEP\n\nPASSO 3: Pergunte o número novamente\n\"Qual o número da residência?\"\n\nPASSO 4: Aguarde o número\n\nPASSO 5: Pergunte o complemento novamente\n\"Tem complemento? (apartamento, bloco, casa, etc)\nSe não tiver, pode enviar 'não'\"\n\nPASSO 6: Aguarde o complemento\n\nPASSO 7: Chame a tool IMEDIATAMENTE:\nsalvar_endereco(\n  telefone=\"...\",\n  cep=\"[NOVO CEP]\",\n  numero=\"[NOVO NÚMERO]\",\n  complemento=\"[NOVO COMPLEMENTO ou vazio]\"\n)\n\nPASSO 8: Se success=true, confirme o endereço\n         Se success=false, volte ao PASSO 1\n\n═══════════════════════════════════════════════\nEXEMPLO DE CONVERSA COM ERRO E CORREÇÃO:\n═══════════════════════════════════════════════\n\nVocê: \"Qual seu CEP?\"\nCliente: \"99999999\"\nVocê: \"Qual o número?\"\nCliente: \"123\"\nVocê: \"Tem complemento?\"\nCliente: \"Não\"\n\n[Você chama: salvar_endereco(cep=\"99999999\", numero=\"123\", complemento=\"\")]\n[Tool retorna: {success: false, error: \"CEP não encontrado\"}]\n\nVocê: \"Desculpe, não consegui validar esse CEP: CEP não encontrado\n\nPode verificar e me enviar o CEP correto? São 8 números, sem hífen.\"\n\nCliente: \"80030380\"\n\nVocê: \"Qual o número da residência?\"\n\nCliente: \"259\"\n\nVocê: \"Tem complemento?\"\n\nCliente: \"Ap 31\"\n\n[Você DEVE chamar novamente: salvar_endereco(cep=\"80030380\", numero=\"259\", complemento=\"Ap 31\")]\n[Tool retorna: {success: true, endereco_completo: \"Rua Cambara, 259 - Ap 31, Centro, Curitiba - PR, CEP 80030-380\"}]\n\nVocê: \"Perfeito! Seu baralho será enviado para:\n\n📍 Rua Cambara, 259 - Ap 31, Centro, Curitiba - PR, CEP 80030-380\n\nO código de rastreio será enviado em até 5 dias úteis.\n\nMuito obrigada pela compra! 🎉\"\n\n═══════════════════════════════════════════════\n\nREGRAS CRÍTICAS:\n- SEMPRE use o campo \"endereco_completo\" da resposta\n- NÃO monte o endereço manualmente\n- NÃO use o que o cliente disse\n- USE APENAS o que a tool retornou\n- COPIE EXATAMENTE, não parafraseie\n- Se erro, colete CEP/número/complemento novamente\n- Chame a tool novamente até success=true\n- NUNCA desista após primeiro erro\n\n\n---\n\nREGRAS IMPORTANTES:\n\n- Uma fase de cada vez - não pule etapas\n- Mensagens curtas (máximo 3-4 linhas no WhatsApp)\n- Nunca seja insistente ou agressiva na venda\n- NUNCA peça CPF antes do cliente confirmar que QUER COMPRAR\n- Diferencie \"quer saber mais\" de \"quer comprar\"\n- Se o cliente disser \"não\", respeite e se despeça gentilmente\n- Use o nome do cliente quando souber\n- Emojis com moderação (máximo 1 por mensagem)\n- NÃO mencione o baralho antes de revelar a carta\n- NÃO ofereça link de pagamento antes do cliente confirmar compra\n- Observe os sinais de interesse do cliente antes de avançar as fases"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        3200,
+        64
+      ],
+      "id": "05f4d13c-7b35-4b86-82c1-264b6be288cc",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Dados Lead').item.json.IdConversa }}",
+        "tableName": "chat_history",
+        "contextWindowLength": 50
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        3296,
+        272
+      ],
+      "id": "719aebbe-d965-4c86-a1f1-1af50d02033a",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "0Z8zeX4ox8eTEGL1",
+          "name": "Postgres account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Seleciona uma carta do baralho da prosperidade com base nos temas identificados na conversa. Use esta tool quando entender bem o momento de vida do cliente (desafios, anseios, bloqueios) e quiser revelar a carta perfeita para ele. Retorna informações completas da carta incluindo nome, significado e URL da imagem.",
+        "method": "POST",
+        "url": "https://prosperidade-n8n.yc5mic.easypanel.host/webhook/selecionar-carta",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "tema",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `Temas identificados na conversa separados por vírgula. Exemplos: \"abundancia\", \"bloqueios,coragem\", \"inicio,potencial\"`, 'string') }}"
+            },
+            {
+              "name": "telefone",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters1_Value', `Telefone do cliente no formato completo com código do país. Exemplo: 5511991872614`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        3152,
+        464
+      ],
+      "id": "e38e7983-4bfc-4daf-a407-54831446bee2",
+      "name": "selecionar_carta"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.z-api.io/instances/3EAC63EE98C5F14530FE227360D3178E/token/198DF2D98C4EB52EFD1319EA/send-text",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "phone",
+              "value": "={{ $('Merge').item.json.telefone }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $json['output.mensagens'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4e1809a8-4e25-4e97-bd39-c499959b13ea",
+      "name": "(Z-API) Enviar Mensagem",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4352,
+        160
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "8jRtMgiJTpVow7wP",
+          "name": "Z-API Credential"
+        }
+      },
+      "disabled": true,
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output.mensagens",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        3920,
+        64
+      ],
+      "id": "4c98d865-ada6-4f3b-8eb8-9e304c274962",
+      "name": "Split Out1",
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        4176,
+        64
+      ],
+      "id": "88fb3c69-9517-43a6-9bfd-12e75e67d1e6",
+      "name": "Loop Over Items1",
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4560,
+        448
+      ],
+      "id": "155eb4ee-42e8-4916-89e9-194777cfca7c",
+      "name": "Wait3",
+      "webhookId": "33c5308c-6ef7-4028-8fb7-f0f46b8d615d",
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4352,
+        -64
+      ],
+      "id": "33b6adca-9a4f-4639-b9cd-d95677844b2d",
+      "name": "No Operation, do nothing5",
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserAutofixing",
+      "typeVersion": 1,
+      "position": [
+        3696,
+        240
+      ],
+      "id": "5e65e32c-2628-4e6c-bb96-6b0e2b777386",
+      "name": "Auto-fixing Output Parser1",
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        3600,
+        416
+      ],
+      "id": "c80ff72b-2813-477c-8e2c-1abf9948151c",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "VqrbOmkmcbSCq58f",
+          "name": "Formacao n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"mensagens\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    }\n  },\n  \"required\": [\"mensagens\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        3808,
+        400
+      ],
+      "id": "54f6da51-e9e0-478c-b081-4ac363d0f4fb",
+      "name": "Structured Output Parser [Schema]",
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=<mensagem_do_usuario>\n{{ $json.output }}\n</mensagem_do_usuario>",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Apenas estruture a <mensagem_do_usuario> no formato JSON solicitado no output parser e seguindo as instruções de formatação abaixo. Não altere nada mais na mensagem\n\n# Formatação\n- Divida as mensagens para que fiquem naturais e humanizadas;\n- Divida as mensagens conforme estrutura do output parser para que não fiquem muito longas (maiores que 240 caractéres);\n- Não separe mensagens vazias;\n- Use quebras de linhas (\\n\\n) após pontos finais;\n- Para negrito (bold) use apenas um '' nunca duas '' (exemplo: *negrito).\n\nExemplo de formato JSON:\n{\n\"mensagens\": [\"Mensagem 0\", \"Mensagem 1\", \"Mensagem 2\"]\n}"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        3600,
+        64
+      ],
+      "id": "5b0eaead-064b-4ddf-bd3f-6263e9dfde91",
+      "name": "Basic LLM Chain",
+      "retryOnFail": true,
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "content": "## Humaniza a resposta com buffer de mensagens \n",
+        "height": 784,
+        "width": 1248
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3552,
+        -112
+      ],
+      "typeVersion": 1,
+      "id": "d91198d2-72fd-46e4-b299-f2909e0564dc",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Cadastra lead",
+        "height": 832,
+        "width": 1408,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1328,
+        -128
+      ],
+      "typeVersion": 1,
+      "id": "216109aa-b445-4331-97a3-b5cc39dd4a22",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Apresenta e vende o baralho \n",
+        "height": 784,
+        "width": 432,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3088,
+        -112
+      ],
+      "typeVersion": 1,
+      "id": "08ba25e1-f812-4a86-9669-e471e4cdc698",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Cria um link de pagamento para o cliente comprar o Baralho da Prosperidade.  Use esta ferramenta quando o cliente demonstrar interesse em adquirir o baralho. Retorna o link de pagamento que você deve enviar ao cliente.  ",
+        "method": "POST",
+        "url": "https://prosperidade-n8n.yc5mic.easypanel.host/webhook/criar-link-pagamento",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "telefone",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `Telefone do cliente no formato completo com código do país.\nUse o telefone da conversa atual.`, 'string') }}"
+            },
+            {
+              "name": "nome",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters1_Value', `Nome COMPLETO do cliente como aparece no CPF.\nDeve incluir nome e sobrenome. Exemplo: João Silva Santos`, 'string') }}"
+            },
+            {
+              "name": "valor",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters2_Value', `Valor da compra. Sempre use 50.00 para o Baralho da Prosperidade.`, 'string') }}"
+            },
+            {
+              "name": "cpf",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters3_Value', `CPF do cliente com 11 dígitos (apenas números).`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        3408,
+        320
+      ],
+      "id": "b3c8ab56-8134-4282-96ed-066eb6b26b76",
+      "name": "criar_link_pagamento"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Salva o endereço completo do cliente para envio do Baralho da Prosperidade. \nUse após coletar CEP, número e complemento. Valida o CEP automaticamente e retorna o endereço completo formatado.",
+        "method": "POST",
+        "url": "https://prosperidade-n8n.yc5mic.easypanel.host/webhook/salvar-endereco",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "telefone",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `Telefone do cliente no formato completo com código do país`, 'string') }}"
+            },
+            {
+              "name": "cep",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters1_Value', `CEP com 8 dígitos (apenas números, sem hífen). \nExemplo: 01310100`, 'string') }}"
+            },
+            {
+              "name": "numero",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters2_Value', `Número da residência`, 'string') }}"
+            },
+            {
+              "name": "complemento",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters3_Value', `Complemento do endereço (apartamento, bloco, casa, etc). \nPode ser vazio se não houver complemento.`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        3408,
+        496
+      ],
+      "id": "1e2c52d1-ecf2-4fab-b5c5-6ac5df49a8f4",
+      "name": "salvar_endereco"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Atualiza a fase atual da conversa no sistema. Use para marcar em qual etapa do atendimento o cliente está. IMPORTANTE: Use APENAS após apresentar o baralho completo (FASE 2.5).          │\nNão use para outras fases - elas são atualizadas automaticamente pelos workflows.    ",
+        "method": "POST",
+        "url": "https://prosperidade-n8n.yc5mic.easypanel.host/webhook/atualizar-fase",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "telefone",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `Telefone do cliente no formato completo com código do país`, 'string') }}"
+            },
+            {
+              "name": "nova_fase",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters1_Value', `Nova fase da conversa. Use APENAS \"apresentacao_venda\" após apresentar o baralho completo na FASE 2.5. Outras fases são atualizadas automaticamente.`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        3296,
+        432
+      ],
+      "id": "e21ebc2f-5334-420e-84f7-75fcd54b46fb",
+      "name": "atualizar_fase"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "bc64f125-d93c-4d1d-97ae-65c0adb08b79",
+                    "leftValue": "={{ $('Receber mensagem').item.json.body.text.message }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "texto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "137aec3f-e95e-4d59-b9ba-1140f9fc4fb4",
+                    "leftValue": "={{ $('Receber mensagem').item.json.body.audio.audioUrl }}",
+                    "rightValue": "audio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Receber mensagem').item.json.body.image.imageUrl }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "40b284c8-fdf7-49e5-9ac3-8c5051f51521"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "imagem"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "7babc8fd-200c-4cb8-bc63-f999f57d5217",
+                    "leftValue": "={{ $('Receber mensagem').item.json.body.document.mimeType }}",
+                    "rightValue": "pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PDF"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Outro"
+        }
+      },
+      "id": "a63166ef-adaa-4ecf-a35d-cccd01261459",
+      "name": "Switch1",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.1,
+      "position": [
+        176,
+        48
+      ],
+      "notesInFlow": true,
+      "notes": "Ajustar condições para cada tipo de mensagem a depender da sua entrada de dados\n\nTEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "binaryPropertyName": "=data",
+        "options": {
+          "language": "pt"
+        }
+      },
+      "id": "e223e75b-a746-44b7-a80c-9c905212791f",
+      "name": "Transcrever Áudio1",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.4,
+      "position": [
+        864,
+        -80
+      ],
+      "retryOnFail": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "47a3ptzhP4wlIUiz",
+          "name": "OpenAi account"
+        }
+      },
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "=#Instruções\nO usuário te enviou uma imagem a qual você deve descrever.\n\nA imagem pode vir acompanhada de uma mensagem de texto (<MensagemUsuario>)\n\nCaso venha, utilize a mensagem anexa como contexto extra, tente capturar o sentimento da mensagem e objetivo pelo qual o usuário esteja enviando esta imagem na conversa.\n\nCrie uma resposta descrevendo as informações enviadas para que estas sejam utilizadas por um agente no futuro.\n\nLembre-se:\nEste agente apenas terá as informações que você fornecer, portanto repasse toda informação que julgar importante.\n\n#Dados\n<MensagemUsuario>\n{{ $json.MensagemImagem }}\n</MensagemUsuario>\n",
+        "imageUrls": "={{ $json.Imagem }}",
+        "options": {}
+      },
+      "id": "b89db6a8-2497-4275-b505-d8831abcfd27",
+      "name": "OpenAI1",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.4,
+      "position": [
+        656,
+        96
+      ],
+      "retryOnFail": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "VqrbOmkmcbSCq58f",
+          "name": "Formacao n8n"
+        }
+      },
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "amount": "=5"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1664,
+        96
+      ],
+      "id": "266305ee-a276-49a6-92f0-6456e7c4ae0d",
+      "name": "Wait1",
+      "webhookId": "84b05b68-c282-4dfa-a9d0-dfaeb6669d60",
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1bd6c365-d077-4284-9dfe-94db1cbe39bd",
+              "leftValue": "={{ $('Buffer 3').item.json.messages.last() }}",
+              "rightValue": "={{ $('Buffer ').item.json.messages.last() }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2112,
+        96
+      ],
+      "id": "7316140a-7013-4bf1-a8d1-6c2a1fe36bec",
+      "name": "ComparandoMensagens1",
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "66a91f66-e755-4120-b22f-44c814f56162",
+              "name": "message",
+              "value": "={{ $('Apagar Buffer1').item.json.messages.join('\\n\\n') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2768,
+        64
+      ],
+      "id": "7dc6a7e4-6a2d-4bb8-a22a-bcfdd087e6fb",
+      "name": "Mensagem1",
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "messages",
+        "key": "={{ $('Dados Lead').item.json.IdConversa }}_buffer",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1456,
+        96
+      ],
+      "id": "e4e0c7bd-d794-408f-a5d8-185807a1cb89",
+      "name": "Buffer ",
+      "credentials": {
+        "redis": {
+          "id": "Apao8W4lZNhw5Kun",
+          "name": "Redis Prosperidade"
+        }
+      },
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "messages",
+        "key": "={{ $('Dados Lead').item.json.IdConversa }}_buffer",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1888,
+        96
+      ],
+      "id": "2a126c7a-142b-4e19-a0af-1cdb24d82169",
+      "name": "Buffer 3",
+      "credentials": {
+        "redis": {
+          "id": "Apao8W4lZNhw5Kun",
+          "name": "Redis Prosperidade"
+        }
+      },
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $('Dados Lead').item.json.IdConversa }}_buffer",
+        "messageData": "={{ $json.Texto }}",
+        "tail": true
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        688
+      ],
+      "id": "320f6a16-52e1-4e96-8bda-6779526b73e7",
+      "name": "Add Texto Buffer1",
+      "retryOnFail": false,
+      "executeOnce": false,
+      "credentials": {
+        "redis": {
+          "id": "Apao8W4lZNhw5Kun",
+          "name": "Redis Prosperidade"
+        }
+      },
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('Dados Lead').item.json.IdConversa }}_buffer"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2336,
+        0
+      ],
+      "id": "6f1b1eeb-cde2-429a-a49f-0f4a395218fa",
+      "name": "Apagar Buffer1",
+      "credentials": {
+        "redis": {
+          "id": "Apao8W4lZNhw5Kun",
+          "name": "Redis Prosperidade"
+        }
+      },
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c1ce011b-bd95-468e-863e-f2076f644cf9",
+              "name": "Texto",
+              "value": "={{ $('Receber mensagem').item.json.body.text.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        384,
+        688
+      ],
+      "id": "8e730f8b-e4c9-4655-8d79-e3deeb680a75",
+      "name": "Mensagem Texto1",
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5efc6961-1ff7-4ef2-a772-7e9761592a3e",
+              "name": "Audio",
+              "value": "={{ $('Webhook').item.json.body.audio.audioUrl }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        384,
+        -80
+      ],
+      "id": "2a866c5b-e3bc-4777-93ad-b5ff0186fb6c",
+      "name": "Mensagem Audio1",
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5efc6961-1ff7-4ef2-a772-7e9761592a3e",
+              "name": "Imagem",
+              "value": "={{ $('Webhook').item.json.body.image.imageUrl }}",
+              "type": "string"
+            },
+            {
+              "id": "f5c70ab5-7671-4bc8-9d23-65b8954ddb08",
+              "name": "MensagemImagem",
+              "value": "={{ $('Webhook').item.json.body.image.caption }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        384,
+        96
+      ],
+      "id": "a26bea64-d021-47a6-9066-d10f722ba2b0",
+      "name": "Mensagem Imagem1",
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $('Dados Lead').item.json.IdConversa }}_buffer",
+        "messageData": "={{ $json.text }}",
+        "tail": true
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        -80
+      ],
+      "id": "3c1f6010-7ee6-417d-a74e-f83ca19bd550",
+      "name": "Add Audio Buffer1",
+      "retryOnFail": false,
+      "credentials": {
+        "redis": {
+          "id": "2YLmSxsr6T77RzwN",
+          "name": "Redis account"
+        }
+      },
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $('Dados Lead').item.json.IdConversa }}_buffer",
+        "messageData": "={{ $json.Erro }}",
+        "tail": true
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        480
+      ],
+      "id": "8537ef4c-a5c4-4c3c-8ee0-8afc17057f97",
+      "name": "Add Error Buffer1",
+      "retryOnFail": false,
+      "credentials": {
+        "redis": {
+          "id": "2YLmSxsr6T77RzwN",
+          "name": "Redis account"
+        }
+      },
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        864,
+        288
+      ],
+      "id": "a8c8cf4f-bf6f-470f-a120-3f4ba8556818",
+      "name": "Extract from File",
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "11dc126a-e72e-431b-8db5-c78168c69439",
+              "name": "Erro",
+              "value": "<ErroFormatoMensagem>",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        384,
+        480
+      ],
+      "id": "cef671aa-f496-4f2a-8a40-38b5e01846c7",
+      "name": "Mensagem Erro1",
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $('Dados Lead').item.json.IdConversa }}_buffer",
+        "messageData": "=<ContextoPDF>\n  <TranscricaoPDF>\n{{ $json.text }}\n  </TranscricaoPDF>\nContexto Extra: O usuário encaminhou a mensagem a seguir junto ao PDF.\n  <MensagemUsuario>\n{{ $('Mensagem Documento PDF').item.json.MensagemDocumento }}\n  </MensagemUsuario>\n</ContextoPDF>",
+        "tail": true
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        288
+      ],
+      "id": "b8e76ca6-9174-42bc-b941-e44f31580cd8",
+      "name": "Add PDF Buffer1",
+      "retryOnFail": false,
+      "credentials": {
+        "redis": {
+          "id": "2YLmSxsr6T77RzwN",
+          "name": "Redis account"
+        }
+      },
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $('Dados Lead').item.json.IdConversa }}_buffer",
+        "messageData": "=<ContextoImagem>\n\n  <DetalheImagem>\n{{ $json.content }}\n  </DetalheImagem>\n\nContexto Extra: O usuário encaminhou a mensagem a seguir junto á imagem.\n  <MensagemUsuario>\n{{ $('Mensagem Imagem1').item.json.MensagemImagem }}\n  </MensagemUsuario>\n\n</ContextoImagem>",
+        "tail": true
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        96
+      ],
+      "id": "ab9c329d-8880-420f-a3a2-06095a7e7662",
+      "name": "Add Imagem Buffer1",
+      "retryOnFail": false,
+      "credentials": {
+        "redis": {
+          "id": "2YLmSxsr6T77RzwN",
+          "name": "Redis account"
+        }
+      },
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2336,
+        192
+      ],
+      "id": "4bf5823b-16a3-4039-a760-8a0aa167bfe3",
+      "name": "No Operation, do nothing6",
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5efc6961-1ff7-4ef2-a772-7e9761592a3e",
+              "name": "Documento",
+              "value": "={{ $('Webhook').item.json.body.document.documentUrl }}",
+              "type": "string"
+            },
+            {
+              "id": "003323ec-ffbe-4c91-b8b5-623466b5014d",
+              "name": "MensagemDocumento",
+              "value": "={{ $('Webhook').item.json.body.document.caption }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        384,
+        288
+      ],
+      "id": "81d6d49b-a66d-4ca5-b07c-419db1bddc04",
+      "name": "Mensagem Documento PDF",
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.Audio }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        656,
+        -80
+      ],
+      "id": "8a376b3c-6621-4258-9be9-b3259d2bbf7b",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.Documento }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        656,
+        288
+      ],
+      "id": "600b3fb0-c345-4cf1-ab95-af4d181ff254",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "24aa4532-80db-4c1e-977a-0036b82a8e5f",
+              "leftValue": "={{ $('Receber mensagem').item.json.body.isEdit }}",
+              "rightValue": "false",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "204f54b0-e3ed-4ff4-8302-8c20d3b8aa78",
+              "leftValue": "={{ $('Receber mensagem').item.json.body.isGroup }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "130cc493-a17a-4cc1-955b-816799583076",
+              "leftValue": "={{ $('Receber mensagem').item.json.body.isNewsletter }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "c51986d9-f347-4198-89bb-9e4cd0f021c9",
+              "leftValue": "={{ $('Receber mensagem').item.json.body.broadcast }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "ac9c4286-34d7-4058-9bbb-985bd9c2b6e7",
+              "leftValue": "={{ $('Receber mensagem').item.json.body.fromApi }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b9b5ec31-6dbc-4b88-aef0-c587819b3c4b",
+      "name": "Filtro Inicial1",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.1,
+      "position": [
+        -1024,
+        -16
+      ],
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9f488c5c-0b3b-48e9-87b1-5a22d513d1ec",
+              "name": "IdConversa",
+              "value": "={{ $('Receber mensagem').item.json.body.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "69f6217f-9063-423f-abf4-e94f6b70f94e",
+              "name": "LeadNome",
+              "value": "={{ $('Receber mensagem').item.json.body.senderName }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a4c431f4-71a7-4d98-b6fb-961419aeaded",
+      "name": "Dados Lead",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -800,
+        -16
+      ],
+      "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+    }
+  ],
+  "connections": {
+    "Receber mensagem": {
+      "main": [
+        [
+          {
+            "node": "Filtro Inicial1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar conversa": {
+      "main": [
+        [
+          {
+            "node": "Cliente existe?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cliente existe?": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Criar conversa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar conversa": {
+      "main": [
+        [
+          {
+            "node": "Criar Card Trello",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar Card Trello": {
+      "main": [
+        [
+          {
+            "node": "Salvar Card ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salvar Card ID": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "selecionar_carta": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "(Z-API) Enviar Mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-fixing Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Auto-fixing Output Parser1",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser [Schema]": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Auto-fixing Output Parser1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "(Z-API) Enviar Mensagem": {
+      "main": [
+        [
+          {
+            "node": "Wait3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "criar_link_pagamento": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "salvar_endereco": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "atualizar_fase": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Mensagem Texto1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mensagem Audio1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mensagem Imagem1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mensagem Documento PDF",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mensagem Erro1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcrever Áudio1": {
+      "main": [
+        [
+          {
+            "node": "Add Audio Buffer1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI1": {
+      "main": [
+        [
+          {
+            "node": "Add Imagem Buffer1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Buffer 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ComparandoMensagens1": {
+      "main": [
+        [
+          {
+            "node": "Apagar Buffer1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buffer ": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buffer 3": {
+      "main": [
+        [
+          {
+            "node": "ComparandoMensagens1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Texto Buffer1": {
+      "main": [
+        [
+          {
+            "node": "Buffer ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apagar Buffer1": {
+      "main": [
+        [
+          {
+            "node": "Mensagem1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensagem Texto1": {
+      "main": [
+        [
+          {
+            "node": "Add Texto Buffer1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensagem Audio1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensagem Imagem1": {
+      "main": [
+        [
+          {
+            "node": "OpenAI1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Audio Buffer1": {
+      "main": [
+        [
+          {
+            "node": "Buffer ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Error Buffer1": {
+      "main": [
+        [
+          {
+            "node": "Buffer ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Add PDF Buffer1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensagem Erro1": {
+      "main": [
+        [
+          {
+            "node": "Add Error Buffer1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add PDF Buffer1": {
+      "main": [
+        [
+          {
+            "node": "Buffer ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Imagem Buffer1": {
+      "main": [
+        [
+          {
+            "node": "Buffer ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensagem Documento PDF": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Transcrever Áudio1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtro Inicial1": {
+      "main": [
+        [
+          {
+            "node": "Dados Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados Lead": {
+      "main": [
+        [
+          {
+            "node": "Buscar conversa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensagem1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Receber mensagem": [
+      {
+        "json": {
+          "body": {
+            "instanceId": "3C7FA2B3E8A9D1F04B6E",
+            "messageId": "3EB0A1D2F4C8B5E6A7F9",
+            "phone": "5511991872614",
+            "fromMe": false,
+            "fromApi": false,
+            "momment": 1707667200000,
+            "status": "RECEIVED",
+            "chatName": "João Silva",
+            "senderPhoto": "https://pps.whatsapp.net/v/t61/photo.jpg",
+            "senderName": "João Silva",
+            "participantPhone": null,
+            "photo": "https://pps.whatsapp.net/v/t61/photo.jpg",
+            "broadcast": false,
+            "type": "ReceivedCallback",
+            "isEdit": false,
+            "isGroup": false,
+            "isNewsletter": false,
+            "instanceToken": "abc123def456",
+            "text": {
+              "message": "preciso de alguma motivação para seguir em frente"
+            },
+            "image": {
+              "imageUrl": "",
+              "mimeType": "",
+              "caption": ""
+            },
+            "audio": {
+              "audioUrl": "",
+              "mimeType": ""
+            },
+            "document": {
+              "documentUrl": "",
+              "mimeType": "",
+              "title": "",
+              "pageCount": null
+            }
+          },
+          "headers": {
+            "content-type": "application/json",
+            "client-token": "abc123def456"
+          },
+          "query": {}
+        }
+      }
+    ]
+  },
+  "versionId": "0478d619-5ebc-4fd4-ac92-c87a45d31564",
+  "activeVersionId": "0478d619-5ebc-4fd4-ac92-c87a45d31564",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-12-18T18:06:48.401Z",
+      "createdAt": "2025-12-18T18:06:48.401Z",
+      "role": "workflow:owner",
+      "workflowId": "mguFfg86yLCjgAHa",
+      "projectId": "SoH44tJE4dqRVTiw"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-02-13T14:42:12.000Z",
+    "createdAt": "2026-02-13T14:41:47.920Z",
+    "versionId": "0478d619-5ebc-4fd4-ac92-c87a45d31564",
+    "workflowId": "mguFfg86yLCjgAHa",
+    "nodes": [
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "conversas",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "telefone",
+                "keyValue": "={{ $json.IdConversa }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -560,
+          -16
+        ],
+        "id": "959c8190-17ac-4dc2-ab9e-27b5441def37",
+        "name": "Buscar conversa",
+        "alwaysOutputData": true,
+        "credentials": {
+          "supabaseApi": {
+            "id": "C87gCgyLKdnG6PSu",
+            "name": "baralho_prosperidade"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "webhook-baralho",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -1248,
+          -16
+        ],
+        "id": "d8087ae2-d597-4954-9a00-fb63f3e2b23d",
+        "name": "Receber mensagem",
+        "webhookId": "9c8a306b-5fcb-4759-8eaf-786c573f7c93"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "9f3775cb-6e9b-46be-953d-f07fea466f7a",
+                "leftValue": "={{ $json.id }}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -384,
+          -16
+        ],
+        "id": "26eb04db-241f-488a-a9dc-aa21f8c5e642",
+        "name": "Cliente existe?",
+        "alwaysOutputData": false
+      },
+      {
+        "parameters": {
+          "tableId": "conversas",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "telefone",
+                "fieldValue": "={{ $('Receber mensagem').item.json.body.phone }}"
+              },
+              {
+                "fieldId": "nome",
+                "fieldValue": "={{ $('Receber mensagem').item.json.body.senderName }}"
+              },
+              {
+                "fieldId": "fase_atual",
+                "fieldValue": "descoberta"
+              },
+              {
+                "fieldId": "status",
+                "fieldValue": "novo_lead"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -736,
+          240
+        ],
+        "id": "d666ef76-1017-4ae6-9742-78905c96becd",
+        "name": "Criar conversa",
+        "credentials": {
+          "supabaseApi": {
+            "id": "C87gCgyLKdnG6PSu",
+            "name": "baralho_prosperidade"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "listId": "694441fa4cef80f1c0e4ecbc",
+          "name": "={{ $json.nome }}",
+          "description": "=Telefone: {{ $json.telefone }}\n\nData e hora: {{ $now }}\n\n📊 STATUS:\nStatus: novo_lead\nFase: descoberta",
+          "additionalFields": {}
+        },
+        "type": "n8n-nodes-base.trello",
+        "typeVersion": 1,
+        "position": [
+          -560,
+          240
+        ],
+        "id": "27879f2b-8e8a-418e-aee6-ac936d8d6740",
+        "name": "Criar Card Trello",
+        "credentials": {
+          "trelloApi": {
+            "id": "Rw0karD0UnTWxue6",
+            "name": "Trello account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "conversas",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('Criar conversa').item.json.id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "trello_card_id",
+                "fieldValue": "={{ $json.id }}"
+              },
+              {
+                "fieldId": "trello_list_id",
+                "fieldValue": "={{ $json.idList }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -368,
+          240
+        ],
+        "id": "13236e7c-a519-4bf3-9f4a-052351482c62",
+        "name": "Salvar Card ID",
+        "credentials": {
+          "supabaseApi": {
+            "id": "C87gCgyLKdnG6PSu",
+            "name": "baralho_prosperidade"
+          }
+        }
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          -128,
+          96
+        ],
+        "id": "bdd84ebe-db2e-4649-93af-aa55ceb9509e",
+        "name": "Merge"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gpt-4.1-mini"
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          3152,
+          272
+        ],
+        "id": "37a3a70c-cb38-4c23-8b11-af19b83ce023",
+        "name": "OpenAI Chat Model",
+        "credentials": {
+          "openAiApi": {
+            "id": "VqrbOmkmcbSCq58f",
+            "name": "Formacao n8n"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "={{ $('Receber mensagem').item.json.body.text.message }}",
+          "options": {
+            "systemMessage": "=Você é a Silvia, assistente virtual de Fernando Botto, autor do livro \"O Algoritmo da Prosperidade\".\n\nSOBRE VOCÊ:\n- Você é calorosa, empática e inspiradora\n- Faz perguntas abertas sobre os anseios, desafios e questões delicadas que envolvam desenvolvimento espiritual, financeiro e pessoal do cliente\n- Escuta ativamente antes de apresentar soluções\n- Sua missão é ajudar pessoas a desbloquearem sua prosperidade e conduzí-las até a revelação da carta que melhor condiz com as experiências do cliente.\n\nSOBRE O BARALHO:\n- São 52 cartas com ensinamentos sobre prosperidade\n- Cada carta oferece uma mensagem e reflexão única\n- Preço: R$ 50,00\n- Frete GRÁTIS para todo Brasil\n\nDADOS DO CLIENTE:\nNome: {{ $json.nome || \"amigo(a)\" }}\nTelefone: {{ $('Receber mensagem').item.json.body.phone }}\nFase atual:{{ $('Buscar conversa').item.json.fase_atual }}\nStatus: {{ $('Buscar conversa').item.json.status }}\n\n---\n\nPROCESSO DE ATENDIMENTO:\n\nFASE 1 - DESCOBERTA (3-4 mensagens NO MÁXIMO):\n- Cumprimente o cliente com empatia\n- Apresente-se e diga que será a responsável por conduzí-lo(a) para a escolha e revelação da carta que melhor o(a) oriente em seu momento atual\n- Pergunte sobre seu momento de vida atual\n- Faça NO MÁXIMO 3-4 perguntas para entender:\n  • Desafios com dinheiro/carreira\n  • O que busca (abundância, coragem, início, etc)\n  • Bloqueios ou medos\n\nIMPORTANTE: Após 3-4 mensagens, PARE de perguntar e PASSE para FASE 2!\n\n---\n\nFASE 2 - REVELAÇÃO DA CARTA E PRIMEIRA APRESENTAÇÃO:\n\nQuando identificar pelo menos 2-3 temas do cliente, chame:\nselecionar_carta(tema=\"resumo de 2-3 frases descrevendo o momento do cliente: seus desafios, sentimentos, bloqueios e o que busca, baseado no que compartilhou na conversa\", telefone=\"...\")\nExemplo: tema=\"Pessoa que sente medo de investir e arriscar financeiramente. Carrega culpa por desejar mais dinheiro e repete padrões negativos herdados da família. Busca coragem para dar o próximo passo.\"\n\nA ferramenta irá:\n1. Selecionar uma carta apropriada baseada nos temas\n2. Retornar o nome, mensagem e reflexão da carta\n\nQuando receber a resposta:\n1. Revele a carta de forma especial e significativa\n2. Explique por que essa carta é perfeita para o momento do cliente\n3. Compartilhe a mensagem da carta\n4. Faça uma conexão entre a carta e o que o cliente compartilhou \n\nExemplo de revelação:\n\"✨ A carta que surgiu para você é: [NOME DA CARTA]\n\n[Mensagem da carta]\n\nEssa carta apareceu porque [conecte com o que o cliente disse]. \n\n[Reflexão da carta]\"\n\n5. Faça uma transição natural: \"Essa carta faz parte do Baralho da Prosperidade, uma ferramenta de autoconhecimento com 52 cartas baseadas no livro 'O Algoritmo da Prosperidade'. Se tiver interesse, posso te contar mais sobre ele!\"\n\nNÃO apresente detalhes do baralho ainda. Aguarde o cliente demonstrar interesse.\n\n---\n\nFASE 2.5 - APRESENTAÇÃO DETALHADA DO BARALHO:\n\nEsta fase SÓ acontece se o cliente demonstrar interesse! Exemplos:\n- \"Como funciona?\"\n- \"Me conta mais\"\n- \"Quanto custa?\"\n- \"Gostaria de saber mais\"\n\nQuando o cliente pedir mais informações:\n\n1. Explique o baralho com detalhes:\n   - São 52 cartas com ensinamentos completos do livro \"O Algoritmo da Prosperidade\"\n   - Cada carta oferece orientações para diferentes momentos da vida\n   - Ferramenta de autoconhecimento e transformação\n   - Pode ser usado para consulta diária\n   - Ajuda a superar bloqueios, encontrar coragem e atrair abundância\n\n2. Formas de uso do baralho:\n\n   USO INDIVIDUAL:\n   - Reflexão pessoal diária\n   - Orientação para momentos de decisão\n   - Consulta quando sentir necessidade de clareza\n\n   USO ENTRE DUAS PESSOAS (destaque este diferencial):\n   O baralho também pode ser usado entre duas pessoas de forma simples e poderosa:\n\n   • Diálogo guiado: uma pessoa tira a carta e lê a reflexão; a outra escuta e faz uma pergunta aberta para aprofundar o tema\n\n   • Espelhamento: cada um compartilha como a mensagem se manifesta na própria vida, sem aconselhar, apenas refletindo\n\n   • Alinhamento de intenções: ambos tiram uma carta e buscam pontos de conexão entre as reflexões, criando uma intenção comum\n\n   • Prática de escuta consciente: um fala por 2–3 minutos sobre a carta enquanto o outro apenas escuta, depois invertem\n\n   • Tomada de decisão conjunta: usam a carta como lente simbólica para refletir sobre uma escolha financeira ou de vida\n\n   Essas práticas transformam o baralho em uma ferramenta de conexão, clareza e crescimento compartilhado.\n\n3. Informações práticas:\n   - Valor: R$ 50,00\n   - Frete GRÁTIS para todo Brasil\n   - Formas de pagamento: Pix (instantâneo), Cartão ou Boleto\n   - Entrega pelos Correios\n\n4. Faça uma pergunta consultiva, não agressiva:\n   \"O baralho pode ser um grande aliado na sua jornada de prosperidade. Gostaria de adquirir o seu?\"\n\nNÃO peça CPF ainda! Aguarde confirmação CLARA de interesse em COMPRAR.\n\n---\n\nFASE 3 - FECHAMENTO DA VENDA:\n\nEsta fase SÓ acontece quando o cliente CONFIRMAR que quer COMPRAR! Exemplos:\n- \"Sim, quero comprar\"\n- \"Como faço para comprar?\"\n- \"Quero o baralho\"\n- \"Pode gerar o link\"\n\nQuando o cliente demonstrar INTENÇÃO CLARA DE COMPRA:\n\nPRIMEIRO, colete os dados para pagamento:\n\n1. NOME COMPLETO:\n\"Perfeito! Para gerar seu link de pagamento, preciso de alguns dados.\n\nPrimeiro, qual seu nome completo? (como aparece no CPF)\"\n\nAguarde o cliente enviar o nome completo.\n\nVALIDE o NOME:\n- Deve ter pelo menos 2 palavras (nome e sobrenome)\n- Se vier só primeiro nome, peça: \"Preciso do nome completo,como aparece no seu CPF. Pode me enviar?\"\n\n2. CPF:\n\"Ótimo! Agora preciso do seu CPF.\nPode me enviar apenas os números?\"\n\nAguarde o cliente enviar o CPF.\n\nVALIDE o CPF:\n- Deve ter 11 dígitos\n- Se inválido, peça novamente de forma gentil\n\nDEPOIS de receber NOME COMPLETO e CPF válido, chame:\n\ncriar_link_pagamento(\n  telefone=\"número do telefone do cliente\",\n  nome=\"nome COMPLETO do cliente (como informado agora)\",\n  cpf=\"CPF do cliente (só números)\",\n  valor=50.00\n)\n\n---\n\nTRATAMENTO DE RESPOSTA DA TOOL:\n\nA tool criar_link_pagamento pode retornar SUCESSO ou ERRO.\n\n═══════════════════════════════════════════════\nCENÁRIO 1: SUCESSO (success = true)\n═══════════════════════════════════════════════\n\nA tool retornou o link com sucesso.\n\nResponda:\n\"Perfeito! Seu link de pagamento está pronto! 🎉\n\nValor: R$ 50,00\n\n[cole aqui o invoiceUrl]\n\nVocê pode pagar por:\n- PIX (aprovação instantânea)\n- Cartão de crédito\n- Boleto\n\nApós o pagamento, vou te pedir o endereço para envio! 📦\"\n\n═══════════════════════════════════════════════\nCENÁRIO 2: ERRO (success = false)\n═══════════════════════════════════════════════\n\nA tool retornou erro de validação.\n\nVOCÊ DEVE TENTAR NOVAMENTE!\n\nSiga EXATAMENTE este fluxo:\n\nPASSO 1: Informe o erro ao cliente\n\"Desculpe, houve um problema: [error da resposta]\n\nPode me enviar seu CPF novamente? São 11 números, sem traços.\"\n\nPASSO 2: Aguarde o cliente enviar novo CPF\n\nPASSO 3: Quando receber o novo CPF, chame a tool IMEDIATAMENTE:\ncriar_link_pagamento(\n  telefone=\"...\",\n  nome=\"...\",\n  cpf=\"[NOVO CPF QUE O CLIENTE ENVIOU]\",\n  valor=50.00\n)\n\nPASSO 4: Se retornar success=true, envie o link\n         Se retornar success=false, volte ao PASSO 1\n\n═══════════════════════════════════════════════\nEXEMPLO DE CONVERSA COM ERRO E CORREÇÃO:\n═══════════════════════════════════════════════\n\nCliente: \"Quero comprar\"\nVocê: \"Qual seu nome completo?\"\nCliente: \"João Silva\"\nVocê: \"Qual seu CPF?\"\nCliente: \"11111111111\"\n\n[Você chama: criar_link_pagamento(cpf=\"11111111111\")]\n[Tool retorna: {success: false, error: \"CPF não pode ser sequência\"}]\n\nVocê: \"Desculpe, houve um problema: CPF não pode ser sequência de números repetidos\n\nPode me enviar seu CPF novamente? São 11 números, sem traços.\"\n\nCliente: \"12345678900\"\n\n[Você DEVE chamar novamente: criar_link_pagamento(cpf=\"12345678900\")]\n[Tool retorna: {success: false, error: \"CPF inválido\"}]\n\nVocê: \"Desculpe, houve um problema: CPF inválido (dígito verificador incorreto)\n\nPode verificar e me enviar novamente?\"\n\nCliente: \"26622732833\"\n\n[Você DEVE chamar novamente: criar_link_pagamento(cpf=\"26622732833\")]\n[Tool retorna: {success: true, invoiceUrl: \"https://...\"}]\n\nVocê: \"Perfeito! Seu link está pronto! 🎉\n[envia o link]\"\n\n═══════════════════════════════════════════════\n\nREGRAS CRÍTICAS:\n- SEMPRE chame a tool quando receber um novo CPF após erro\n- NÃO desista após o primeiro erro\n- NÃO peça confirmação antes de tentar de novo\n- TENTE quantas vezes for necessário até success=true\n- Cada CPF novo = nova chamada da tool\n\n---\n\nFASE 4 - FOLLOW-UP:\n\n- Se o cliente não pagar em 10 minutos, envie lembrete gentil\n- Se não pagar em 24h, envie segundo lembrete\n- Seja sempre respeitosa e não insistente\n- Se após 48h não houver interação, despedida gentil\n\n---\n\nFASE 5 - COLETA DE ENDEREÇO:\n\nSe fase_atual = \"coletando_endereco\":\n  O pagamento já foi confirmado! \n  Seu único objetivo agora é coletar o endereço completo para envio.\n\nCOLETA DE ENDEREÇO (em ordem):\n\n1. CEP:\n\"Para que eu possa enviar seu baralho, qual seu CEP?\n(Apenas os 8 números, sem hífen)\"\n\nAguarde o cliente enviar o CEP.\n\nVALIDE o CEP:\n- Deve ter 8 dígitos\n- Apenas números\n- Se vier com hífen, remova antes de enviar à tool\n\n2. NÚMERO:\n\"Qual o número da residência?\"\n\nAguarde o cliente enviar o número.\n\n3. COMPLEMENTO (opcional):\n\"Tem algum complemento? (apartamento, bloco, casa, etc)\nSe não tiver, pode enviar 'não' ou 'sem complemento'\"\n\nAguarde o cliente enviar o complemento.\n\nDEPOIS de coletar CEP + NÚMERO + COMPLEMENTO (ou confirmação de que não tem), chame:\n\nsalvar_endereco(\n  telefone=\"número do telefone do cliente\",\n  cep=\"CEP com 8 dígitos sem hífen\",\n  numero=\"número da residência\",\n  complemento=\"complemento ou vazio se não tiver\"\n)\n\nA ferramenta irá:\n- Validar o CEP automaticamente\n- Buscar endereço completo (rua, bairro, cidade, estado)\n- Salvar tudo no sistema\n- Adicionar no card do Trello\n- Retornar endereço completo formatado\n\nCRÍTICO - LEIA COM ATENÇÃO:\n- A tool vai validar o CEP e retornar o endereço completo\n- AGUARDE a resposta da tool antes de confirmar ao cliente!\n- NUNCA recrie o endereço manualmente\n- NUNCA use o que o cliente disse\n- USE APENAS o campo \"endereco_completo\" que a tool retornar\n\n---\n\nTRATAMENTO DE RESPOSTA DA TOOL salvar_endereco:\n\nA tool pode retornar SUCESSO ou ERRO.\n\n═══════════════════════════════════════════════\nCENÁRIO 1: SUCESSO (success = true)\n═══════════════════════════════════════════════\n\nA tool retornou o endereço completo validado.\n\nCOPIE EXATAMENTE o campo \"endereco_completo\" da resposta!\n\nResponda:\n\"Perfeito! Seu baralho será enviado para:\n\n📍 [COPIE AQUI o endereco_completo DA RESPOSTA DA TOOL]\n\nO código de rastreio será enviado em até 5 dias úteis.\n\nMuito obrigada pela compra! Foi um prazer te atender! 🎉\"\n\n═══════════════════════════════════════════════\nCENÁRIO 2: ERRO (success = false)\n═══════════════════════════════════════════════\n\nA tool retornou erro (CEP inválido ou não encontrado).\n\nVOCÊ DEVE TENTAR NOVAMENTE!\n\nSiga EXATAMENTE este fluxo:\n\nPASSO 1: Informe o erro\n\"Desculpe, não consegui validar esse CEP: [error da resposta]\n\nPode verificar e me enviar o CEP correto? São 8 números, sem hífen.\"\n\nPASSO 2: Aguarde o cliente enviar novo CEP\n\nPASSO 3: Pergunte o número novamente\n\"Qual o número da residência?\"\n\nPASSO 4: Aguarde o número\n\nPASSO 5: Pergunte o complemento novamente\n\"Tem complemento? (apartamento, bloco, casa, etc)\nSe não tiver, pode enviar 'não'\"\n\nPASSO 6: Aguarde o complemento\n\nPASSO 7: Chame a tool IMEDIATAMENTE:\nsalvar_endereco(\n  telefone=\"...\",\n  cep=\"[NOVO CEP]\",\n  numero=\"[NOVO NÚMERO]\",\n  complemento=\"[NOVO COMPLEMENTO ou vazio]\"\n)\n\nPASSO 8: Se success=true, confirme o endereço\n         Se success=false, volte ao PASSO 1\n\n═══════════════════════════════════════════════\nEXEMPLO DE CONVERSA COM ERRO E CORREÇÃO:\n═══════════════════════════════════════════════\n\nVocê: \"Qual seu CEP?\"\nCliente: \"99999999\"\nVocê: \"Qual o número?\"\nCliente: \"123\"\nVocê: \"Tem complemento?\"\nCliente: \"Não\"\n\n[Você chama: salvar_endereco(cep=\"99999999\", numero=\"123\", complemento=\"\")]\n[Tool retorna: {success: false, error: \"CEP não encontrado\"}]\n\nVocê: \"Desculpe, não consegui validar esse CEP: CEP não encontrado\n\nPode verificar e me enviar o CEP correto? São 8 números, sem hífen.\"\n\nCliente: \"80030380\"\n\nVocê: \"Qual o número da residência?\"\n\nCliente: \"259\"\n\nVocê: \"Tem complemento?\"\n\nCliente: \"Ap 31\"\n\n[Você DEVE chamar novamente: salvar_endereco(cep=\"80030380\", numero=\"259\", complemento=\"Ap 31\")]\n[Tool retorna: {success: true, endereco_completo: \"Rua Cambara, 259 - Ap 31, Centro, Curitiba - PR, CEP 80030-380\"}]\n\nVocê: \"Perfeito! Seu baralho será enviado para:\n\n📍 Rua Cambara, 259 - Ap 31, Centro, Curitiba - PR, CEP 80030-380\n\nO código de rastreio será enviado em até 5 dias úteis.\n\nMuito obrigada pela compra! 🎉\"\n\n═══════════════════════════════════════════════\n\nREGRAS CRÍTICAS:\n- SEMPRE use o campo \"endereco_completo\" da resposta\n- NÃO monte o endereço manualmente\n- NÃO use o que o cliente disse\n- USE APENAS o que a tool retornou\n- COPIE EXATAMENTE, não parafraseie\n- Se erro, colete CEP/número/complemento novamente\n- Chame a tool novamente até success=true\n- NUNCA desista após primeiro erro\n\n\n---\n\nREGRAS IMPORTANTES:\n\n- Uma fase de cada vez - não pule etapas\n- Mensagens curtas (máximo 3-4 linhas no WhatsApp)\n- Nunca seja insistente ou agressiva na venda\n- NUNCA peça CPF antes do cliente confirmar que QUER COMPRAR\n- Diferencie \"quer saber mais\" de \"quer comprar\"\n- Se o cliente disser \"não\", respeite e se despeça gentilmente\n- Use o nome do cliente quando souber\n- Emojis com moderação (máximo 1 por mensagem)\n- NÃO mencione o baralho antes de revelar a carta\n- NÃO ofereça link de pagamento antes do cliente confirmar compra\n- Observe os sinais de interesse do cliente antes de avançar as fases"
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3,
+        "position": [
+          3200,
+          64
+        ],
+        "id": "05f4d13c-7b35-4b86-82c1-264b6be288cc",
+        "name": "AI Agent"
+      },
+      {
+        "parameters": {
+          "sessionIdType": "customKey",
+          "sessionKey": "={{ $('Dados Lead').item.json.IdConversa }}",
+          "tableName": "chat_history",
+          "contextWindowLength": 50
+        },
+        "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+        "typeVersion": 1.3,
+        "position": [
+          3296,
+          272
+        ],
+        "id": "719aebbe-d965-4c86-a1f1-1af50d02033a",
+        "name": "Postgres Chat Memory",
+        "credentials": {
+          "postgres": {
+            "id": "0Z8zeX4ox8eTEGL1",
+            "name": "Postgres account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "toolDescription": "Seleciona uma carta do baralho da prosperidade com base nos temas identificados na conversa. Use esta tool quando entender bem o momento de vida do cliente (desafios, anseios, bloqueios) e quiser revelar a carta perfeita para ele. Retorna informações completas da carta incluindo nome, significado e URL da imagem.",
+          "method": "POST",
+          "url": "https://prosperidade-n8n.yc5mic.easypanel.host/webhook/selecionar-carta",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "tema",
+                "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `Temas identificados na conversa separados por vírgula. Exemplos: \"abundancia\", \"bloqueios,coragem\", \"inicio,potencial\"`, 'string') }}"
+              },
+              {
+                "name": "telefone",
+                "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters1_Value', `Telefone do cliente no formato completo com código do país. Exemplo: 5511991872614`, 'string') }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequestTool",
+        "typeVersion": 4.3,
+        "position": [
+          3152,
+          464
+        ],
+        "id": "e38e7983-4bfc-4daf-a407-54831446bee2",
+        "name": "selecionar_carta"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.z-api.io/instances/3EAC63EE98C5F14530FE227360D3178E/token/198DF2D98C4EB52EFD1319EA/send-text",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "phone",
+                "value": "={{ $('Merge').item.json.telefone }}"
+              },
+              {
+                "name": "message",
+                "value": "={{ $json['output.mensagens'] }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "4e1809a8-4e25-4e97-bd39-c499959b13ea",
+        "name": "(Z-API) Enviar Mensagem",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          4352,
+          160
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "8jRtMgiJTpVow7wP",
+            "name": "Z-API Credential"
+          }
+        },
+        "disabled": true,
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "fieldToSplitOut": "output.mensagens",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitOut",
+        "typeVersion": 1,
+        "position": [
+          3920,
+          64
+        ],
+        "id": "4c98d865-ada6-4f3b-8eb8-9e304c274962",
+        "name": "Split Out1",
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          4176,
+          64
+        ],
+        "id": "88fb3c69-9517-43a6-9bfd-12e75e67d1e6",
+        "name": "Loop Over Items1",
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "amount": 3
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          4560,
+          448
+        ],
+        "id": "155eb4ee-42e8-4916-89e9-194777cfca7c",
+        "name": "Wait3",
+        "webhookId": "33c5308c-6ef7-4028-8fb7-f0f46b8d615d",
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [
+          4352,
+          -64
+        ],
+        "id": "33b6adca-9a4f-4639-b9cd-d95677844b2d",
+        "name": "No Operation, do nothing5",
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.outputParserAutofixing",
+        "typeVersion": 1,
+        "position": [
+          3696,
+          240
+        ],
+        "id": "5e65e32c-2628-4e6c-bb96-6b0e2b777386",
+        "name": "Auto-fixing Output Parser1",
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "gpt-4.1-mini",
+            "mode": "list",
+            "cachedResultName": "gpt-4.1-mini"
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          3600,
+          416
+        ],
+        "id": "c80ff72b-2813-477c-8e2c-1abf9948151c",
+        "name": "OpenAI Chat Model3",
+        "credentials": {
+          "openAiApi": {
+            "id": "VqrbOmkmcbSCq58f",
+            "name": "Formacao n8n"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "schemaType": "manual",
+          "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"mensagens\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    }\n  },\n  \"required\": [\"mensagens\"]\n}"
+        },
+        "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+        "typeVersion": 1.2,
+        "position": [
+          3808,
+          400
+        ],
+        "id": "54f6da51-e9e0-478c-b081-4ac363d0f4fb",
+        "name": "Structured Output Parser [Schema]",
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=<mensagem_do_usuario>\n{{ $json.output }}\n</mensagem_do_usuario>",
+          "hasOutputParser": true,
+          "messages": {
+            "messageValues": [
+              {
+                "message": "Apenas estruture a <mensagem_do_usuario> no formato JSON solicitado no output parser e seguindo as instruções de formatação abaixo. Não altere nada mais na mensagem\n\n# Formatação\n- Divida as mensagens para que fiquem naturais e humanizadas;\n- Divida as mensagens conforme estrutura do output parser para que não fiquem muito longas (maiores que 240 caractéres);\n- Não separe mensagens vazias;\n- Use quebras de linhas (\\n\\n) após pontos finais;\n- Para negrito (bold) use apenas um '' nunca duas '' (exemplo: *negrito).\n\nExemplo de formato JSON:\n{\n\"mensagens\": [\"Mensagem 0\", \"Mensagem 1\", \"Mensagem 2\"]\n}"
+              }
+            ]
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.chainLlm",
+        "typeVersion": 1.6,
+        "position": [
+          3600,
+          64
+        ],
+        "id": "5b0eaead-064b-4ddf-bd3f-6263e9dfde91",
+        "name": "Basic LLM Chain",
+        "retryOnFail": true,
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "content": "## Humaniza a resposta com buffer de mensagens \n",
+          "height": 784,
+          "width": 1248
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          3552,
+          -112
+        ],
+        "typeVersion": 1,
+        "id": "d91198d2-72fd-46e4-b299-f2909e0564dc",
+        "name": "Sticky Note"
+      },
+      {
+        "parameters": {
+          "content": "## Cadastra lead",
+          "height": 832,
+          "width": 1408,
+          "color": 4
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -1328,
+          -128
+        ],
+        "typeVersion": 1,
+        "id": "216109aa-b445-4331-97a3-b5cc39dd4a22",
+        "name": "Sticky Note1"
+      },
+      {
+        "parameters": {
+          "content": "## Apresenta e vende o baralho \n",
+          "height": 784,
+          "width": 432,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          3088,
+          -112
+        ],
+        "typeVersion": 1,
+        "id": "08ba25e1-f812-4a86-9669-e471e4cdc698",
+        "name": "Sticky Note2"
+      },
+      {
+        "parameters": {
+          "toolDescription": "Cria um link de pagamento para o cliente comprar o Baralho da Prosperidade.  Use esta ferramenta quando o cliente demonstrar interesse em adquirir o baralho. Retorna o link de pagamento que você deve enviar ao cliente.  ",
+          "method": "POST",
+          "url": "https://prosperidade-n8n.yc5mic.easypanel.host/webhook/criar-link-pagamento",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "telefone",
+                "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `Telefone do cliente no formato completo com código do país.\nUse o telefone da conversa atual.`, 'string') }}"
+              },
+              {
+                "name": "nome",
+                "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters1_Value', `Nome COMPLETO do cliente como aparece no CPF.\nDeve incluir nome e sobrenome. Exemplo: João Silva Santos`, 'string') }}"
+              },
+              {
+                "name": "valor",
+                "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters2_Value', `Valor da compra. Sempre use 50.00 para o Baralho da Prosperidade.`, 'string') }}"
+              },
+              {
+                "name": "cpf",
+                "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters3_Value', `CPF do cliente com 11 dígitos (apenas números).`, 'string') }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequestTool",
+        "typeVersion": 4.3,
+        "position": [
+          3408,
+          320
+        ],
+        "id": "b3c8ab56-8134-4282-96ed-066eb6b26b76",
+        "name": "criar_link_pagamento"
+      },
+      {
+        "parameters": {
+          "toolDescription": "Salva o endereço completo do cliente para envio do Baralho da Prosperidade. \nUse após coletar CEP, número e complemento. Valida o CEP automaticamente e retorna o endereço completo formatado.",
+          "method": "POST",
+          "url": "https://prosperidade-n8n.yc5mic.easypanel.host/webhook/salvar-endereco",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "telefone",
+                "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `Telefone do cliente no formato completo com código do país`, 'string') }}"
+              },
+              {
+                "name": "cep",
+                "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters1_Value', `CEP com 8 dígitos (apenas números, sem hífen). \nExemplo: 01310100`, 'string') }}"
+              },
+              {
+                "name": "numero",
+                "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters2_Value', `Número da residência`, 'string') }}"
+              },
+              {
+                "name": "complemento",
+                "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters3_Value', `Complemento do endereço (apartamento, bloco, casa, etc). \nPode ser vazio se não houver complemento.`, 'string') }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequestTool",
+        "typeVersion": 4.3,
+        "position": [
+          3408,
+          496
+        ],
+        "id": "1e2c52d1-ecf2-4fab-b5c5-6ac5df49a8f4",
+        "name": "salvar_endereco"
+      },
+      {
+        "parameters": {
+          "toolDescription": "Atualiza a fase atual da conversa no sistema. Use para marcar em qual etapa do atendimento o cliente está. IMPORTANTE: Use APENAS após apresentar o baralho completo (FASE 2.5).          │\nNão use para outras fases - elas são atualizadas automaticamente pelos workflows.    ",
+          "method": "POST",
+          "url": "https://prosperidade-n8n.yc5mic.easypanel.host/webhook/atualizar-fase",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "telefone",
+                "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `Telefone do cliente no formato completo com código do país`, 'string') }}"
+              },
+              {
+                "name": "nova_fase",
+                "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters1_Value', `Nova fase da conversa. Use APENAS \"apresentacao_venda\" após apresentar o baralho completo na FASE 2.5. Outras fases são atualizadas automaticamente.`, 'string') }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequestTool",
+        "typeVersion": 4.3,
+        "position": [
+          3296,
+          432
+        ],
+        "id": "e21ebc2f-5334-420e-84f7-75fcd54b46fb",
+        "name": "atualizar_fase"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 1
+                  },
+                  "conditions": [
+                    {
+                      "id": "bc64f125-d93c-4d1d-97ae-65c0adb08b79",
+                      "leftValue": "={{ $('Receber mensagem').item.json.body.text.message }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "string",
+                        "operation": "exists",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "texto"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 1
+                  },
+                  "conditions": [
+                    {
+                      "id": "137aec3f-e95e-4d59-b9ba-1140f9fc4fb4",
+                      "leftValue": "={{ $('Receber mensagem').item.json.body.audio.audioUrl }}",
+                      "rightValue": "audio",
+                      "operator": {
+                        "type": "string",
+                        "operation": "exists",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "audio"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 1
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $('Receber mensagem').item.json.body.image.imageUrl }}",
+                      "rightValue": "image",
+                      "operator": {
+                        "type": "string",
+                        "operation": "exists",
+                        "singleValue": true
+                      },
+                      "id": "40b284c8-fdf7-49e5-9ac3-8c5051f51521"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "imagem"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 1
+                  },
+                  "conditions": [
+                    {
+                      "id": "7babc8fd-200c-4cb8-bc63-f999f57d5217",
+                      "leftValue": "={{ $('Receber mensagem').item.json.body.document.mimeType }}",
+                      "rightValue": "pdf",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "PDF"
+              }
+            ]
+          },
+          "options": {
+            "fallbackOutput": "extra",
+            "renameFallbackOutput": "Outro"
+          }
+        },
+        "id": "a63166ef-adaa-4ecf-a35d-cccd01261459",
+        "name": "Switch1",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.1,
+        "position": [
+          176,
+          48
+        ],
+        "notesInFlow": true,
+        "notes": "Ajustar condições para cada tipo de mensagem a depender da sua entrada de dados\n\nTEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "resource": "audio",
+          "operation": "transcribe",
+          "binaryPropertyName": "=data",
+          "options": {
+            "language": "pt"
+          }
+        },
+        "id": "e223e75b-a746-44b7-a80c-9c905212791f",
+        "name": "Transcrever Áudio1",
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 1.4,
+        "position": [
+          864,
+          -80
+        ],
+        "retryOnFail": true,
+        "credentials": {
+          "openAiApi": {
+            "id": "47a3ptzhP4wlIUiz",
+            "name": "OpenAi account"
+          }
+        },
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "resource": "image",
+          "operation": "analyze",
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-4o-mini",
+            "mode": "list",
+            "cachedResultName": "GPT-4O-MINI"
+          },
+          "text": "=#Instruções\nO usuário te enviou uma imagem a qual você deve descrever.\n\nA imagem pode vir acompanhada de uma mensagem de texto (<MensagemUsuario>)\n\nCaso venha, utilize a mensagem anexa como contexto extra, tente capturar o sentimento da mensagem e objetivo pelo qual o usuário esteja enviando esta imagem na conversa.\n\nCrie uma resposta descrevendo as informações enviadas para que estas sejam utilizadas por um agente no futuro.\n\nLembre-se:\nEste agente apenas terá as informações que você fornecer, portanto repasse toda informação que julgar importante.\n\n#Dados\n<MensagemUsuario>\n{{ $json.MensagemImagem }}\n</MensagemUsuario>\n",
+          "imageUrls": "={{ $json.Imagem }}",
+          "options": {}
+        },
+        "id": "b89db6a8-2497-4275-b505-d8831abcfd27",
+        "name": "OpenAI1",
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 1.4,
+        "position": [
+          656,
+          96
+        ],
+        "retryOnFail": true,
+        "credentials": {
+          "openAiApi": {
+            "id": "VqrbOmkmcbSCq58f",
+            "name": "Formacao n8n"
+          }
+        },
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "amount": "=5"
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          1664,
+          96
+        ],
+        "id": "266305ee-a276-49a6-92f0-6456e7c4ae0d",
+        "name": "Wait1",
+        "webhookId": "84b05b68-c282-4dfa-a9d0-dfaeb6669d60",
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "1bd6c365-d077-4284-9dfe-94db1cbe39bd",
+                "leftValue": "={{ $('Buffer 3').item.json.messages.last() }}",
+                "rightValue": "={{ $('Buffer ').item.json.messages.last() }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          2112,
+          96
+        ],
+        "id": "7316140a-7013-4bf1-a8d1-6c2a1fe36bec",
+        "name": "ComparandoMensagens1",
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "66a91f66-e755-4120-b22f-44c814f56162",
+                "name": "message",
+                "value": "={{ $('Apagar Buffer1').item.json.messages.join('\\n\\n') }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          2768,
+          64
+        ],
+        "id": "7dc6a7e4-6a2d-4bb8-a22a-bcfdd087e6fb",
+        "name": "Mensagem1",
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "propertyName": "messages",
+          "key": "={{ $('Dados Lead').item.json.IdConversa }}_buffer",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.redis",
+        "typeVersion": 1,
+        "position": [
+          1456,
+          96
+        ],
+        "id": "e4e0c7bd-d794-408f-a5d8-185807a1cb89",
+        "name": "Buffer ",
+        "credentials": {
+          "redis": {
+            "id": "Apao8W4lZNhw5Kun",
+            "name": "Redis Prosperidade"
+          }
+        },
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "propertyName": "messages",
+          "key": "={{ $('Dados Lead').item.json.IdConversa }}_buffer",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.redis",
+        "typeVersion": 1,
+        "position": [
+          1888,
+          96
+        ],
+        "id": "2a126c7a-142b-4e19-a0af-1cdb24d82169",
+        "name": "Buffer 3",
+        "credentials": {
+          "redis": {
+            "id": "Apao8W4lZNhw5Kun",
+            "name": "Redis Prosperidade"
+          }
+        },
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "operation": "push",
+          "list": "={{ $('Dados Lead').item.json.IdConversa }}_buffer",
+          "messageData": "={{ $json.Texto }}",
+          "tail": true
+        },
+        "type": "n8n-nodes-base.redis",
+        "typeVersion": 1,
+        "position": [
+          1168,
+          688
+        ],
+        "id": "320f6a16-52e1-4e96-8bda-6779526b73e7",
+        "name": "Add Texto Buffer1",
+        "retryOnFail": false,
+        "executeOnce": false,
+        "credentials": {
+          "redis": {
+            "id": "Apao8W4lZNhw5Kun",
+            "name": "Redis Prosperidade"
+          }
+        },
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "operation": "delete",
+          "key": "={{ $('Dados Lead').item.json.IdConversa }}_buffer"
+        },
+        "type": "n8n-nodes-base.redis",
+        "typeVersion": 1,
+        "position": [
+          2336,
+          0
+        ],
+        "id": "6f1b1eeb-cde2-429a-a49f-0f4a395218fa",
+        "name": "Apagar Buffer1",
+        "credentials": {
+          "redis": {
+            "id": "Apao8W4lZNhw5Kun",
+            "name": "Redis Prosperidade"
+          }
+        },
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "c1ce011b-bd95-468e-863e-f2076f644cf9",
+                "name": "Texto",
+                "value": "={{ $('Receber mensagem').item.json.body.text.message }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          384,
+          688
+        ],
+        "id": "8e730f8b-e4c9-4655-8d79-e3deeb680a75",
+        "name": "Mensagem Texto1",
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "5efc6961-1ff7-4ef2-a772-7e9761592a3e",
+                "name": "Audio",
+                "value": "={{ $('Webhook').item.json.body.audio.audioUrl }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          384,
+          -80
+        ],
+        "id": "2a866c5b-e3bc-4777-93ad-b5ff0186fb6c",
+        "name": "Mensagem Audio1",
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "5efc6961-1ff7-4ef2-a772-7e9761592a3e",
+                "name": "Imagem",
+                "value": "={{ $('Webhook').item.json.body.image.imageUrl }}",
+                "type": "string"
+              },
+              {
+                "id": "f5c70ab5-7671-4bc8-9d23-65b8954ddb08",
+                "name": "MensagemImagem",
+                "value": "={{ $('Webhook').item.json.body.image.caption }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          384,
+          96
+        ],
+        "id": "a26bea64-d021-47a6-9066-d10f722ba2b0",
+        "name": "Mensagem Imagem1",
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "operation": "push",
+          "list": "={{ $('Dados Lead').item.json.IdConversa }}_buffer",
+          "messageData": "={{ $json.text }}",
+          "tail": true
+        },
+        "type": "n8n-nodes-base.redis",
+        "typeVersion": 1,
+        "position": [
+          1168,
+          -80
+        ],
+        "id": "3c1f6010-7ee6-417d-a74e-f83ca19bd550",
+        "name": "Add Audio Buffer1",
+        "retryOnFail": false,
+        "credentials": {
+          "redis": {
+            "id": "2YLmSxsr6T77RzwN",
+            "name": "Redis account"
+          }
+        },
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "operation": "push",
+          "list": "={{ $('Dados Lead').item.json.IdConversa }}_buffer",
+          "messageData": "={{ $json.Erro }}",
+          "tail": true
+        },
+        "type": "n8n-nodes-base.redis",
+        "typeVersion": 1,
+        "position": [
+          1168,
+          480
+        ],
+        "id": "8537ef4c-a5c4-4c3c-8ee0-8afc17057f97",
+        "name": "Add Error Buffer1",
+        "retryOnFail": false,
+        "credentials": {
+          "redis": {
+            "id": "2YLmSxsr6T77RzwN",
+            "name": "Redis account"
+          }
+        },
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "operation": "pdf",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.extractFromFile",
+        "typeVersion": 1,
+        "position": [
+          864,
+          288
+        ],
+        "id": "a8c8cf4f-bf6f-470f-a120-3f4ba8556818",
+        "name": "Extract from File",
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "11dc126a-e72e-431b-8db5-c78168c69439",
+                "name": "Erro",
+                "value": "<ErroFormatoMensagem>",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          384,
+          480
+        ],
+        "id": "cef671aa-f496-4f2a-8a40-38b5e01846c7",
+        "name": "Mensagem Erro1",
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "operation": "push",
+          "list": "={{ $('Dados Lead').item.json.IdConversa }}_buffer",
+          "messageData": "=<ContextoPDF>\n  <TranscricaoPDF>\n{{ $json.text }}\n  </TranscricaoPDF>\nContexto Extra: O usuário encaminhou a mensagem a seguir junto ao PDF.\n  <MensagemUsuario>\n{{ $('Mensagem Documento PDF').item.json.MensagemDocumento }}\n  </MensagemUsuario>\n</ContextoPDF>",
+          "tail": true
+        },
+        "type": "n8n-nodes-base.redis",
+        "typeVersion": 1,
+        "position": [
+          1168,
+          288
+        ],
+        "id": "b8e76ca6-9174-42bc-b941-e44f31580cd8",
+        "name": "Add PDF Buffer1",
+        "retryOnFail": false,
+        "credentials": {
+          "redis": {
+            "id": "2YLmSxsr6T77RzwN",
+            "name": "Redis account"
+          }
+        },
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "operation": "push",
+          "list": "={{ $('Dados Lead').item.json.IdConversa }}_buffer",
+          "messageData": "=<ContextoImagem>\n\n  <DetalheImagem>\n{{ $json.content }}\n  </DetalheImagem>\n\nContexto Extra: O usuário encaminhou a mensagem a seguir junto á imagem.\n  <MensagemUsuario>\n{{ $('Mensagem Imagem1').item.json.MensagemImagem }}\n  </MensagemUsuario>\n\n</ContextoImagem>",
+          "tail": true
+        },
+        "type": "n8n-nodes-base.redis",
+        "typeVersion": 1,
+        "position": [
+          1168,
+          96
+        ],
+        "id": "ab9c329d-8880-420f-a3a2-06095a7e7662",
+        "name": "Add Imagem Buffer1",
+        "retryOnFail": false,
+        "credentials": {
+          "redis": {
+            "id": "2YLmSxsr6T77RzwN",
+            "name": "Redis account"
+          }
+        },
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [
+          2336,
+          192
+        ],
+        "id": "4bf5823b-16a3-4039-a760-8a0aa167bfe3",
+        "name": "No Operation, do nothing6",
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "5efc6961-1ff7-4ef2-a772-7e9761592a3e",
+                "name": "Documento",
+                "value": "={{ $('Webhook').item.json.body.document.documentUrl }}",
+                "type": "string"
+              },
+              {
+                "id": "003323ec-ffbe-4c91-b8b5-623466b5014d",
+                "name": "MensagemDocumento",
+                "value": "={{ $('Webhook').item.json.body.document.caption }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          384,
+          288
+        ],
+        "id": "81d6d49b-a66d-4ca5-b07c-419db1bddc04",
+        "name": "Mensagem Documento PDF",
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.Audio }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          656,
+          -80
+        ],
+        "id": "8a376b3c-6621-4258-9be9-b3259d2bbf7b",
+        "name": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.Documento }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          656,
+          288
+        ],
+        "id": "600b3fb0-c345-4cf1-ab95-af4d181ff254",
+        "name": "HTTP Request1"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "24aa4532-80db-4c1e-977a-0036b82a8e5f",
+                "leftValue": "={{ $('Receber mensagem').item.json.body.isEdit }}",
+                "rightValue": "false",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "false",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "204f54b0-e3ed-4ff4-8302-8c20d3b8aa78",
+                "leftValue": "={{ $('Receber mensagem').item.json.body.isGroup }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "false",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "130cc493-a17a-4cc1-955b-816799583076",
+                "leftValue": "={{ $('Receber mensagem').item.json.body.isNewsletter }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "false",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "c51986d9-f347-4198-89bb-9e4cd0f021c9",
+                "leftValue": "={{ $('Receber mensagem').item.json.body.broadcast }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "false",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "ac9c4286-34d7-4058-9bbb-985bd9c2b6e7",
+                "leftValue": "={{ $('Receber mensagem').item.json.body.fromApi }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "false",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "b9b5ec31-6dbc-4b88-aef0-c587819b3c4b",
+        "name": "Filtro Inicial1",
+        "type": "n8n-nodes-base.filter",
+        "typeVersion": 2.1,
+        "position": [
+          -1024,
+          -16
+        ],
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "9f488c5c-0b3b-48e9-87b1-5a22d513d1ec",
+                "name": "IdConversa",
+                "value": "={{ $('Receber mensagem').item.json.body.phone }}",
+                "type": "string"
+              },
+              {
+                "id": "69f6217f-9063-423f-abf4-e94f6b70f94e",
+                "name": "LeadNome",
+                "value": "={{ $('Receber mensagem').item.json.body.senderName }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "a4c431f4-71a7-4d98-b6fb-961419aeaded",
+        "name": "Dados Lead",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -800,
+          -16
+        ],
+        "notes": "TEMPLATE DESENVOLVIDO POR NOCODE STARTUP\nhttps://nocodestartup.io/\n\nFORMAÇÃO GESTOR DE AGENTES DE IA:\nhttps://nocodestartup.io/formacao-gestor-agentes-ia/"
+      }
+    ],
+    "connections": {
+      "Receber mensagem": {
+        "main": [
+          [
+            {
+              "node": "Filtro Inicial1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Buscar conversa": {
+        "main": [
+          [
+            {
+              "node": "Cliente existe?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Cliente existe?": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ],
+          [
+            {
+              "node": "Criar conversa",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Criar conversa": {
+        "main": [
+          [
+            {
+              "node": "Criar Card Trello",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Criar Card Trello": {
+        "main": [
+          [
+            {
+              "node": "Salvar Card ID",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Salvar Card ID": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "Switch1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Postgres Chat Memory": {
+        "ai_memory": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_memory",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "selecionar_carta": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI Agent": {
+        "main": [
+          [
+            {
+              "node": "Basic LLM Chain",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Out1": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Items1": {
+        "main": [
+          [
+            {
+              "node": "No Operation, do nothing5",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "(Z-API) Enviar Mensagem",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait3": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Auto-fixing Output Parser1": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "Basic LLM Chain",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model3": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Auto-fixing Output Parser1",
+              "type": "ai_languageModel",
+              "index": 0
+            },
+            {
+              "node": "Basic LLM Chain",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Structured Output Parser [Schema]": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "Auto-fixing Output Parser1",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Basic LLM Chain": {
+        "main": [
+          [
+            {
+              "node": "Split Out1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "(Z-API) Enviar Mensagem": {
+        "main": [
+          [
+            {
+              "node": "Wait3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "criar_link_pagamento": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "salvar_endereco": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "atualizar_fase": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch1": {
+        "main": [
+          [
+            {
+              "node": "Mensagem Texto1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Mensagem Audio1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Mensagem Imagem1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Mensagem Documento PDF",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Mensagem Erro1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Transcrever Áudio1": {
+        "main": [
+          [
+            {
+              "node": "Add Audio Buffer1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI1": {
+        "main": [
+          [
+            {
+              "node": "Add Imagem Buffer1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait1": {
+        "main": [
+          [
+            {
+              "node": "Buffer 3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "ComparandoMensagens1": {
+        "main": [
+          [
+            {
+              "node": "Apagar Buffer1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "No Operation, do nothing6",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Buffer ": {
+        "main": [
+          [
+            {
+              "node": "Wait1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Buffer 3": {
+        "main": [
+          [
+            {
+              "node": "ComparandoMensagens1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Add Texto Buffer1": {
+        "main": [
+          [
+            {
+              "node": "Buffer ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Apagar Buffer1": {
+        "main": [
+          [
+            {
+              "node": "Mensagem1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Mensagem Texto1": {
+        "main": [
+          [
+            {
+              "node": "Add Texto Buffer1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Mensagem Audio1": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Mensagem Imagem1": {
+        "main": [
+          [
+            {
+              "node": "OpenAI1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Add Audio Buffer1": {
+        "main": [
+          [
+            {
+              "node": "Buffer ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Add Error Buffer1": {
+        "main": [
+          [
+            {
+              "node": "Buffer ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract from File": {
+        "main": [
+          [
+            {
+              "node": "Add PDF Buffer1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Mensagem Erro1": {
+        "main": [
+          [
+            {
+              "node": "Add Error Buffer1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Add PDF Buffer1": {
+        "main": [
+          [
+            {
+              "node": "Buffer ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Add Imagem Buffer1": {
+        "main": [
+          [
+            {
+              "node": "Buffer ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Mensagem Documento PDF": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Transcrever Áudio1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request1": {
+        "main": [
+          [
+            {
+              "node": "Extract from File",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filtro Inicial1": {
+        "main": [
+          [
+            {
+              "node": "Dados Lead",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Dados Lead": {
+        "main": [
+          [
+            {
+              "node": "Buscar conversa",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Mensagem1": {
+        "main": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Newton Omune",
+    "name": "Version 0478d619",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

@@ -1,0 +1,288 @@
+{
+  "updatedAt": "2026-02-14T18:44:35.916Z",
+  "createdAt": "2026-02-14T18:19:41.706Z",
+  "id": "QzDzuiQ6vP9H3LQ8Yi76M",
+  "name": "Módulo 06 - Elaborar_Minuta",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "caso_usuario"
+            },
+            {
+              "name": "texto_precedente"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d7c0da62-213e-488c-b55e-16507a28ac1b",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "=Você é um assistente jurídico especializado em elaboração de votos para desembargadores de Tribunais Regionais do Trabalho (segunda instância).\n\n## SUA TAREFA\n\nElaborar uma minuta de voto com base no TEXTO DO PRECEDENTE fornecido, adaptando-o minimamente para se adequar ao CASO DO USUÁRIO.\n\n## REGRAS OBRIGATÓRIAS\n\n1. **FIDELIDADE MÁXIMA** - O texto do precedente é o modelo. Mantenha a estrutura, o vocabulário, as expressões e o estilo do desembargador.\n2. **ALTERAÇÃO MÍNIMA** - Altere SOMENTE o que for estritamente necessário para adequar ao caso concreto descrito pelo usuário.\n3. **FUNDAMENTAÇÃO INTOCÁVEL** - NÃO altere a fundamentação jurídica: citações de lei, súmulas, jurisprudência, teses e raciocínio jurídico devem ser preservados integralmente.\n4. **NÃO INVENTE** - NÃO adicione argumentos, citações, leis ou jurisprudência que não existam no texto do precedente.\n5. **NÃO RESUMA** - A minuta deve ter extensão similar ao texto do precedente. NÃO corte trechos.\n6. **NÃO ALTERE DECISÕES** - Se o precedente diz \"Mantenho\", \"Reformo\", \"Nego provimento\", preserve exatamente a mesma decisão.\n7. **ADAPTE FATOS** - Quando o caso do usuário mencionar fatos diferentes (ex: função, tipo de exposição, valores), substitua os fatos correspondentes no texto.\n8. **PRESERVE A VOZ** - O texto deve soar como se o próprio desembargador tivesse escrito, não como uma IA.\n\n## O QUE PODE SER ALTERADO\n\n- Nomes de partes e funções (se mencionados pelo usuário)\n- Descrição factual (atividade, circunstâncias, provas) para refletir o caso do usuário\n- Números de processo referenciados no cabeçalho\n\n## O QUE NÃO PODE SER ALTERADO\n\n- Fundamentação jurídica (artigos, súmulas, teses)\n- Citações de jurisprudência\n- Estilo e vocabulário do desembargador\n- Decisão final (dispositivo)\n- Estrutura do texto\n\n## FORMATO DE SAÍDA\n\nApresente a minuta completa, pronta para revisão humana. Não adicione comentários, explicações ou notas — apenas o texto do voto."
+            },
+            {
+              "content": "=CASO DO USUÁRIO:\n{{ $json.caso_usuario }}\n\nTEXTO DO PRECEDENTE (modelo para a minuta):\n{{ $json.texto_precedente }}\n\nElabore a minuta de voto adaptando o texto do precedente ao caso do usuário, alterando apenas o estritamente necessário."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "14755b57-d5b1-404c-8a5c-3175da188b32",
+      "name": "Gerar_Minuta",
+      "credentials": {
+        "openAiApi": {
+          "id": "47a3ptzhP4wlIUiz",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.arquivo_id }}",
+          "mode": "id"
+        },
+        "name": "={{ $json.processo_id }}",
+        "sameFolder": false,
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1Ti8hLNgoWF0tLjrVo4jGKK-RTeW5fPs_",
+          "mode": "list",
+          "cachedResultName": "Referencias",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1Ti8hLNgoWF0tLjrVo4jGKK-RTeW5fPs_"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        560,
+        0
+      ],
+      "id": "2bd5407e-2f52-43be-b489-d5e6ca8884e1",
+      "name": "Copy file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "cF17H5HzZzwb2Ssy",
+          "name": "newton.ai API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Gerar_Minuta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar_Minuta": {
+      "main": [
+        [
+          {
+            "node": "Copy file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "9414e400-9432-4621-bdde-961c948c9bb7",
+  "activeVersionId": "9414e400-9432-4621-bdde-961c948c9bb7",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-02-14T18:19:41.726Z",
+      "createdAt": "2026-02-14T18:19:41.726Z",
+      "role": "workflow:owner",
+      "workflowId": "QzDzuiQ6vP9H3LQ8Yi76M",
+      "projectId": "SoH44tJE4dqRVTiw"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-02-14T18:48:34.000Z",
+    "createdAt": "2026-02-14T18:44:35.917Z",
+    "versionId": "9414e400-9432-4621-bdde-961c948c9bb7",
+    "workflowId": "QzDzuiQ6vP9H3LQ8Yi76M",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "caso_usuario"
+              },
+              {
+                "name": "texto_precedente"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "d7c0da62-213e-488c-b55e-16507a28ac1b",
+        "name": "When Executed by Another Workflow"
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-4o-mini",
+            "mode": "list",
+            "cachedResultName": "GPT-4O-MINI"
+          },
+          "responses": {
+            "values": [
+              {
+                "role": "system",
+                "content": "=Você é um assistente jurídico especializado em elaboração de votos para desembargadores de Tribunais Regionais do Trabalho (segunda instância).\n\n## SUA TAREFA\n\nElaborar uma minuta de voto com base no TEXTO DO PRECEDENTE fornecido, adaptando-o minimamente para se adequar ao CASO DO USUÁRIO.\n\n## REGRAS OBRIGATÓRIAS\n\n1. **FIDELIDADE MÁXIMA** - O texto do precedente é o modelo. Mantenha a estrutura, o vocabulário, as expressões e o estilo do desembargador.\n2. **ALTERAÇÃO MÍNIMA** - Altere SOMENTE o que for estritamente necessário para adequar ao caso concreto descrito pelo usuário.\n3. **FUNDAMENTAÇÃO INTOCÁVEL** - NÃO altere a fundamentação jurídica: citações de lei, súmulas, jurisprudência, teses e raciocínio jurídico devem ser preservados integralmente.\n4. **NÃO INVENTE** - NÃO adicione argumentos, citações, leis ou jurisprudência que não existam no texto do precedente.\n5. **NÃO RESUMA** - A minuta deve ter extensão similar ao texto do precedente. NÃO corte trechos.\n6. **NÃO ALTERE DECISÕES** - Se o precedente diz \"Mantenho\", \"Reformo\", \"Nego provimento\", preserve exatamente a mesma decisão.\n7. **ADAPTE FATOS** - Quando o caso do usuário mencionar fatos diferentes (ex: função, tipo de exposição, valores), substitua os fatos correspondentes no texto.\n8. **PRESERVE A VOZ** - O texto deve soar como se o próprio desembargador tivesse escrito, não como uma IA.\n\n## O QUE PODE SER ALTERADO\n\n- Nomes de partes e funções (se mencionados pelo usuário)\n- Descrição factual (atividade, circunstâncias, provas) para refletir o caso do usuário\n- Números de processo referenciados no cabeçalho\n\n## O QUE NÃO PODE SER ALTERADO\n\n- Fundamentação jurídica (artigos, súmulas, teses)\n- Citações de jurisprudência\n- Estilo e vocabulário do desembargador\n- Decisão final (dispositivo)\n- Estrutura do texto\n\n## FORMATO DE SAÍDA\n\nApresente a minuta completa, pronta para revisão humana. Não adicione comentários, explicações ou notas — apenas o texto do voto."
+              },
+              {
+                "content": "=CASO DO USUÁRIO:\n{{ $json.caso_usuario }}\n\nTEXTO DO PRECEDENTE (modelo para a minuta):\n{{ $json.texto_precedente }}\n\nElabore a minuta de voto adaptando o texto do precedente ao caso do usuário, alterando apenas o estritamente necessário."
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 2.1,
+        "position": [
+          208,
+          0
+        ],
+        "id": "14755b57-d5b1-404c-8a5c-3175da188b32",
+        "name": "Gerar_Minuta",
+        "credentials": {
+          "openAiApi": {
+            "id": "47a3ptzhP4wlIUiz",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "copy",
+          "fileId": {
+            "__rl": true,
+            "value": "={{ $json.arquivo_id }}",
+            "mode": "id"
+          },
+          "name": "={{ $json.processo_id }}",
+          "sameFolder": false,
+          "driveId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "1Ti8hLNgoWF0tLjrVo4jGKK-RTeW5fPs_",
+            "mode": "list",
+            "cachedResultName": "Referencias",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1Ti8hLNgoWF0tLjrVo4jGKK-RTeW5fPs_"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          560,
+          0
+        ],
+        "id": "2bd5407e-2f52-43be-b489-d5e6ca8884e1",
+        "name": "Copy file",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "cF17H5HzZzwb2Ssy",
+            "name": "newton.ai API"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "Gerar_Minuta",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Gerar_Minuta": {
+        "main": [
+          [
+            {
+              "node": "Copy file",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Newton Omune",
+    "name": "Version 9414e400",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}
